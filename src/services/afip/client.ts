@@ -1,6 +1,6 @@
 import Afip from "@afipsdk/afip.js";
 import fs from "fs";
-import config from "../config";
+import config from "../../config";
 
 const { CUIT, CERT_PATH, KEY_PATH } = config;
 
