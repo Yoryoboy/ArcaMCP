@@ -5,7 +5,8 @@
   "type": "module",
   "main": "index.ts",
   "scripts": {
-    "dev": "npx tsx src/index.ts"
+    "dev": "npx tsx src/index.ts",
+    "inspector": "npx -y @modelcontextprotocol/inspector npx -y tsx src/index.ts"
   },
   "keywords": [
     "monotributo",

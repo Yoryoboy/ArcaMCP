@@ -75,3 +75,9 @@ export const VoucherSchema = BaseVoucherSchema.extend({
 
 // Schema para createNextVoucher (solo campos base)
 export const NextVoucherSchema = BaseVoucherSchema;
+
+// Schema para LastVoucherTool
+export const LastVoucherSchema = z.object({
+  puntoDeVenta: z.number().describe("Punto de venta"),
+  tipoDeComprobante: z.number().describe("Tipo de comprobante"),
+});

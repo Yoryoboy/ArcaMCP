@@ -1,20 +1,15 @@
-import { z } from "zod";
 import { MCPResponse } from "../core/types.js";
 import { LastVoucherParams } from "./types.js";
+import { LastVoucherSchema } from "./schemas.js";
 import afip from "../services/afip/client.js";
 
 export class LastVoucherTool {
   static readonly name = "ultimo_comprobante_creado";
 
-  static readonly schema = {
-    puntoDeVenta: z.number().describe("Punto de venta"),
-    tipoDeComprobante: z.number().describe("Tipo de comprobante"),
-  };
-
   static readonly metadata = {
     title: "Obtener número último comprobante creado",
     description: "Obtener número último comprobante creado",
-    inputSchema: this.schema,
+    inputSchema: LastVoucherSchema.shape,
   };
 
   /**
