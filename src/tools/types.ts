@@ -116,6 +116,48 @@ export interface CreatePDFParams {
   fileName?: string;
 }
 
+export interface GetInvoicesInDateRangeParams {
+  PtoVta: number;
+  CbteTipo: number;
+  fechaDesde: string;
+  fechaHasta: string;
+  batchSize?: number;
+  includeDetails?: boolean;
+  maxVouchers?: number;
+}
+
+export interface VoucherSummary {
+  cbteNro: number;
+  cbteFch: string;
+  impTotal: number;
+  cae: string;
+  caeExpiry: string;
+  docTipo?: number;
+  docNro?: number;
+}
+
+export interface DateRangeResult {
+  summary: {
+    totalVouchers: number;
+    totalAmount: number;
+    dateRange: {
+      from: string;
+      to: string;
+    };
+    voucherRange: {
+      first: number;
+      last: number;
+    };
+  };
+  vouchers: VoucherSummary[];
+  performance: {
+    totalQueries: number;
+    binarySearchQueries: number;
+    batchQueries: number;
+    executionTimeMs: number;
+  };
+}
+
 export interface AFIPVoucherResponse {
   CAE: string;
   CAEFchVto: string;

@@ -15,3 +15,4 @@ export { GetVoucherInfoTool } from './GetVoucherInfoTool.js';
 export { GetTaxpayerDetailsTool } from './GetTaxpayerDetailsTool.js';
 export { GetTaxIDByDocumentTool } from './GetTaxIDByDocumentTool.js';
 export { CreatePDFTool } from './CreatePDFTool.js';
+export { GetInvoicesInDateRangeTool } from './GetInvoicesInDateRangeTool.js';
