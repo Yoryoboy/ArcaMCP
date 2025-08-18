@@ -93,5 +93,13 @@ export const GetVoucherInfoSchema = z.object({
   CbteTipo: z.number().min(1).describe("Tipo de comprobante informado. Consultar FEParamGetTiposCbte")
 });
 
+export const GetTaxpayerDetailsSchema = z.object({
+  taxId: z.number().describe("CUIT del contribuyente a consultar")
+});
+
+export const GetTaxIDByDocumentSchema = z.object({
+  nationalId: z.number().describe("DNI del contribuyente")
+});
+
 // Schema vacío para herramientas sin parámetros
 export const EmptySchema = z.object({});

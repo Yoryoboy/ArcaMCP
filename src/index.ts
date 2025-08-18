@@ -15,6 +15,8 @@ import {
   GetTaxTypesTool,
   GetTaxConditionTypesTool,
   GetVoucherInfoTool,
+  GetTaxpayerDetailsTool,
+  GetTaxIDByDocumentTool,
 } from "./tools/index.js";
 
 const server = new McpServer({
@@ -45,6 +47,18 @@ server.registerTool(
   GetVoucherInfoTool.name,
   GetVoucherInfoTool.metadata,
   GetVoucherInfoTool.execute
+);
+
+server.registerTool(
+  GetTaxpayerDetailsTool.name,
+  GetTaxpayerDetailsTool.metadata,
+  GetTaxpayerDetailsTool.execute
+);
+
+server.registerTool(
+  GetTaxIDByDocumentTool.name,
+  GetTaxIDByDocumentTool.metadata,
+  GetTaxIDByDocumentTool.execute
 );
 
 server.registerTool(

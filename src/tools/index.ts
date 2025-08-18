@@ -12,3 +12,5 @@ export { GetOptionsTypesTool } from "./GetOptionsTypesTool.js";
 export { GetTaxTypesTool } from "./GetTaxTypesTool.js";
 export { GetTaxConditionTypesTool } from './GetTaxConditionTypesTool.js';
 export { GetVoucherInfoTool } from './GetVoucherInfoTool.js';
+export { GetTaxpayerDetailsTool } from './GetTaxpayerDetailsTool.js';
+export { GetTaxIDByDocumentTool } from './GetTaxIDByDocumentTool.js';

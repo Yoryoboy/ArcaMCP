@@ -101,6 +101,14 @@ export interface GetVoucherInfoParams {
   CbteTipo: number;
 }
 
+export interface GetTaxpayerDetailsParams {
+  taxId: number;
+}
+
+export interface GetTaxIDByDocumentParams {
+  nationalId: number;
+}
+
 export interface AFIPVoucherResponse {
   CAE: string;
   CAEFchVto: string;
