@@ -19,8 +19,8 @@ export class LastVoucherTool {
     try {
       // 1. Realizar consulta a AFIP
       const lastVoucher = await afip.ElectronicBilling.getLastVoucher(
-        params.puntoDeVenta,
-        params.tipoDeComprobante
+        params.PtoVta,
+        params.CbteTipo
       );
 
       // 2. Extraer número del comprobante

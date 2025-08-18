@@ -1,7 +1,7 @@
 // Tipos específicos de AFIP
 export interface LastVoucherParams {
-  puntoDeVenta: number;
-  tipoDeComprobante: number;
+  PtoVta: number;
+  CbteTipo: number;
 }
 
 export interface AFIPLastVoucherResponse {

@@ -78,6 +78,14 @@ export const NextVoucherSchema = BaseVoucherSchema;
 
 // Schema para LastVoucherTool
 export const LastVoucherSchema = z.object({
-  puntoDeVenta: z.number().describe("Punto de venta"),
-  tipoDeComprobante: z.number().describe("Tipo de comprobante"),
+  PtoVta: z.number().describe("Punto de venta"),
+  CbteTipo: z.number().describe("Tipo de comprobante")
 });
+
+export const GetExchangeRateSchema = z.object({
+  MonId: z.string().describe("ID de la moneda a consultar (ej: 'DOL' para dólares)"),
+  FchCotiz: z.string().regex(/^\d{8}$/).describe("Fecha de la cotización en formato AAAAMMDD (ej: '20250221')")
+});
+
+// Schema vacío para herramientas sin parámetros
+export const EmptySchema = z.object({});
