@@ -7,9 +7,27 @@ Esta guía explica los conceptos fundamentales de la facturación electrónica e
 ## 📚 Glosario de Términos AFIP
 
 ### **CAE (Código de Autorización Electrónica)**
-Código único de 14 dígitos que AFIP asigna a cada comprobante electrónico válido. Es la "firma digital" que autoriza legalmente el comprobante. Sin CAE, la factura no tiene validez fiscal.
+Código único de 14 dígitos que AFIP asigna a cada comprobante electrónico válido **en tiempo real**. Es la "firma digital" que autoriza legalmente el comprobante. Sin CAE, la factura no tiene validez fiscal.
 
 **Ejemplo:** `70123456789012`
+
+**Características:**
+- Se obtiene al momento de emitir el comprobante
+- Requiere conexión a internet activa
+- Cada comprobante tiene su CAE único
+- Válido por tiempo limitado (generalmente 10 días)
+
+### **CAEA (Código de Autorización Electrónica Anticipado)**
+Código de autorización que se solicita **por adelantado** a AFIP para un período determinado (generalmente 15 días). Permite emitir comprobantes sin conexión a internet en el momento de la venta.
+
+**Ejemplo:** `21234567890123`
+
+**Características:**
+- Se solicita antes del período de uso
+- Permite facturación offline
+- Válido para un rango de fechas específico
+- Ideal para zonas con conectividad limitada
+- Requiere informar los comprobantes usados posteriormente
 
 ### **WSFEv1 (Web Service de Facturación Electrónica v1)**
 Servicio web oficial de AFIP para emitir comprobantes electrónicos. Es la API que utilizan los sistemas de facturación para comunicarse con AFIP.
@@ -35,6 +53,33 @@ Indica qué tipo de operación representa el comprobante:
 
 ### **Monotributista**
 Régimen fiscal simplificado en Argentina. Los monotributistas emiten principalmente Facturas C y tienen restricciones específicas (ej: no pueden discriminar IVA).
+
+---
+
+## ⚖️ CAE vs CAEA - Comparación Detallada
+
+| Aspecto | CAE | CAEA |
+|---------|-----|------|
+| **Cuándo se obtiene** | En tiempo real al emitir | Por adelantado (antes del período) |
+| **Conexión requerida** | Sí, al momento de facturar | No, durante la facturación |
+| **Duración** | ~10 días desde emisión | 15 días del período solicitado |
+| **Uso típico** | Facturación online normal | Zonas rurales, vendedores móviles |
+| **Proceso** | Directo: emitir → obtener CAE | 1) Solicitar CAEA 2) Facturar offline 3) Informar uso |
+| **Flexibilidad** | Inmediata | Requiere planificación |
+
+### **¿Cuándo usar CAE?**
+- ✅ Tienes conexión a internet estable
+- ✅ Facturación desde oficina/local fijo
+- ✅ Proceso normal de negocio
+- ✅ Quieres simplicidad (nuestras herramientas MCP)
+
+### **¿Cuándo usar CAEA?**
+- ⚠️ Vendedores en ruta sin conexión
+- ⚠️ Zonas rurales con internet intermitente
+- ⚠️ Ferias o eventos temporales
+- ⚠️ Contingencias por fallas de conectividad
+
+> **Nota:** Las herramientas MCP actuales trabajan con **CAE** (tiempo real). Para CAEA se requiere un flujo diferente que incluye solicitud previa y posterior informado de uso.
 
 ---
 
