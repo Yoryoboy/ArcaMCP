@@ -90,6 +90,17 @@ export interface OpcionalesItem {
   Valor: string;
 }
 
+export interface GetExchangeRateParams {
+  MonId: string;
+  FchCotiz: string;
+}
+
+export interface GetVoucherInfoParams {
+  CbteNro: number;
+  PtoVta: number;
+  CbteTipo: number;
+}
+
 export interface AFIPVoucherResponse {
   CAE: string;
   CAEFchVto: string;

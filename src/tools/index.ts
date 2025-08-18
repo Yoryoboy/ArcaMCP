@@ -10,4 +10,5 @@ export { GetCurrenciesTypesTool } from "./GetCurrenciesTypesTool.js";
 export { GetExchangeRateTool } from "./GetExchangeRateTool.js";
 export { GetOptionsTypesTool } from "./GetOptionsTypesTool.js";
 export { GetTaxTypesTool } from "./GetTaxTypesTool.js";
-export { GetTaxConditionTypesTool } from "./GetTaxConditionTypesTool.js";
+export { GetTaxConditionTypesTool } from './GetTaxConditionTypesTool.js';
+export { GetVoucherInfoTool } from './GetVoucherInfoTool.js';

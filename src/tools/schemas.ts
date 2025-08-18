@@ -87,5 +87,11 @@ export const GetExchangeRateSchema = z.object({
   FchCotiz: z.string().regex(/^\d{8}$/).describe("Fecha de la cotización en formato AAAAMMDD (ej: '20250221')")
 });
 
+export const GetVoucherInfoSchema = z.object({
+  CbteNro: z.number().min(1).describe("Número de comprobante a consultar"),
+  PtoVta: z.number().min(1).describe("Punto de venta del comprobante"),
+  CbteTipo: z.number().min(1).describe("Tipo de comprobante informado. Consultar FEParamGetTiposCbte")
+});
+
 // Schema vacío para herramientas sin parámetros
 export const EmptySchema = z.object({});

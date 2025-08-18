@@ -13,7 +13,8 @@ import {
   GetExchangeRateTool,
   GetOptionsTypesTool,
   GetTaxTypesTool,
-  GetTaxConditionTypesTool
+  GetTaxConditionTypesTool,
+  GetVoucherInfoTool,
 } from "./tools/index.js";
 
 const server = new McpServer({
@@ -38,6 +39,12 @@ server.registerTool(
   CreateNextVoucherTool.name,
   CreateNextVoucherTool.metadata,
   CreateNextVoucherTool.execute
+);
+
+server.registerTool(
+  GetVoucherInfoTool.name,
+  GetVoucherInfoTool.metadata,
+  GetVoucherInfoTool.execute
 );
 
 server.registerTool(
