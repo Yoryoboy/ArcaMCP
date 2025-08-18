@@ -14,3 +14,4 @@ export { GetTaxConditionTypesTool } from './GetTaxConditionTypesTool.js';
 export { GetVoucherInfoTool } from './GetVoucherInfoTool.js';
 export { GetTaxpayerDetailsTool } from './GetTaxpayerDetailsTool.js';
 export { GetTaxIDByDocumentTool } from './GetTaxIDByDocumentTool.js';
+export { CreatePDFTool } from './CreatePDFTool.js';

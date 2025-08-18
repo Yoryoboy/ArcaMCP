@@ -109,6 +109,13 @@ export interface GetTaxIDByDocumentParams {
   nationalId: number;
 }
 
+export interface CreatePDFParams {
+  PtoVta: number;
+  CbteTipo: number;
+  CbteNro: number;
+  fileName?: string;
+}
+
 export interface AFIPVoucherResponse {
   CAE: string;
   CAEFchVto: string;

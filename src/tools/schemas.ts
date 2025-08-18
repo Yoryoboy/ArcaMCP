@@ -101,5 +101,12 @@ export const GetTaxIDByDocumentSchema = z.object({
   nationalId: z.number().describe("DNI del contribuyente")
 });
 
+export const CreatePDFSchema = z.object({
+  PtoVta: z.number().min(1).describe("Punto de venta del comprobante"),
+  CbteTipo: z.number().min(1).describe("Tipo de comprobante"),
+  CbteNro: z.number().min(1).describe("Número de comprobante a generar PDF"),
+  fileName: z.string().optional().describe("Nombre del archivo PDF (opcional)")
+});
+
 // Schema vacío para herramientas sin parámetros
 export const EmptySchema = z.object({});
