@@ -1,18 +1,20 @@
 import { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js";
 import { StdioServerTransport } from "@modelcontextprotocol/sdk/server/stdio.js";
-import { LastVoucherTool } from "./tools/LastVoucherTool.js";
-import { CreateVoucherTool } from "./tools/CreateVoucherTool.js";
-import { CreateNextVoucherTool } from "./tools/CreateNextVoucherTool.js";
-import { GetSalesPointsTool } from "./tools/GetSalesPointsTool.js";
-import { GetVoucherTypesTool } from "./tools/GetVoucherTypesTool.js";
-import { GetConceptTypesTool } from "./tools/GetConceptTypesTool.js";
-import { GetDocumentTypesTool } from "./tools/GetDocumentTypesTool.js";
-import { GetAliquotTypesTool } from "./tools/GetAliquotTypesTool.js";
-import { GetCurrenciesTypesTool } from "./tools/GetCurrenciesTypesTool.js";
-import { GetExchangeRateTool } from "./tools/GetExchangeRateTool.js";
-import { GetOptionsTypesTool } from "./tools/GetOptionsTypesTool.js";
-import { GetTaxTypesTool } from "./tools/GetTaxTypesTool.js";
-import { GetTaxConditionTypesTool } from "./tools/GetTaxConditionTypesTool.js";
+import {
+  LastVoucherTool,
+  CreateVoucherTool,
+  CreateNextVoucherTool,
+  GetSalesPointsTool,
+  GetVoucherTypesTool,
+  GetConceptTypesTool,
+  GetDocumentTypesTool,
+  GetAliquotTypesTool,
+  GetCurrenciesTypesTool,
+  GetExchangeRateTool,
+  GetOptionsTypesTool,
+  GetTaxTypesTool,
+  GetTaxConditionTypesTool
+} from "./tools/index.js";
 
 const server = new McpServer({
   name: "MonotributoMCP",
