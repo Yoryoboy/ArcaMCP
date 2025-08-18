@@ -18,9 +18,24 @@ export class CreateNextVoucherTool {
       // Validar parámetros
       const validatedParams = NextVoucherSchema.parse(params);
 
+      // Filtrar arrays vacíos para evitar errores de AFIP
+      const cleanedParams = { ...validatedParams };
+      if (cleanedParams.Iva && cleanedParams.Iva.length === 0) {
+        delete cleanedParams.Iva;
+      }
+      if (cleanedParams.Tributos && cleanedParams.Tributos.length === 0) {
+        delete cleanedParams.Tributos;
+      }
+      if (cleanedParams.CbtesAsoc && cleanedParams.CbtesAsoc.length === 0) {
+        delete cleanedParams.CbtesAsoc;
+      }
+      if (cleanedParams.Opcionales && cleanedParams.Opcionales.length === 0) {
+        delete cleanedParams.Opcionales;
+      }
+
       // Crear el próximo comprobante usando el SDK de AFIP
       const result = await afip.ElectronicBilling.createNextVoucher(
-        validatedParams
+        cleanedParams
       );
 
       return {

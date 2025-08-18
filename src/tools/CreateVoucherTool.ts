@@ -20,9 +20,24 @@ export class CreateVoucherTool {
       // Extraer el parámetro fullResponse y removerlo del objeto de datos
       const { fullResponse, ...voucherData } = validatedParams;
 
+      // Filtrar arrays vacíos para evitar errores de AFIP
+      const cleanedParams = { ...voucherData };
+      if (cleanedParams.Iva && cleanedParams.Iva.length === 0) {
+        delete cleanedParams.Iva;
+      }
+      if (cleanedParams.Tributos && cleanedParams.Tributos.length === 0) {
+        delete cleanedParams.Tributos;
+      }
+      if (cleanedParams.CbtesAsoc && cleanedParams.CbtesAsoc.length === 0) {
+        delete cleanedParams.CbtesAsoc;
+      }
+      if (cleanedParams.Opcionales && cleanedParams.Opcionales.length === 0) {
+        delete cleanedParams.Opcionales;
+      }
+
       // Crear el comprobante usando el SDK de AFIP con el segundo parámetro booleano
       const result = await afip.ElectronicBilling.createVoucher(
-        voucherData,
+        cleanedParams,
         fullResponse || false
       );
 
