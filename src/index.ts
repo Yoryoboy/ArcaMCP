@@ -1,7 +1,7 @@
 import { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js";
 import { StdioServerTransport } from "@modelcontextprotocol/sdk/server/stdio.js";
 import {
-  LastVoucherTool,
+  GetLastVoucherTool,
   CreateVoucherTool,
   CreateNextVoucherTool,
   GetSalesPointsTool,
@@ -28,9 +28,9 @@ const server = new McpServer({
 
 // Register all tools
 server.registerTool(
-  LastVoucherTool.name,
-  LastVoucherTool.metadata,
-  LastVoucherTool.execute
+  GetLastVoucherTool.name,
+  GetLastVoucherTool.metadata,
+  GetLastVoucherTool.execute
 );
 
 server.registerTool(

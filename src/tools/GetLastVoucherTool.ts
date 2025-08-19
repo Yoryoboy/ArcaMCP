@@ -1,21 +1,21 @@
 import { MCPResponse } from "../core/types.js";
-import { LastVoucherParams } from "./types.js";
-import { LastVoucherSchema } from "./schemas.js";
+import { GetLastVoucherParams } from "./types.js";
+import { GetLastVoucherSchema } from "./schemas.js";
 import afip from "../services/afip/client.js";
 
-export class LastVoucherTool {
+export class GetLastVoucherTool {
   static readonly name = "ultimo_comprobante_creado";
 
   static readonly metadata = {
     title: "Obtener número último comprobante creado",
     description: "Obtener número último comprobante creado",
-    inputSchema: LastVoucherSchema.shape,
+    inputSchema: GetLastVoucherSchema.shape,
   };
 
   /**
    * Ejecuta la consulta del último comprobante
    */
-  static async execute(params: LastVoucherParams): Promise<MCPResponse> {
+  static async execute(params: GetLastVoucherParams): Promise<MCPResponse> {
     try {
       // 1. Realizar consulta a AFIP
       const lastVoucher = await afip.ElectronicBilling.getLastVoucher(

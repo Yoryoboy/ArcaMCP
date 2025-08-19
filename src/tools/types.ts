@@ -1,5 +1,5 @@
 // Tipos específicos de AFIP
-export interface LastVoucherParams {
+export interface GetLastVoucherParams {
   PtoVta: number;
   CbteTipo: number;
 }
