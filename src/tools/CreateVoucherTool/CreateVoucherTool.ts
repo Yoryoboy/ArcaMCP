@@ -1,25 +1,27 @@
-import { MCPResponse } from "../core/types.js";
-import { NextVoucherParams } from "./types.js";
-import { NextVoucherSchema } from "./schemas.js";
-import afip from "../services/afip/client.js";
+import { MCPResponse } from "../../core/types.js";
+import { VoucherParams } from "../types.js";
+import { VoucherSchema } from "./CreateVoucherTool.schemas.js";
+import afip from "../../services/afip/client.js";
 
-export class CreateNextVoucherTool {
-  static readonly name = "create_next_voucher";
+export class CreateVoucherTool {
+  static readonly name = "create_voucher";
 
   static readonly metadata = {
-    title: "Crear próximo comprobante electrónico",
-    description:
-      "Crear el próximo comprobante electrónico en AFIP con numeración automática y CAE asignado",
-    inputSchema: NextVoucherSchema.shape,
+    title: "Crear comprobante electrónico",
+    description: "Crear un comprobante electrónico en AFIP con CAE asignado",
+    inputSchema: VoucherSchema.shape,
   };
 
-  static async execute(params: NextVoucherParams): Promise<MCPResponse> {
+  static async execute(params: VoucherParams): Promise<MCPResponse> {
     try {
       // Validar parámetros
-      const validatedParams = NextVoucherSchema.parse(params);
+      const validatedParams = VoucherSchema.parse(params);
+
+      // Extraer el parámetro fullResponse y removerlo del objeto de datos
+      const { fullResponse, ...voucherData } = validatedParams;
 
       // Filtrar arrays vacíos para evitar errores de AFIP
-      const cleanedParams = { ...validatedParams };
+      const cleanedParams = { ...voucherData };
       if (cleanedParams.Iva && cleanedParams.Iva.length === 0) {
         delete cleanedParams.Iva;
       }
@@ -33,9 +35,10 @@ export class CreateNextVoucherTool {
         delete cleanedParams.Opcionales;
       }
 
-      // Crear el próximo comprobante usando el SDK de AFIP
-      const result = await afip.ElectronicBilling.createNextVoucher(
-        cleanedParams
+      // Crear el comprobante usando el SDK de AFIP con el segundo parámetro booleano
+      const result = await afip.ElectronicBilling.createVoucher(
+        cleanedParams,
+        fullResponse || false
       );
 
       return {

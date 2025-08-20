@@ -1,7 +1,7 @@
-import { MCPResponse } from "../core/types.js";
-import { GetLastVoucherParams } from "./types.js";
-import { GetLastVoucherSchema } from "./schemas.js";
-import afip from "../services/afip/client.js";
+import { MCPResponse } from "../../core/types.js";
+import { GetLastVoucherParams } from "../types.js";
+import { GetLastVoucherSchema } from "./GetLastVoucherTool.schemas.js";
+import afip from "../../services/afip/client.js";
 
 export class GetLastVoucherTool {
   static readonly name = "ultimo_comprobante_creado";

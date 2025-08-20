@@ -1,27 +1,23 @@
-import { GetVoucherInfoSchema } from "./schemas.js";
-import { GetVoucherInfoParams } from "./types.js";
-import afip from "../services/afip/client.js";
-import { MCPResponse } from "../core/types.js";
+import { GetTaxpayerDetailsSchema } from "./GetTaxpayerDetailsTool.schemas.js";
+import { GetTaxpayerDetailsParams } from "../types.js";
+import afip from "../../services/afip/client.js";
+import { MCPResponse } from "../../core/types.js";
 
-export class GetVoucherInfoTool {
-  static readonly name = "get_voucher_info";
+export class GetTaxpayerDetailsTool {
+  static readonly name = "get_taxpayer_details";
 
   static readonly metadata = {
-    title: "Obtener información de comprobante",
-    description: "Obtener información completa de un comprobante ya emitido en AFIP",
-    inputSchema: GetVoucherInfoSchema.shape,
+    title: "Obtener datos del contribuyente",
+    description: "Obtiene los datos completos de un contribuyente a partir de su CUIT",
+    inputSchema: GetTaxpayerDetailsSchema.shape,
   };
 
-  static async execute(params: GetVoucherInfoParams): Promise<MCPResponse> {
+  static async execute(params: GetTaxpayerDetailsParams): Promise<MCPResponse> {
     try {
-      const validatedParams = GetVoucherInfoSchema.parse(params);
-      const { CbteNro, PtoVta, CbteTipo } = validatedParams;
+      const validatedParams = GetTaxpayerDetailsSchema.parse(params);
+      const { taxId } = validatedParams;
 
-      const result = await afip.ElectronicBilling.getVoucherInfo(
-        CbteNro,
-        PtoVta,
-        CbteTipo
-      );
+      const result = await afip.RegisterScopeThirteen.getTaxpayerDetails(taxId);
 
       if (result === null) {
         return {
@@ -29,7 +25,7 @@ export class GetVoucherInfoTool {
             {
               type: "text" as const,
               text: JSON.stringify(
-                { message: "El comprobante no existe" },
+                { message: "El contribuyente no existe en el padrón" },
                 null,
                 2
               ),

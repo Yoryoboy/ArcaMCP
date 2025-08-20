@@ -1,6 +1,6 @@
-import { MCPResponse } from '../core/types.js';
-import afip from '../services/afip/client.js';
-import { EmptySchema } from './schemas.js';
+import { MCPResponse } from '../../core/types.js';
+import afip from '../../services/afip/client.js';
+import { EmptySchema } from '../shared.schemas.js';
 
 export class GetSalesPointsTool {
   static readonly name = "get_sales_points";

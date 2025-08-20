@@ -1,27 +1,23 @@
-import { MCPResponse } from "../core/types.js";
-import { VoucherParams, AFIPVoucherResponse } from "./types.js";
-import { VoucherSchema } from "./schemas.js";
-import afip from "../services/afip/client.js";
+import { MCPResponse } from "../../core/types.js";
+import { NextVoucherSchema } from "./CreateNextVoucherTool.schemas.js";
+import afip from "../../services/afip/client.js";
+import { NextVoucherParams } from "../types.js";
 
-export class CreateVoucherTool {
-  static readonly name = "create_voucher";
+export class CreateNextVoucherTool {
+  static readonly name = "create_next_voucher";
 
   static readonly metadata = {
-    title: "Crear comprobante electrónico",
-    description: "Crear un comprobante electrónico en AFIP con CAE asignado",
-    inputSchema: VoucherSchema.shape,
+    title: "Crear próximo comprobante electrónico",
+    description:
+      "Crear el próximo comprobante electrónico en AFIP con numeración automática y CAE asignado",
+    inputSchema: NextVoucherSchema.shape,
   };
 
-  static async execute(params: VoucherParams): Promise<MCPResponse> {
+  static async execute(params: NextVoucherParams): Promise<MCPResponse> {
     try {
-      // Validar parámetros
-      const validatedParams = VoucherSchema.parse(params);
-      
-      // Extraer el parámetro fullResponse y removerlo del objeto de datos
-      const { fullResponse, ...voucherData } = validatedParams;
+      const validatedParams = NextVoucherSchema.parse(params);
 
-      // Filtrar arrays vacíos para evitar errores de AFIP
-      const cleanedParams = { ...voucherData };
+      const cleanedParams = { ...validatedParams };
       if (cleanedParams.Iva && cleanedParams.Iva.length === 0) {
         delete cleanedParams.Iva;
       }
@@ -35,10 +31,8 @@ export class CreateVoucherTool {
         delete cleanedParams.Opcionales;
       }
 
-      // Crear el comprobante usando el SDK de AFIP con el segundo parámetro booleano
-      const result = await afip.ElectronicBilling.createVoucher(
-        cleanedParams,
-        fullResponse || false
+      const result = await afip.ElectronicBilling.createNextVoucher(
+        cleanedParams
       );
 
       return {

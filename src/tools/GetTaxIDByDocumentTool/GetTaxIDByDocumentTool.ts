@@ -1,7 +1,7 @@
-import { GetTaxIDByDocumentSchema } from "./schemas.js";
-import { GetTaxIDByDocumentParams } from "./types.js";
-import afip from "../services/afip/client.js";
-import { MCPResponse } from "../core/types.js";
+import { GetTaxIDByDocumentSchema } from "./GetTaxIDByDocumentTool.schemas.js";
+import { GetTaxIDByDocumentParams } from "../types.js";
+import afip from "../../services/afip/client.js";
+import { MCPResponse } from "../../core/types.js";
 
 export class GetTaxIDByDocumentTool {
   static readonly name = "get_tax_id_by_document";

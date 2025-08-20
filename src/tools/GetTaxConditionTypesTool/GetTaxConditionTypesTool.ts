@@ -1,19 +1,19 @@
-import { MCPResponse } from '../core/types.js';
-import afip from '../services/afip/client.js';
-import { EmptySchema } from './schemas.js';
+import { MCPResponse } from '../../core/types.js';
+import afip from '../../services/afip/client.js';
+import { EmptySchema } from '../shared.schemas.js';
 
-export class GetOptionsTypesTool {
-  static readonly name = "get_options_types";
+export class GetTaxConditionTypesTool {
+  static readonly name = "get_tax_condition_types";
 
   static readonly metadata = {
-    title: "Obtener tipos de opciones",
-    description: "Obtiene los tipos de opciones disponibles para los comprobantes en AFIP.",
+    title: "Obtener tipos de condiciones IVA",
+    description: "Obtiene los tipos de condiciones frente al IVA disponibles en AFIP (Responsable Inscripto, Monotributista, Exento, etc.).",
     inputSchema: EmptySchema.shape,
   };
 
   static async execute(): Promise<MCPResponse> {
     try {
-      const result = await afip.ElectronicBilling.getOptionsTypes();
+      const result = await afip.ElectronicBilling.executeRequest('FEParamGetCondicionIvaReceptor');
       return {
         content: [{
           type: "text" as const,

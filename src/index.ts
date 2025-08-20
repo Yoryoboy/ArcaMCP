@@ -26,7 +26,6 @@ const server = new McpServer({
   version: "1.0.0",
 });
 
-// Register all tools
 server.registerTool(
   GetLastVoucherTool.name,
   GetLastVoucherTool.metadata,
@@ -135,6 +134,5 @@ server.registerTool(
   GetTaxConditionTypesTool.execute
 );
 
-// Start STDIO transport
 const transport = new StdioServerTransport();
 await server.connect(transport);

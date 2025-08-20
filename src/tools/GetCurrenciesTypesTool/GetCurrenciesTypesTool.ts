@@ -1,19 +1,19 @@
-import { MCPResponse } from '../core/types.js';
-import afip from '../services/afip/client.js';
-import { EmptySchema } from './schemas.js';
+import { MCPResponse } from '../../core/types.js';
+import afip from '../../services/afip/client.js';
+import { EmptySchema } from '../shared.schemas.js';
 
-export class GetAliquotTypesTool {
-  static readonly name = "get_aliquot_types";
+export class GetCurrenciesTypesTool {
+  static readonly name = "get_currencies_types";
 
   static readonly metadata = {
-    title: "Obtener tipos de alícuotas",
-    description: "Obtiene los tipos de alícuotas de IVA disponibles en AFIP (0%, 10.5%, 21%, 27%, etc.).",
+    title: "Obtener tipos de monedas",
+    description: "Obtiene los tipos de monedas disponibles en AFIP (ARS, USD, EUR, etc.).",
     inputSchema: EmptySchema.shape,
   };
 
   static async execute(): Promise<MCPResponse> {
     try {
-      const result = await afip.ElectronicBilling.getAliquotTypes();
+      const result = await afip.ElectronicBilling.getCurrenciesTypes();
       return {
         content: [{
           type: "text" as const,

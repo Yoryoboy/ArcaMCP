@@ -1,19 +1,19 @@
-import { MCPResponse } from '../core/types.js';
-import afip from '../services/afip/client.js';
-import { EmptySchema } from './schemas.js';
+import { MCPResponse } from '../../core/types.js';
+import afip from '../../services/afip/client.js';
+import { EmptySchema } from '../shared.schemas.js';
 
-export class GetVoucherTypesTool {
-  static readonly name = "get_voucher_types";
+export class GetOptionsTypesTool {
+  static readonly name = "get_options_types";
 
   static readonly metadata = {
-    title: "Obtener tipos de comprobantes",
-    description: "Obtiene los tipos de comprobantes disponibles en AFIP (Factura A, B, C, Nota de Crédito, etc.).",
+    title: "Obtener tipos de opciones",
+    description: "Obtiene los tipos de opciones disponibles para los comprobantes en AFIP.",
     inputSchema: EmptySchema.shape,
   };
 
   static async execute(): Promise<MCPResponse> {
     try {
-      const result = await afip.ElectronicBilling.getVoucherTypes();
+      const result = await afip.ElectronicBilling.getOptionsTypes();
       return {
         content: [{
           type: "text" as const,

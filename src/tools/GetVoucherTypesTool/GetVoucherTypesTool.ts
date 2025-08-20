@@ -1,19 +1,19 @@
-import { MCPResponse } from '../core/types.js';
-import afip from '../services/afip/client.js';
-import { EmptySchema } from './schemas.js';
+import { MCPResponse } from '../../core/types.js';
+import afip from '../../services/afip/client.js';
+import { EmptySchema } from '../shared.schemas.js';
 
-export class GetTaxTypesTool {
-  static readonly name = "get_tax_types";
+export class GetVoucherTypesTool {
+  static readonly name = "get_voucher_types";
 
   static readonly metadata = {
-    title: "Obtener tipos de tributos",
-    description: "Obtiene los tipos de tributos disponibles en AFIP (IIBB, impuestos municipales, etc.).",
+    title: "Obtener tipos de comprobantes",
+    description: "Obtiene los tipos de comprobantes disponibles en AFIP (Factura A, B, C, Nota de Crédito, etc.).",
     inputSchema: EmptySchema.shape,
   };
 
   static async execute(): Promise<MCPResponse> {
     try {
-      const result = await afip.ElectronicBilling.getTaxTypes();
+      const result = await afip.ElectronicBilling.getVoucherTypes();
       return {
         content: [{
           type: "text" as const,

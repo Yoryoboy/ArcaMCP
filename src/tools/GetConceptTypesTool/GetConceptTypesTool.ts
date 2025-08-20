@@ -1,19 +1,19 @@
-import { MCPResponse } from '../core/types.js';
-import afip from '../services/afip/client.js';
-import { EmptySchema } from './schemas.js';
+import { MCPResponse } from '../../core/types.js';
+import afip from '../../services/afip/client.js';
+import { EmptySchema } from '../shared.schemas.js';
 
-export class GetCurrenciesTypesTool {
-  static readonly name = "get_currencies_types";
+export class GetConceptTypesTool {
+  static readonly name = "get_concept_types";
 
   static readonly metadata = {
-    title: "Obtener tipos de monedas",
-    description: "Obtiene los tipos de monedas disponibles en AFIP (ARS, USD, EUR, etc.).",
+    title: "Obtener tipos de conceptos",
+    description: "Obtiene los tipos de conceptos disponibles en AFIP (Productos, Servicios, Productos y Servicios).",
     inputSchema: EmptySchema.shape,
   };
 
   static async execute(): Promise<MCPResponse> {
     try {
-      const result = await afip.ElectronicBilling.getCurrenciesTypes();
+      const result = await afip.ElectronicBilling.getConceptTypes();
       return {
         content: [{
           type: "text" as const,

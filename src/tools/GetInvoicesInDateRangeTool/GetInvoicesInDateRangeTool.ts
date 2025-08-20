@@ -1,11 +1,11 @@
-import { MCPResponse } from "../core/types";
+import { MCPResponse } from "../../core/types.js";
 import {
   GetInvoicesInDateRangeParams,
   DateRangeResult,
   VoucherSummary,
-} from "./types";
-import { GetInvoicesInDateRangeSchema } from "./schemas";
-import afip from "../services/afip/client";
+} from "../types.js";
+import { GetInvoicesInDateRangeSchema } from "./GetInvoicesInDateRangeTool.schemas.js";
+import afip from "../../services/afip/client.js";
 
 export class GetInvoicesInDateRangeTool {
   static readonly name = "get_invoices_in_date_range";
