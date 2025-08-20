@@ -36,7 +36,7 @@ export const NextVoucherSchema = z.object({
     .number()
     .optional()
     .describe(
-      "Número de identificación del comprador. Si es consumidor final, no debe informarse."
+      "Número de identificación del comprador. Si el monto (ImpTotal) es por menos de 10000000 de pesos (10 millones) y es para consumidor Final, no es necesario declarar los datos del receptor del comprobante. (DocNro puede ser omitido)"
     ),
   CbteFch: z
     .string()
@@ -47,7 +47,7 @@ export const NextVoucherSchema = z.object({
     .number()
     .min(0)
     .describe(
-      "Importe total del comprobante. Fórmula: Importe no gravado + Importe exento + Importe neto gravado + IVA + tributos"
+      "Importe total del comprobante. Fórmula: Importe no gravado + Importe exento + Importe neto gravado + IVA + tributos. Si el monto es por menos de 10000000 de pesos (10 millones) y es para consumidor Final, no es necesario declarar los datos del receptor del comprobante. (DocNro puede ser omitido)"
     ),
   ImpTotConc: z
     .number()
