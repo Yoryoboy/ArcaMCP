@@ -40,7 +40,6 @@ export const NextVoucherSchema = z.object({
     ),
   CbteFch: z
     .string()
-    .optional()
     .describe(
       "Fecha del comprobante (yyyyMMdd). Para concepto=1: hasta 5 días anteriores/posteriores. Para 2 o 3: hasta 10 días. Si el usuario no especifica, usar la fecha actual"
     ),

@@ -2,6 +2,7 @@ import { MCPResponse } from "../../core/types.js";
 import { NextVoucherSchema } from "./CreateNextVoucherTool.schemas.js";
 import afip from "../../services/afip/client.js";
 import { NextVoucherParams } from "../types.js";
+import { processAfipError } from "../../utils/errorProcessor.js";
 
 export class CreateNextVoucherTool {
   static readonly name = "create_next_voucher";
@@ -44,19 +45,13 @@ export class CreateNextVoucherTool {
         ],
       };
     } catch (error) {
+      // Centralized error processing: preserve error + details, add deterministic instructions
+      const processed = processAfipError(error);
       return {
         content: [
           {
             type: "text" as const,
-            text: JSON.stringify(
-              {
-                error:
-                  error instanceof Error ? error.message : "Error desconocido",
-                details: error,
-              },
-              null,
-              2
-            ),
+            text: JSON.stringify(processed, null, 2),
           },
         ],
         isError: true,

@@ -20,7 +20,7 @@ export interface VoucherParams {
   DocNro?: number;
   CbteDesde: number;
   CbteHasta: number;
-  CbteFch?: string;
+  CbteFch: string;
   ImpTotal: number;
   ImpTotConc: number;
   ImpNeto: number;
@@ -45,7 +45,7 @@ export interface NextVoucherParams {
   Concepto: number;
   DocTipo: number;
   DocNro?: number;
-  CbteFch?: string;
+  CbteFch: string;
   ImpTotal: number;
   ImpTotConc: number;
   ImpNeto: number;
