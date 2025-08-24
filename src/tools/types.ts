@@ -109,11 +109,46 @@ export interface GetTaxIDByDocumentParams {
   nationalId: number;
 }
 
+// New: Invoice item structure for dynamic PDF rows
+export interface InvoiceItem {
+  code?: string; // Código
+  description: string; // Producto / Servicio
+  quantity?: number; // Cantidad (default 1)
+  unit?: string; // U. Medida (default "Unidad")
+  unitPrice?: number; // Precio Unit.
+  discountPercent?: number; // % Bonif.
+  discountAmount?: number; // Importe Bonif.
+  subtotal?: number; // Subtotal (si no se provee se calcula)
+}
+
+// Expanded: PDF generation params now accept optional overrides and items
 export interface CreatePDFParams {
   PtoVta: number;
   CbteTipo: number;
   CbteNro: number;
   fileName?: string;
+  // Optional overrides to map directly to bill.html placeholders
+  issuer?: {
+    companyName?: string; // {{ISSUER_COMPANY_NAME}}
+    cuit?: string | number; // {{ISSUER_CUIT}}
+    address?: string; // {{ISSUER_ADDRESS}}
+    taxCondition?: string; // {{ISSUER_TAX_CONDITION}}
+    grossIncome?: string; // {{ISSUER_GROSS_INCOME}}
+    startDate?: string; // {{ISSUER_START_DATE}} (yyyyMMdd o yyyy-MM-dd)
+  };
+  recipient?: {
+    name?: string; // {{RECIPIENT_NAME}}
+    cuit?: string | number; // {{RECIPIENT_CUIT}}
+    address?: string; // {{RECIPIENT_ADDRESS}}
+    taxCondition?: string; // {{RECIPIENT_TAX_CONDITION}}
+  };
+  service?: {
+    dateFrom?: string; // {{SERVICE_DATE_FROM}} (yyyyMMdd o yyyy-MM-dd)
+    dateTo?: string; // {{SERVICE_DATE_TO}} (yyyyMMdd o yyyy-MM-dd)
+    paymentDueDate?: string; // {{PAYMENT_DUE_DATE}} (yyyyMMdd o yyyy-MM-dd)
+  };
+  paymentCondition?: string; // {{PAYMENT_CONDITION}}
+  items?: InvoiceItem[]; // {{INVOICE_ITEMS}}
 }
 
 export interface GetInvoicesInDateRangeParams {

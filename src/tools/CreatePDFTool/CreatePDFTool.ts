@@ -4,6 +4,14 @@ import { CreatePDFSchema } from "./CreatePDFTool.schemas.js";
 import afip from "../../services/afip/client.js";
 import * as fs from "fs";
 import * as path from "path";
+import { fileURLToPath } from "url";
+import QRCode from "qrcode";
+import { GenerateQRSchema } from "../GenerateQRTool/GenerateQRTool.schemas.js";
+import type { InvoiceItem } from "../types.js";
+
+// ESM-safe __dirname
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = path.dirname(__filename);
 
 export class CreatePDFTool {
   static readonly name = "create_pdf";
@@ -17,7 +25,19 @@ export class CreatePDFTool {
 
   static async execute(params: CreatePDFParams): Promise<MCPResponse> {
     try {
-      const { PtoVta, CbteTipo, CbteNro, fileName } = params;
+      // Validación y normalización de entrada
+      const validated = CreatePDFSchema.parse(params);
+      const {
+        PtoVta,
+        CbteTipo,
+        CbteNro,
+        fileName,
+        issuer: issuerOverride,
+        recipient: recipientOverride,
+        service: serviceOverride,
+        paymentCondition,
+        items,
+      } = validated as any;
 
       // 1. Obtener información del comprobante
       console.log(`Obteniendo información del comprobante ${CbteNro}...`);
@@ -80,9 +100,19 @@ export class CreatePDFTool {
         }
       }
 
-      // 4. Leer template HTML
-      const templatePath = path.join(__dirname, "../../templates/bill.html");
-      let htmlTemplate = fs.readFileSync(templatePath, "utf8");
+      // 4. Leer template HTML (resolución robusta)
+      const candidatePaths = [
+        path.resolve(process.cwd(), "templates/bill.html"),
+        path.resolve(__dirname, "../../../templates/bill.html"),
+        path.resolve(__dirname, "../../templates/bill.html"),
+      ];
+      const foundTemplate = candidatePaths.find((p) => fs.existsSync(p));
+      if (!foundTemplate) {
+        throw new Error(
+          "No se encontró la plantilla HTML 'templates/bill.html'. Asegúrese de que exista en la raíz del proyecto."
+        );
+      }
+      let htmlTemplate = fs.readFileSync(foundTemplate, "utf8");
 
       // 5. Formatear fechas
       const formatDate = (dateStr: string) => {
@@ -94,27 +124,51 @@ export class CreatePDFTool {
       };
 
       // 6. Preparar datos para reemplazar placeholders
-      const issuerName =
+      const formatDateAny = (s?: string) => {
+        if (!s) return "";
+        if (/^\d{8}$/.test(s))
+          return `${s.slice(6, 8)}/${s.slice(4, 6)}/${s.slice(0, 4)}`;
+        const m = s.match(/^(\d{4})-(\d{2})-(\d{2})$/);
+        if (m) return `${m[3]}/${m[2]}/${m[1]}`;
+        return s;
+      };
+
+      const issuerNameFromAFIP =
         (issuerDetails as any)?.persona?.razonSocial ||
         `${(issuerDetails as any)?.persona?.nombre || ""} ${
           (issuerDetails as any)?.persona?.apellido || ""
         }`.trim() ||
         "Empresa no identificada";
-
+      const issuerCompanyName =
+        issuerOverride?.companyName || issuerNameFromAFIP;
       const issuerAddress =
+        issuerOverride?.address ||
         (issuerDetails as any)?.persona?.domicilio?.[0]?.direccion ||
         "Dirección no disponible";
+      const issuerTaxCondition = issuerOverride?.taxCondition || "No informado";
+      const issuerGrossIncome = issuerOverride?.grossIncome || "";
+      const issuerStartDateRaw =
+        issuerOverride?.startDate ||
+        (issuerDetails as any)?.persona?.fechaInicioActividades;
+      const issuerStartDate = formatDateAny(issuerStartDateRaw);
 
-      const recipientName =
+      const recipientNameFromAFIP =
         (recipientDetails as any)?.persona?.razonSocial ||
         `${(recipientDetails as any)?.persona?.nombre || ""} ${
           (recipientDetails as any)?.persona?.apellido || ""
         }`.trim() ||
         (docTipo === 99 ? "Consumidor Final" : "Cliente no identificado");
-
+      const recipientName = recipientOverride?.name || recipientNameFromAFIP;
       const recipientAddress =
+        recipientOverride?.address ||
         (recipientDetails as any)?.persona?.domicilio?.[0]?.direccion ||
         (docTipo === 99 ? "" : "Dirección no disponible");
+      const recipientTaxCondition =
+        recipientOverride?.taxCondition ||
+        (docTipo === 99 ? "Consumidor Final" : "No informado");
+      const recipientDoc =
+        recipientOverride?.cuit ??
+        (docNro && docNro !== 0 ? docNro.toString() : "");
 
       // Formatear montos
       const formatAmount = (amount: number) => {
@@ -124,33 +178,72 @@ export class CreatePDFTool {
         });
       };
 
-      // 7. Reemplazar placeholders en el HTML
-      const replacements = {
-        "{{ISSUER_COMPANY_NAME}}": issuerName,
-        "{{ISSUER_CUIT}}": issuerCuit,
-        "{{ISSUER_ADDRESS}}": issuerAddress,
-        "{{RECIPIENT_NAME}}": recipientName,
-        "{{RECIPIENT_CUIT}}": docNro && docNro !== 0 ? docNro.toString() : "",
-        "{{RECIPIENT_ADDRESS}}": recipientAddress,
-        "{{VOUCHER_TYPE}}": this.getVoucherTypeName(CbteTipo),
-        "{{SALES_POINT}}": PtoVta.toString().padStart(5, "0"),
+      // 7. Generar QR en memoria y los ítems dinámicos
+      const qrDataUrl = await this.buildQRDataUrl(voucher, String(issuerCuit));
+      const itemsHtml = this.generateInvoiceItems(
+        items as InvoiceItem[] | undefined,
+        voucher
+      );
+
+      // Subtotal por ítems si se brindaron
+      let computedItemsSubtotal = 0;
+      if (Array.isArray(items) && items.length > 0) {
+        for (const it of items) {
+          const qty = it.quantity ?? 1;
+          const unitPrice = it.unitPrice ?? 0;
+          const discPct = it.discountPercent ?? 0;
+          const discAmt =
+            it.discountAmount ??
+            (discPct > 0 ? qty * unitPrice * (discPct / 100) : 0);
+          const sub = it.subtotal ?? qty * unitPrice - discAmt;
+          computedItemsSubtotal += sub;
+        }
+      }
+
+      // 8. Reemplazar placeholders en el HTML (usando split/join para evitar regex)
+      const replacements: Record<string, string> = {
+        "{{VOUCHER_TYPE_LETTER}}": this.getVoucherTypeLetter(CbteTipo),
+        "{{ISSUER_COMPANY_NAME}}": String(issuerCompanyName),
+        "{{ISSUER_CUIT}}": String(issuerOverride?.cuit ?? issuerCuit),
+        "{{ISSUER_ADDRESS}}": String(issuerAddress),
+        "{{ISSUER_TAX_CONDITION}}": String(issuerTaxCondition),
+        "{{ISSUER_GROSS_INCOME}}": String(issuerGrossIncome || ""),
+        "{{ISSUER_START_DATE}}": String(issuerStartDate || ""),
+        "{{POINT_OF_SALE}}": PtoVta.toString().padStart(5, "0"),
         "{{VOUCHER_NUMBER}}": CbteNro.toString().padStart(8, "0"),
-        "{{INVOICE_DATE}}": formatDate(voucher.CbteFch || ""),
-        "{{SUBTOTAL}}": formatAmount(voucher.ImpNeto || 0),
+        "{{ISSUE_DATE}}": formatDate(voucher.CbteFch || ""),
+        "{{RECIPIENT_CUIT}}": String(recipientDoc || ""),
+        "{{RECIPIENT_NAME}}": String(recipientName),
+        "{{RECIPIENT_TAX_CONDITION}}": String(recipientTaxCondition),
+        "{{RECIPIENT_ADDRESS}}": String(recipientAddress),
+        "{{PAYMENT_CONDITION}}": String(paymentCondition || ""),
+        "{{SERVICE_DATE_FROM}}": String(
+          serviceOverride?.dateFrom ||
+            (voucher.FchServDesde ? formatDate(voucher.FchServDesde) : "")
+        ),
+        "{{SERVICE_DATE_TO}}": String(
+          serviceOverride?.dateTo ||
+            (voucher.FchServHasta ? formatDate(voucher.FchServHasta) : "")
+        ),
+        "{{PAYMENT_DUE_DATE}}": String(
+          serviceOverride?.paymentDueDate ||
+            (voucher.FchVtoPago ? formatDate(voucher.FchVtoPago) : "")
+        ),
+        "{{SUBTOTAL}}": formatAmount(
+          (computedItemsSubtotal || 0) > 0
+            ? computedItemsSubtotal
+            : voucher.ImpNeto || 0
+        ),
         "{{OTHER_TAXES}}": formatAmount(voucher.ImpTrib || 0),
         "{{TOTAL_AMOUNT}}": formatAmount(voucher.ImpTotal || 0),
         "{{CAE_NUMBER}}": voucher.CAE || "",
         "{{CAE_EXPIRY_DATE}}": formatDate(voucher.CAEFchVto || ""),
-        "{{QR_CODE_DATA}}": this.generateQRCodeData(voucher, issuerCuit),
-        "{{INVOICE_ITEMS}}": this.generateInvoiceItems(voucher),
+        "{{QR_CODE_DATA}}": qrDataUrl,
+        "{{INVOICE_ITEMS}}": itemsHtml,
       };
 
-      // Aplicar reemplazos
       for (const [placeholder, value] of Object.entries(replacements)) {
-        htmlTemplate = htmlTemplate.replace(
-          new RegExp(placeholder, "g"),
-          value
-        );
+        htmlTemplate = htmlTemplate.split(placeholder).join(value ?? "");
       }
 
       // 8. Generar PDF
@@ -185,6 +278,7 @@ export class CreatePDFTool {
                   (pdfResult as any).file_url ||
                   (pdfResult as any).url ||
                   pdfResult.file,
+                expiresInHours: 24,
                 voucherInfo: {
                   type: this.getVoucherTypeName(CbteTipo),
                   number: CbteNro,
@@ -194,12 +288,12 @@ export class CreatePDFTool {
                   caeExpiry: formatDate(voucher.CAEFchVto || ""),
                 },
                 issuer: {
-                  name: issuerName,
-                  cuit: issuerCuit,
+                  name: issuerCompanyName,
+                  cuit: String(issuerOverride?.cuit ?? issuerCuit),
                 },
                 recipient: {
                   name: recipientName,
-                  document: docNro && docNro !== 0 ? docNro.toString() : "N/A",
+                  document: String(recipientDoc || "N/A"),
                 },
               },
               null,
@@ -244,41 +338,125 @@ export class CreatePDFTool {
     return types[type] || `Tipo ${type}`;
   }
 
-  private static generateQRCodeData(voucher: any, issuerCuit: string): string {
-    // Generar datos básicos para QR (simplificado)
-    const qrData = {
-      ver: 1,
-      fecha: voucher.CbteFch,
-      cuit: issuerCuit,
-      ptoVta: voucher.PtoVta,
-      tipoCmp: voucher.CbteTipo,
-      nroCmp: voucher.CbteNro,
-      importe: voucher.ImpTotal,
-      moneda: voucher.MonId || "PES",
-      ctz: voucher.MonCotiz || 1,
-      cae: voucher.CAE,
-    };
-
-    // En producción, esto debería generar un QR real
-    // Por ahora retornamos un placeholder
-    return "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mNkYPhfDwAChwGA60e6kgAAAABJRU5ErkJggg==";
+  private static getVoucherTypeLetter(type: number): string {
+    if ([1, 2, 3].includes(type)) return "A";
+    if ([6, 7, 8].includes(type)) return "B";
+    if ([11, 12, 13].includes(type)) return "C";
+    return "";
   }
 
-  private static generateInvoiceItems(voucher: any): string {
-    // Para facturas C simples, generar una línea básica
-    const total = voucher.ImpTotal || 0;
-    const description = "Servicios profesionales";
+  private static async buildQRDataUrl(
+    voucher: any,
+    issuerCuit: string
+  ): Promise<string> {
+    try {
+      const MonId = (voucher.MonId || "PES").toString().toUpperCase();
+      const MonCotiz = MonId === "PES" ? 1 : voucher.MonCotiz || 1;
+      const parsed = GenerateQRSchema.parse({
+        Ver: 1,
+        CbteFch: voucher.CbteFch,
+        Cuit: issuerCuit,
+        PtoVta: voucher.PtoVta,
+        CbteTipo: voucher.CbteTipo,
+        CbteNro: voucher.CbteNro,
+        ImpTotal: voucher.ImpTotal,
+        MonId,
+        MonCotiz,
+        DocTipo: voucher.DocTipo,
+        DocNro: voucher.DocNro,
+        TipoCodAut: "E",
+        CodAut: voucher.CAE,
+      });
 
+      const formatDateISO = (yyyymmdd: string) =>
+        `${yyyymmdd.slice(0, 4)}-${yyyymmdd.slice(4, 6)}-${yyyymmdd.slice(
+          6,
+          8
+        )}`;
+
+      const payload: Record<string, any> = {
+        ver: parsed.Ver ?? 1,
+        fecha: formatDateISO(parsed.CbteFch),
+        cuit: parsed.Cuit,
+        ptoVta: parsed.PtoVta,
+        tipoCmp: parsed.CbteTipo,
+        nroCmp: parsed.CbteNro,
+        importe: parsed.ImpTotal,
+        moneda: parsed.MonId,
+        ctz: parsed.MonCotiz,
+        ...(parsed.DocTipo !== undefined && parsed.DocNro !== undefined
+          ? { tipoDocRec: parsed.DocTipo, nroDocRec: parsed.DocNro }
+          : {}),
+        tipoCodAut: parsed.TipoCodAut,
+        codAut: String(parsed.CodAut),
+      };
+
+      const base64 = Buffer.from(JSON.stringify(payload), "utf8").toString(
+        "base64"
+      );
+      const qrText = `https://www.afip.gob.ar/fe/qr/?p=${encodeURIComponent(
+        base64
+      )}`;
+      const dataUrl = await QRCode.toDataURL(qrText, {
+        errorCorrectionLevel: "M",
+      });
+      return dataUrl;
+    } catch (e) {
+      console.warn("No se pudo generar QR en memoria, usando placeholder.", e);
+      return "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mNkYPhfDwAChwGA60e6kgAAAABJRU5ErkJggg==";
+    }
+  }
+
+  private static generateInvoiceItems(
+    items: InvoiceItem[] | undefined,
+    voucher: any
+  ): string {
+    const fmt = (n: number) =>
+      n.toLocaleString("es-AR", {
+        minimumFractionDigits: 2,
+        maximumFractionDigits: 2,
+      });
+    if (Array.isArray(items) && items.length > 0) {
+      return items
+        .map((it, idx) => {
+          const code = it.code ?? String(idx + 1).padStart(3, "0");
+          const qty = it.quantity ?? 1;
+          const unit = it.unit ?? "Unidad";
+          const unitPrice = it.unitPrice ?? 0;
+          const discPct = it.discountPercent ?? 0;
+          const discAmt =
+            it.discountAmount ??
+            (discPct > 0 ? qty * unitPrice * (discPct / 100) : 0);
+          const subtotal = it.subtotal ?? qty * unitPrice - discAmt;
+          return `
+            <tr>
+              <td>${code}</td>
+              <td>${(it.description || "")
+                .replace(/</g, "&lt;")
+                .replace(/>/g, "&gt;")}</td>
+              <td>${fmt(qty)}</td>
+              <td>${unit}</td>
+              <td>${fmt(unitPrice)}</td>
+              <td>${fmt(discPct)}</td>
+              <td>${fmt(discAmt)}</td>
+              <td>${fmt(subtotal)}</td>
+            </tr>
+          `;
+        })
+        .join("");
+    }
+    // Fallback: una línea básica usando total del voucher
+    const total = Number(voucher?.ImpTotal || 0);
     return `
       <tr>
         <td>001</td>
-        <td>${description}</td>
+        <td>Servicios profesionales</td>
         <td>1,00</td>
         <td>Unidad</td>
-        <td>${total.toLocaleString("es-AR", { minimumFractionDigits: 2 })}</td>
+        <td>${fmt(total)}</td>
         <td>0,00</td>
         <td>0,00</td>
-        <td>${total.toLocaleString("es-AR", { minimumFractionDigits: 2 })}</td>
+        <td>${fmt(total)}</td>
       </tr>
     `;
   }
