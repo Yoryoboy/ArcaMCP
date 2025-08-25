@@ -2,6 +2,7 @@ import { MCPResponse } from "../../core/types.js";
 import { CreatePDFParams } from "../types.js";
 import { CreatePDFSchema } from "./CreatePDFTool.schemas.js";
 import afip from "../../services/afip/client.js";
+import config from "../../config.js";
 import * as fs from "fs";
 import * as path from "path";
 import { fileURLToPath } from "url";
@@ -12,6 +13,127 @@ import type { InvoiceItem } from "../types.js";
 // ESM-safe __dirname
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
+
+// --- Helper functions (top-level to avoid 'this' context issues) ---
+const getVoucherTypeName = (type: number): string => {
+  const types: { [key: number]: string } = {
+    1: "Factura A",
+    2: "Nota de Débito A",
+    3: "Nota de Crédito A",
+    6: "Factura B",
+    7: "Nota de Débito B",
+    8: "Nota de Crédito B",
+    11: "Factura C",
+    12: "Nota de Débito C",
+    13: "Nota de Crédito C",
+  };
+  return types[type] || `Tipo ${type}`;
+};
+
+const getVoucherTypeLetter = (type: number): string => {
+  if ([1, 2, 3].includes(type)) return "A";
+  if ([6, 7, 8].includes(type)) return "B";
+  if ([11, 12, 13].includes(type)) return "C";
+  return "";
+};
+
+const buildQRDataUrl = async (voucher: any, issuerCuit: string): Promise<string> => {
+  try {
+    const MonId = (voucher.MonId || "PES").toString().toUpperCase();
+    const MonCotiz = MonId === "PES" ? 1 : voucher.MonCotiz || 1;
+    const parsed = GenerateQRSchema.parse({
+      Ver: 1,
+      CbteFch: voucher.CbteFch,
+      Cuit: issuerCuit,
+      PtoVta: voucher.PtoVta,
+      CbteTipo: voucher.CbteTipo,
+      CbteNro: voucher.CbteNro,
+      ImpTotal: voucher.ImpTotal,
+      MonId,
+      MonCotiz,
+      DocTipo: voucher.DocTipo,
+      DocNro: voucher.DocNro,
+      TipoCodAut: "E",
+      CodAut: voucher.CAE,
+    });
+
+    const formatDateISO = (yyyymmdd: string) =>
+      `${yyyymmdd.slice(0, 4)}-${yyyymmdd.slice(4, 6)}-${yyyymmdd.slice(6, 8)}`;
+
+    const payload: Record<string, any> = {
+      ver: parsed.Ver ?? 1,
+      fecha: formatDateISO(parsed.CbteFch),
+      cuit: parsed.Cuit,
+      ptoVta: parsed.PtoVta,
+      tipoCmp: parsed.CbteTipo,
+      nroCmp: parsed.CbteNro,
+      importe: parsed.ImpTotal,
+      moneda: parsed.MonId,
+      ctz: parsed.MonCotiz,
+      ...(parsed.DocTipo !== undefined && parsed.DocNro !== undefined
+        ? { tipoDocRec: parsed.DocTipo, nroDocRec: parsed.DocNro }
+        : {}),
+      tipoCodAut: parsed.TipoCodAut,
+      codAut: String(parsed.CodAut),
+    };
+
+    const base64 = Buffer.from(JSON.stringify(payload), "utf8").toString("base64");
+    const qrText = `https://www.afip.gob.ar/fe/qr/?p=${encodeURIComponent(base64)}`;
+    const dataUrl = await QRCode.toDataURL(qrText, { errorCorrectionLevel: "M" });
+    return dataUrl;
+  } catch (e) {
+    console.warn("No se pudo generar QR en memoria, usando placeholder.", e);
+    return "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mNkYPhfDwAChwGA60e6kgAAAABJRU5ErkJggg==";
+  }
+};
+
+const generateInvoiceItems = (items: InvoiceItem[] | undefined, voucher: any): string => {
+  const fmt = (n: number) =>
+    n.toLocaleString("es-AR", {
+      minimumFractionDigits: 2,
+      maximumFractionDigits: 2,
+    });
+  if (Array.isArray(items) && items.length > 0) {
+    return items
+      .map((it, idx) => {
+        const code = it.code ?? String(idx + 1).padStart(3, "0");
+        const qty = it.quantity ?? 1;
+        const unit = it.unit ?? "Unidad";
+        const unitPrice = it.unitPrice ?? 0;
+        const discPct = it.discountPercent ?? 0;
+        const discAmt =
+          it.discountAmount ?? (discPct > 0 ? qty * unitPrice * (discPct / 100) : 0);
+        const subtotal = it.subtotal ?? qty * unitPrice - discAmt;
+        return `
+            <tr>
+              <td>${code}</td>
+              <td>${(it.description || "").replace(/</g, "&lt;").replace(/>/g, "&gt;")}</td>
+              <td>${fmt(qty)}</td>
+              <td>${unit}</td>
+              <td>${fmt(unitPrice)}</td>
+              <td>${fmt(discPct)}</td>
+              <td>${fmt(discAmt)}</td>
+              <td>${fmt(subtotal)}</td>
+            </tr>
+          `;
+      })
+      .join("");
+  }
+  // Fallback: una línea básica usando total del voucher
+  const total = Number(voucher?.ImpTotal || 0);
+  return `
+      <tr>
+        <td>001</td>
+        <td>Servicios profesionales</td>
+        <td>1,00</td>
+        <td>Unidad</td>
+        <td>${fmt(total)}</td>
+        <td>0,00</td>
+        <td>0,00</td>
+        <td>${fmt(total)}</td>
+      </tr>
+    `;
+};
 
 export class CreatePDFTool {
   static readonly name = "create_pdf";
@@ -39,7 +161,7 @@ export class CreatePDFTool {
         items,
       } = validated as any;
 
-      // 1. Obtener información del comprobante
+      // 1. Obtener información del comprobante (manejo robusto de formas de respuesta)
       console.log(`Obteniendo información del comprobante ${CbteNro}...`);
       const voucherInfo = await afip.ElectronicBilling.getVoucherInfo(
         CbteNro,
@@ -47,32 +169,87 @@ export class CreatePDFTool {
         CbteTipo
       );
 
-      if (!voucherInfo || !voucherInfo.FECompConsResp) {
+      if (!voucherInfo) {
         throw new Error("No se pudo obtener información del comprobante");
       }
 
-      const voucher = voucherInfo.FECompConsResp.ResultGet;
+      // AFIP SDK puede devolver distintos envoltorios:
+      // - { FECompConsResp: { ResultGet: {...} } }
+      // - { FECompConsResp: {...} }
+      // - { ResultGet: {...} }
+      // - { ...camposDelComprobante }
+      let voucher: any = undefined as any;
+      const raw: any = voucherInfo as any;
+      if (raw?.FECompConsResp?.ResultGet) {
+        voucher = raw.FECompConsResp.ResultGet;
+      } else if (raw?.FECompConsResp) {
+        voucher = raw.FECompConsResp;
+      } else if (raw?.ResultGet) {
+        voucher = raw.ResultGet;
+      } else {
+        voucher = raw;
+      }
+
       if (!voucher) {
         throw new Error("Comprobante no encontrado");
       }
 
-      // 2. Obtener datos del emisor (desde variable de entorno AFIP_CUIT)
-      const issuerCuit = process.env.AFIP_CUIT;
-      if (!issuerCuit) {
-        throw new Error("AFIP_CUIT no configurado en variables de entorno");
-      }
+      // Normalización de campos para el resto del flujo
+      // Asegurar identificadores básicos
+      voucher.PtoVta = voucher.PtoVta ?? PtoVta;
+      voucher.CbteTipo = voucher.CbteTipo ?? CbteTipo;
+      voucher.CbteNro = voucher.CbteNro ?? voucher.CbteDesde ?? CbteNro;
+      // Normalizar CAE y fecha de vencimiento de CAE
+      voucher.CAE =
+        voucher.CAE ??
+        voucher.CodAutorizacion ??
+        voucher.CodAut ??
+        voucher.codAutorizacion;
+      voucher.CAEFchVto =
+        voucher.CAEFchVto ?? voucher.FchVto ?? voucher.caeFchVto;
+      // Asegurar moneda/cotización
+      voucher.MonId = (voucher.MonId ?? voucher.monId ?? "PES")
+        .toString()
+        .toUpperCase();
+      voucher.MonCotiz = voucher.MonCotiz ?? voucher.ctz ?? 1;
+      // Documento receptor (puede venir undefined para consumidor final)
+      voucher.DocTipo = voucher.DocTipo ?? voucher.tipoDocRec ?? 99;
+      voucher.DocNro = voucher.DocNro ?? voucher.nroDocRec ?? 0;
 
-      console.log(`Obteniendo datos del emisor CUIT: ${issuerCuit}...`);
-      const issuerDetails = await afip.RegisterScopeThirteen.getTaxpayerDetails(
-        parseInt(issuerCuit)
+      // 2. Obtener datos del emisor (flexible con overrides y fallback en dev)
+      const skipPadron =
+        String(process.env.SKIP_PADRON || "") === "1" ||
+        String(process.env.NODE_ENV || "").toLowerCase() === "development";
+      const issuerCuitResolved = String(
+        (issuerOverride as any)?.cuit ??
+          process.env.AFIP_CUIT ??
+          (config as any)?.CUIT ??
+          "20111111112" // CUIT dummy para entornos de desarrollo
       );
+
+      let issuerDetails: any = null;
+      if (!skipPadron) {
+        try {
+          console.log(
+            `Obteniendo datos del emisor CUIT: ${issuerCuitResolved}...`
+          );
+          issuerDetails = await afip.RegisterScopeThirteen.getTaxpayerDetails(
+            parseInt(issuerCuitResolved)
+          );
+        } catch (e) {
+          console.warn(
+            `No se pudieron obtener datos del emisor desde AFIP (se usarán datos mock/override).`,
+            e
+          );
+        }
+      }
 
       // 3. Obtener datos del receptor
       let recipientDetails = null;
       const docNro = voucher.DocNro;
       const docTipo = voucher.DocTipo;
 
-      if (docNro && docNro !== 0 && docTipo !== 99) {
+      if (!skipPadron && docNro && docNro !== 0 && docTipo !== 99) {
         // No es consumidor final
         try {
           console.log(
@@ -179,8 +356,11 @@ export class CreatePDFTool {
       };
 
       // 7. Generar QR en memoria y los ítems dinámicos
-      const qrDataUrl = await this.buildQRDataUrl(voucher, String(issuerCuit));
-      const itemsHtml = this.generateInvoiceItems(
+      const qrDataUrl = await buildQRDataUrl(
+        voucher,
+        String(issuerCuitResolved)
+      );
+      const itemsHtml = generateInvoiceItems(
         items as InvoiceItem[] | undefined,
         voucher
       );
@@ -202,9 +382,9 @@ export class CreatePDFTool {
 
       // 8. Reemplazar placeholders en el HTML (usando split/join para evitar regex)
       const replacements: Record<string, string> = {
-        "{{VOUCHER_TYPE_LETTER}}": this.getVoucherTypeLetter(CbteTipo),
+        "{{VOUCHER_TYPE_LETTER}}": getVoucherTypeLetter(CbteTipo),
         "{{ISSUER_COMPANY_NAME}}": String(issuerCompanyName),
-        "{{ISSUER_CUIT}}": String(issuerOverride?.cuit ?? issuerCuit),
+        "{{ISSUER_CUIT}}": String(issuerCuitResolved),
         "{{ISSUER_ADDRESS}}": String(issuerAddress),
         "{{ISSUER_TAX_CONDITION}}": String(issuerTaxCondition),
         "{{ISSUER_GROSS_INCOME}}": String(issuerGrossIncome || ""),
@@ -280,7 +460,7 @@ export class CreatePDFTool {
                   pdfResult.file,
                 expiresInHours: 24,
                 voucherInfo: {
-                  type: this.getVoucherTypeName(CbteTipo),
+                  type: getVoucherTypeName(CbteTipo),
                   number: CbteNro,
                   salesPoint: PtoVta,
                   total: voucher.ImpTotal,
@@ -289,7 +469,7 @@ export class CreatePDFTool {
                 },
                 issuer: {
                   name: issuerCompanyName,
-                  cuit: String(issuerOverride?.cuit ?? issuerCuit),
+                  cuit: String(issuerCuitResolved),
                 },
                 recipient: {
                   name: recipientName,
