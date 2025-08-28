@@ -1,5 +1,5 @@
 import { MCPResponse } from "../../core/types.js";
-import { GetLastVoucherParams } from "../types.js";
+import { AFIPLastVoucherResponse, GetLastVoucherParams } from "../types.js";
 import { GetLastVoucherSchema } from "./GetLastVoucherTool.schemas.js";
 import afip from "../../services/afip/client.js";
 
@@ -18,10 +18,11 @@ export class GetLastVoucherTool {
   static async execute(params: GetLastVoucherParams): Promise<MCPResponse> {
     try {
       // 1. Realizar consulta a AFIP
-      const lastVoucher = await afip.ElectronicBilling.getLastVoucher(
-        params.PtoVta,
-        params.CbteTipo
-      );
+      const lastVoucher: AFIPLastVoucherResponse =
+        await afip.ElectronicBilling.getLastVoucher(
+          params.PtoVta,
+          params.CbteTipo
+        );
 
       // 2. Extraer número del comprobante
       const FECompUltimoAutorizadoResult = lastVoucher.CbteNro || lastVoucher;

@@ -1,8 +1,7 @@
-// Tipos específicos de AFIP
-export interface GetLastVoucherParams {
-  PtoVta: number;
-  CbteTipo: number;
-}
+import z from "zod";
+import { GetLastVoucherSchema } from "./GetLastVoucherTool/GetLastVoucherTool.schemas";
+
+export type GetLastVoucherParams = z.infer<typeof GetLastVoucherSchema>;
 
 export interface AFIPLastVoucherResponse {
   CbteNro: number;
