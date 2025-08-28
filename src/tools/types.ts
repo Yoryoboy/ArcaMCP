@@ -1,5 +1,22 @@
 import z from "zod";
 import { GetLastVoucherSchema } from "./GetLastVoucherTool/GetLastVoucherTool.schemas";
+import {
+  ComprobantesAsociadosSchema,
+  IvaItemSchema,
+  OpcionalesItemSchema,
+  TributoItemSchema,
+  VoucherCoreSchema,
+} from "./shared.schemas";
+import { VoucherSchema } from "./CreateVoucherTool/CreateVoucherTool.schemas";
+import { GetExchangeRateSchema } from "./GetExchangeRateTool/GetExchangeRateTool.schemas";
+import { GetVoucherInfoSchema } from "./GetVoucherInfoTool/GetVoucherInfoTool.schemas";
+import { GetTaxpayerDetailsSchema } from "./GetTaxpayerDetailsTool/GetTaxpayerDetailsTool.schemas";
+import { GetTaxIDByDocumentSchema } from "./GetTaxIDByDocumentTool/GetTaxIDByDocumentTool.schemas";
+import {
+  CreatePDFSchema,
+  InvoiceItemSchema,
+} from "./CreatePDFTool/CreatePDFTool.schemas";
+import { GetInvoicesInDateRangeSchema } from "./GetInvoicesInDateRangeTool/GetInvoicesInDateRangeTool.schemas";
 
 export type GetLastVoucherParams = z.infer<typeof GetLastVoucherSchema>;
 
@@ -9,156 +26,36 @@ export interface AFIPLastVoucherResponse {
   CbteTipo: number;
 }
 
+export type NextVoucherParams = z.infer<typeof VoucherCoreSchema>;
+
 // Tipos para creación de comprobantes
-export interface VoucherParams {
-  CantReg: number;
-  PtoVta: number;
-  CbteTipo: number;
-  Concepto: number;
-  DocTipo: number;
-  DocNro?: number;
-  CbteDesde: number;
-  CbteHasta: number;
-  CbteFch: string;
-  ImpTotal: number;
-  ImpTotConc: number;
-  ImpNeto: number;
-  ImpOpEx: number;
-  ImpIVA: number;
-  ImpTrib: number;
-  MonId: string;
-  MonCotiz: number;
-  CondicionIVAReceptorId: number;
-  FchServDesde?: string;
-  FchServHasta?: string;
-  FchVtoPago?: string;
-  Iva?: IvaItem[];
-  Tributos?: TributoItem[];
-  CbtesAsoc?: ComprobantesAsociados[];
-  Opcionales?: OpcionalesItem[];
-}
+export type VoucherParams = z.infer<typeof VoucherSchema>;
 
-export interface NextVoucherParams {
-  PtoVta: number;
-  CbteTipo: number;
-  Concepto: number;
-  DocTipo: number;
-  DocNro?: number;
-  CbteFch: string;
-  ImpTotal: number;
-  ImpTotConc: number;
-  ImpNeto: number;
-  ImpOpEx: number;
-  ImpIVA: number;
-  ImpTrib: number;
-  MonId: string;
-  MonCotiz: number;
-  CondicionIVAReceptorId: number;
-  FchServDesde?: string;
-  FchServHasta?: string;
-  FchVtoPago?: string;
-  Iva?: IvaItem[];
-  Tributos?: TributoItem[];
-  CbtesAsoc?: ComprobantesAsociados[];
-  Opcionales?: OpcionalesItem[];
-}
+export type IvaItem = z.infer<typeof IvaItemSchema>;
 
-export interface IvaItem {
-  Id: number;
-  BaseImp: number;
-  Importe: number;
-}
+export type TributoItem = z.infer<typeof TributoItemSchema>;
 
-export interface TributoItem {
-  Id: number;
-  Desc?: string;
-  BaseImp: number;
-  Alic: number;
-  Importe: number;
-}
+export type ComprobantesAsociados = z.infer<typeof ComprobantesAsociadosSchema>;
 
-export interface ComprobantesAsociados {
-  Tipo: number;
-  PtoVta: number;
-  Nro: number;
-  Cuit?: string;
-}
+export type OpcionalesItem = z.infer<typeof OpcionalesItemSchema>;
 
-export interface OpcionalesItem {
-  Id: string;
-  Valor: string;
-}
+export type GetExchangeRateParams = z.infer<typeof GetExchangeRateSchema>;
 
-export interface GetExchangeRateParams {
-  MonId: string;
-  FchCotiz: string;
-}
+export type GetVoucherInfoParams = z.infer<typeof GetVoucherInfoSchema>;
 
-export interface GetVoucherInfoParams {
-  CbteNro: number;
-  PtoVta: number;
-  CbteTipo: number;
-}
+export type GetTaxpayerDetailsParams = z.infer<typeof GetTaxpayerDetailsSchema>;
 
-export interface GetTaxpayerDetailsParams {
-  taxId: number;
-}
-
-export interface GetTaxIDByDocumentParams {
-  nationalId: number;
-}
+export type GetTaxIDByDocumentParams = z.infer<typeof GetTaxIDByDocumentSchema>;
 
 // New: Invoice item structure for dynamic PDF rows
-export interface InvoiceItem {
-  code?: string; // Código
-  description: string; // Producto / Servicio
-  quantity?: number; // Cantidad (default 1)
-  unit?: string; // U. Medida (default "Unidad")
-  unitPrice?: number; // Precio Unit.
-  discountPercent?: number; // % Bonif.
-  discountAmount?: number; // Importe Bonif.
-  subtotal?: number; // Subtotal (si no se provee se calcula)
-}
+export type InvoiceItem = z.infer<typeof InvoiceItemSchema>;
 
 // Expanded: PDF generation params now accept optional overrides and items
-export interface CreatePDFParams {
-  PtoVta: number;
-  CbteTipo: number;
-  CbteNro: number;
-  fileName?: string;
-  // Optional overrides to map directly to bill.html placeholders
-  issuer?: {
-    companyName?: string; // {{ISSUER_COMPANY_NAME}}
-    cuit?: string | number; // {{ISSUER_CUIT}}
-    address?: string; // {{ISSUER_ADDRESS}}
-    taxCondition?: string; // {{ISSUER_TAX_CONDITION}}
-    grossIncome?: string; // {{ISSUER_GROSS_INCOME}}
-    startDate?: string; // {{ISSUER_START_DATE}} (yyyyMMdd o yyyy-MM-dd)
-  };
-  recipient?: {
-    name?: string; // {{RECIPIENT_NAME}}
-    cuit?: string | number; // {{RECIPIENT_CUIT}}
-    address?: string; // {{RECIPIENT_ADDRESS}}
-    taxCondition?: string; // {{RECIPIENT_TAX_CONDITION}}
-  };
-  service?: {
-    dateFrom?: string; // {{SERVICE_DATE_FROM}} (yyyyMMdd o yyyy-MM-dd)
-    dateTo?: string; // {{SERVICE_DATE_TO}} (yyyyMMdd o yyyy-MM-dd)
-    paymentDueDate?: string; // {{PAYMENT_DUE_DATE}} (yyyyMMdd o yyyy-MM-dd)
-  };
-  paymentCondition?: string; // {{PAYMENT_CONDITION}}
-  items?: InvoiceItem[]; // {{INVOICE_ITEMS}}
-}
+export type CreatePDFParams = z.infer<typeof CreatePDFSchema>;
 
-export interface GetInvoicesInDateRangeParams {
-  PtoVta: number;
-  CbteTipo: number;
-  fechaDesde: string;
-  fechaHasta: string;
-  batchSize?: number;
-  includeDetails?: boolean;
-  maxVouchers?: number;
-}
+export type GetInvoicesInDateRangeParams = z.infer<
+  typeof GetInvoicesInDateRangeSchema
+>;
 
 export interface VoucherSummary {
   cbteNro: number;
@@ -190,13 +87,6 @@ export interface DateRangeResult {
     batchQueries: number;
     executionTimeMs: number;
   };
-}
-
-export interface AFIPVoucherResponse {
-  CAE: string;
-  CAEFchVto: string;
-  voucher_number?: number;
-  Resultado?: string;
 }
 
 // Types specific to AFIP QR payload as per official specification
