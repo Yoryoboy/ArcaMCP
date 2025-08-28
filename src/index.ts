@@ -19,7 +19,6 @@ import {
   GetTaxIDByDocumentTool,
   CreatePDFTool,
   GetInvoicesInDateRangeTool,
-  GenerateQRTool,
 } from "./tools/index.js";
 
 const server = new McpServer({
@@ -133,12 +132,6 @@ server.registerTool(
   GetTaxConditionTypesTool.name,
   GetTaxConditionTypesTool.metadata,
   GetTaxConditionTypesTool.execute
-);
-
-server.registerTool(
-  GenerateQRTool.name,
-  GenerateQRTool.metadata,
-  GenerateQRTool.execute
 );
 
 const transport = new StdioServerTransport();
