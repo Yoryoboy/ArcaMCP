@@ -7,4 +7,5 @@ export default {
   CERT_ALIAS: process.env.AFIP_CERT_ALIAS!,
   CERT_PATH: process.env.AFIP_CERT_PATH!,
   KEY_PATH: process.env.AFIP_KEY_PATH!,
+  AFIP_PRODUCTION: process.env.AFIP_PRODUCTION === "true",
 };

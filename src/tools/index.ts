@@ -16,4 +16,3 @@ export { GetTaxpayerDetailsTool } from "./GetTaxpayerDetailsTool/GetTaxpayerDeta
 export { GetTaxIDByDocumentTool } from "./GetTaxIDByDocumentTool/GetTaxIDByDocumentTool.js";
 export { CreatePDFTool } from "./CreatePDFTool/CreatePDFTool.js";
 export { GetInvoicesInDateRangeTool } from "./GetInvoicesInDateRangeTool/GetInvoicesInDateRangeTool.js";
-export { GenerateQRTool } from "./GenerateQRTool/GenerateQRTool.js";

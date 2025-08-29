@@ -7,7 +7,6 @@ import * as fs from "fs";
 import * as path from "path";
 import { fileURLToPath } from "url";
 import QRCode from "qrcode";
-import { GenerateQRSchema } from "../GenerateQRTool/GenerateQRTool.schemas.js";
 import type { InvoiceItem } from "../types.js";
 
 // ESM-safe __dirname
@@ -37,7 +36,10 @@ const getVoucherTypeLetter = (type: number): string => {
   return "";
 };
 
-const buildQRDataUrl = async (voucher: any, issuerCuit: string): Promise<string> => {
+const buildQRDataUrl = async (
+  voucher: any,
+  issuerCuit: string
+): Promise<string> => {
   try {
     const MonId = (voucher.MonId || "PES").toString().toUpperCase();
     const MonCotiz = MonId === "PES" ? 1 : voucher.MonCotiz || 1;
@@ -77,9 +79,15 @@ const buildQRDataUrl = async (voucher: any, issuerCuit: string): Promise<string>
       codAut: String(parsed.CodAut),
     };
 
-    const base64 = Buffer.from(JSON.stringify(payload), "utf8").toString("base64");
-    const qrText = `https://www.afip.gob.ar/fe/qr/?p=${encodeURIComponent(base64)}`;
-    const dataUrl = await QRCode.toDataURL(qrText, { errorCorrectionLevel: "M" });
+    const base64 = Buffer.from(JSON.stringify(payload), "utf8").toString(
+      "base64"
+    );
+    const qrText = `https://www.afip.gob.ar/fe/qr/?p=${encodeURIComponent(
+      base64
+    )}`;
+    const dataUrl = await QRCode.toDataURL(qrText, {
+      errorCorrectionLevel: "M",
+    });
     return dataUrl;
   } catch (e) {
     console.warn("No se pudo generar QR en memoria, usando placeholder.", e);
@@ -87,7 +95,10 @@ const buildQRDataUrl = async (voucher: any, issuerCuit: string): Promise<string>
   }
 };
 
-const generateInvoiceItems = (items: InvoiceItem[] | undefined, voucher: any): string => {
+const generateInvoiceItems = (
+  items: InvoiceItem[] | undefined,
+  voucher: any
+): string => {
   const fmt = (n: number) =>
     n.toLocaleString("es-AR", {
       minimumFractionDigits: 2,
@@ -102,12 +113,15 @@ const generateInvoiceItems = (items: InvoiceItem[] | undefined, voucher: any): s
         const unitPrice = it.unitPrice ?? 0;
         const discPct = it.discountPercent ?? 0;
         const discAmt =
-          it.discountAmount ?? (discPct > 0 ? qty * unitPrice * (discPct / 100) : 0);
+          it.discountAmount ??
+          (discPct > 0 ? qty * unitPrice * (discPct / 100) : 0);
         const subtotal = it.subtotal ?? qty * unitPrice - discAmt;
         return `
             <tr>
               <td>${code}</td>
-              <td>${(it.description || "").replace(/</g, "&lt;").replace(/>/g, "&gt;")}</td>
+              <td>${(it.description || "")
+                .replace(/</g, "&lt;")
+                .replace(/>/g, "&gt;")}</td>
               <td>${fmt(qty)}</td>
               <td>${unit}</td>
               <td>${fmt(unitPrice)}</td>
