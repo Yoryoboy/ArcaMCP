@@ -4,7 +4,7 @@ import { GetLastVoucherSchema } from "./GetLastVoucherTool.schemas.js";
 import afip from "../../services/afip/client.js";
 
 export class GetLastVoucherTool {
-  static readonly name = "ultimo_comprobante_creado";
+  static readonly name = "get_last_voucher";
 
   static readonly metadata = {
     title: "Obtener número último comprobante creado",
