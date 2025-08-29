@@ -1,7 +1,7 @@
 {
-  "name": "monotributomcp",
+  "name": "arcamcp",
   "version": "1.0.0",
-  "description": "MonotributoMCP",
+  "description": "ARCA MCP",
   "type": "module",
   "main": "index.ts",
   "scripts": {
