@@ -71,7 +71,7 @@ export const VoucherCoreSchema = z.object({
   DocTipo: z
     .number()
     .describe(
-      "Código de documento del comprador. Ej: 80=CUIT, 96=DNI, 99=Consumidor Final"
+      "Código de documento del comprador. Ej: 80=CUIT, 96=DNI, 99=Consumidor Final. Se puede recuperar todos los tipos de documentos disponibles usando tool get_document_types"
     ),
   DocNro: z
     .number()
