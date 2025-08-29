@@ -77,7 +77,7 @@ export const VoucherCoreSchema = z.object({
     .number()
     .optional()
     .describe(
-      "Número de identificación del comprador. Si el monto (ImpTotal) es por menos de 10000000 de pesos (10 millones) y es para consumidor Final, no es necesario declarar los datos del receptor del comprobante. (DocNro puede ser omitido)"
+      "Número de identificación del comprador. Si el monto (ImpTotal) es por menos de $10.000.000 ARS y es para consumidor Final, no es necesario declarar los datos del receptor del comprobante. (DocNro puede ser omitido)"
     ),
 
   // Fecha del comprobante
@@ -92,7 +92,7 @@ export const VoucherCoreSchema = z.object({
     .number()
     .min(0)
     .describe(
-      "Importe total del comprobante. Fórmula: Importe no gravado + Importe exento + Importe neto gravado + IVA + tributos. Si el monto es por menos de 10000000 de pesos (10 millones) y es para consumidor Final, no es necesario declarar los datos del receptor del comprobante. (DocNro puede ser omitido)"
+      "Importe total del comprobante. Fórmula: Importe no gravado + Importe exento + Importe neto gravado + IVA + tributos. Si el monto es por menos de $10.000.000 ARS y es para consumidor Final, no es necesario declarar los datos del receptor del comprobante. (DocNro puede ser omitido)"
     ),
   ImpTotConc: z
     .number()
@@ -135,7 +135,7 @@ export const VoucherCoreSchema = z.object({
   CondicionIVAReceptorId: z
     .number()
     .describe(
-      "Condición de IVA del receptor. Para obtener las condiciones frente al IVA disponibles, usar tool get_tax_condition_types. Si el usuario no especifica, se tiene que obtener sus condiciones frente al IVA disponibles y recomendarle elegir una. Si el LLM tiene suficiente informacion para asumir la condicion frente al IVA, puede asumirla. Si el LLM no tiene suficiente informacion para asumir la condicion frente al IVA, debe preguntarle al usuario por esta informacion"
+      "Condición de IVA del receptor. Si el usuario no especifica, se tienen que obtener las condiciones frente al IVA disponibles y pedirle que elija una. Para obtener las condiciones frente al IVA disponibles, usar tool get_tax_condition_types. El LLM no debe asumir esa información"
     ),
 
   // Fechas de servicio (obligatorias si concepto=2 o 3)
@@ -155,7 +155,7 @@ export const VoucherCoreSchema = z.object({
     .string()
     .optional()
     .describe(
-      "Fecha de vencimiento de pago (yyyyMMdd). Obligatorio si concepto=2 o 3. Posterior a CbteFch. Si el usuario no especifica, se le debe preguntar por esta información. El LLM no debe asumir esa información"
+      "Fecha de vencimiento de pago (yyyyMMdd). Obligatorio si concepto=2 o 3. Debe ser igual o posterior a la fecha del comprobante. Si el usuario no especifica, se le debe preguntar por esta información. El LLM no debe asumir esa información"
     ),
 
   // Listas opcionales
