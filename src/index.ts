@@ -62,11 +62,11 @@ server.registerTool(
   GetTaxIDByDocumentTool.execute
 );
 
-// server.registerTool(
-//   CreatePDFTool.name,
-//   CreatePDFTool.metadata,
-//   CreatePDFTool.execute
-// );
+server.registerTool(
+  CreatePDFTool.name,
+  CreatePDFTool.metadata,
+  CreatePDFTool.execute
+);
 
 server.registerTool(
   GetInvoicesInDateRangeTool.name,
