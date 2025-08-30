@@ -156,12 +156,12 @@
     <table class="bill-container">
       <tr class="bill-emitter-row">
         <td>
-          <div class="bill-type">{{VOUCHER_TYPE_LETTER}}</div>
-          <div class="text-lg text-center">{{ISSUER_COMPANY_NAME}}</div>
-          <p><strong>Razón social:</strong> {{ISSUER_COMPANY_NAME}}</p>
-          <p><strong>Domicilio Comercial:</strong> {{ISSUER_ADDRESS}}</p>
+          <div class="bill-type">{{CbteTipo}}</div>
+          <div class="text-lg text-center">{{NOMBRE_EMISOR}}</div>
+          <p><strong>Razón social:</strong> {{NOMBRE_EMISOR}}</p>
+          <p><strong>Domicilio Comercial:</strong> {{DIRECCION_EMISOR}}</p>
           <p>
-            <strong>Condición Frente al IVA:</strong> {{ISSUER_TAX_CONDITION}}
+            <strong>Condición Frente al IVA:</strong> {{CondicionIVAEmisor}}
           </p>
         </td>
         <td>
@@ -169,18 +169,18 @@
             <div class="text-lg">Factura</div>
             <div class="row">
               <p class="col-6 margin-b-0">
-                <strong>Punto de Venta: {{POINT_OF_SALE}}</strong>
+                <strong>Punto de Venta: {{PtoVta}}</strong>
               </p>
               <p class="col-6 margin-b-0">
-                <strong>Comp. Nro: {{VOUCHER_NUMBER}}</strong>
+                <strong>Comp. Nro: {{CbteNro}}</strong>
               </p>
             </div>
-            <p><strong>Fecha de Emisión:</strong> {{ISSUE_DATE}}</p>
-            <p><strong>CUIT:</strong> {{ISSUER_CUIT}}</p>
-            <p><strong>Ingresos Brutos:</strong> {{ISSUER_GROSS_INCOME}}</p>
+            <p><strong>Fecha de Emisión:</strong> {{CbteFch}}</p>
+            <p><strong>CUIT:</strong> {{CUIT_EMISOR}}</p>
+            <p><strong>Ingresos Brutos:</strong> {{INGRESOS_BRUTOS}}</p>
             <p>
               <strong>Fecha de Inicio de Actividades:</strong>
-              {{ISSUER_START_DATE}}
+              {{FECHA_INICIO_ACTIVIDADES}}
             </p>
           </div>
         </td>
@@ -189,13 +189,13 @@
         <td colspan="2">
           <div class="row">
             <p class="col-4 margin-b-0">
-              <strong>Período Facturado Desde: </strong>{{SERVICE_DATE_FROM}}
+              <strong>Período Facturado Desde: </strong>{{FchServDesde}}
             </p>
             <p class="col-3 margin-b-0">
-              <strong>Hasta: </strong>{{SERVICE_DATE_TO}}
+              <strong>Hasta: </strong>{{FchServHasta}}
             </p>
             <p class="col-5 margin-b-0">
-              <strong>Fecha de Vto. para el pago: </strong>{{PAYMENT_DUE_DATE}}
+              <strong>Fecha de Vto. para el pago: </strong>{{FchVtoPago}}
             </p>
           </div>
         </td>
@@ -205,23 +205,23 @@
           <div>
             <div class="row">
               <p class="col-4 margin-b-0">
-                <strong>CUIL/CUIT: </strong>{{RECIPIENT_CUIT}}
+                <strong>CUIL/CUIT: </strong>{{DocNro}}
               </p>
               <p class="col-8 margin-b-0">
                 <strong>Apellido y Nombre / Razón social: </strong
-                >{{RECIPIENT_NAME}}
+                >{{NOMBRE_RECEPTOR}}
               </p>
             </div>
             <div class="row">
               <p class="col-6 margin-b-0">
                 <strong>Condición Frente al IVA: </strong
-                >{{RECIPIENT_TAX_CONDITION}}
+                >{{CondicionIVAReceptor}}
               </p>
               <p class="col-6 margin-b-0">
-                <strong>Domicilio: </strong>{{RECIPIENT_ADDRESS}}
+                <strong>Domicilio: </strong>{{DIRECCION_RECEPTOR}}
               </p>
             </div>
-            <p><strong>Condicion de venta: </strong>{{PAYMENT_CONDITION}}</p>
+            <p><strong>Condicion de venta: </strong>{{CONDICION_PAGO}}</p>
           </div>
         </td>
       </tr>
@@ -260,7 +260,7 @@
                 <strong>Importe Otros Tributos: $</strong>
               </p>
               <p class="col-2 margin-b-0">
-                <strong>{{OTHER_TAXES}}</strong>
+                <strong>{{IMPORTE_OTROS_TRIBUTOS}}</strong>
               </p>
             </div>
             <div class="row text-right">
@@ -268,7 +268,7 @@
                 <strong>Importe total: $</strong>
               </p>
               <p class="col-2 margin-b-0">
-                <strong>{{TOTAL_AMOUNT}}</strong>
+                <strong>{{IMPORTE_TOTAL}}</strong>
               </p>
             </div>
           </div>

@@ -396,30 +396,30 @@ export class CreatePDFTool {
 
       // 8. Reemplazar placeholders en el HTML (usando split/join para evitar regex)
       const replacements: Record<string, string> = {
-        "{{VOUCHER_TYPE_LETTER}}": getVoucherTypeLetter(CbteTipo),
-        "{{ISSUER_COMPANY_NAME}}": String(issuerCompanyName),
-        "{{ISSUER_CUIT}}": String(issuerCuitResolved),
-        "{{ISSUER_ADDRESS}}": String(issuerAddress),
-        "{{ISSUER_TAX_CONDITION}}": String(issuerTaxCondition),
-        "{{ISSUER_GROSS_INCOME}}": String(issuerGrossIncome || ""),
-        "{{ISSUER_START_DATE}}": String(issuerStartDate || ""),
-        "{{POINT_OF_SALE}}": PtoVta.toString().padStart(5, "0"),
-        "{{VOUCHER_NUMBER}}": CbteNro.toString().padStart(8, "0"),
-        "{{ISSUE_DATE}}": formatDate(voucher.CbteFch || ""),
-        "{{RECIPIENT_CUIT}}": String(recipientDoc || ""),
-        "{{RECIPIENT_NAME}}": String(recipientName),
-        "{{RECIPIENT_TAX_CONDITION}}": String(recipientTaxCondition),
-        "{{RECIPIENT_ADDRESS}}": String(recipientAddress),
-        "{{PAYMENT_CONDITION}}": String(paymentCondition || ""),
-        "{{SERVICE_DATE_FROM}}": String(
+        "{{CbteTipo}}": getVoucherTypeLetter(CbteTipo),
+        "{{NOMBRE_EMISOR}}": String(issuerCompanyName),
+        "{{CUIT_EMISOR}}": String(issuerCuitResolved),
+        "{{DIRECCION_EMISOR}}": String(issuerAddress),
+        "{{CondicionIVAEmisor}}": String(issuerTaxCondition),
+        "{{INGRESOS_BRUTOS}}": String(issuerGrossIncome || ""), // CUIT O EXENTO
+        "{{FECHA_INICIO_ACTIVIDADES}}": String(issuerStartDate || ""), //echa real en que comienza la actividad económica o profesional en un local o establecimiento, o la fecha en que se inicia la actividad profesional sin un local fijo
+        "{{PtoVta}}": PtoVta.toString().padStart(5, "0"),
+        "{{CbteNro}}": CbteNro.toString().padStart(8, "0"),
+        "{{CbteFch}}": formatDate(voucher.CbteFch || ""),
+        "{{DocNro}}": String(recipientDoc || ""), // CUIT RECEPTOR
+        "{{NOMBRE_RECEPTOR}}": String(recipientName),
+        "{{CondicionIVAReceptor}}": String(recipientTaxCondition),
+        "{{DIRECCION_RECEPTOR}}": String(recipientAddress),
+        "{{CONDICION_PAGO}}": String(paymentCondition || ""),
+        "{{FchServDesde}}": String(
           serviceOverride?.dateFrom ||
             (voucher.FchServDesde ? formatDate(voucher.FchServDesde) : "")
         ),
-        "{{SERVICE_DATE_TO}}": String(
+        "{{FchServHasta}}": String(
           serviceOverride?.dateTo ||
             (voucher.FchServHasta ? formatDate(voucher.FchServHasta) : "")
         ),
-        "{{PAYMENT_DUE_DATE}}": String(
+        "{{FchVtoPago}}": String(
           serviceOverride?.paymentDueDate ||
             (voucher.FchVtoPago ? formatDate(voucher.FchVtoPago) : "")
         ),
@@ -428,8 +428,8 @@ export class CreatePDFTool {
             ? computedItemsSubtotal
             : voucher.ImpNeto || 0
         ),
-        "{{OTHER_TAXES}}": formatAmount(voucher.ImpTrib || 0),
-        "{{TOTAL_AMOUNT}}": formatAmount(voucher.ImpTotal || 0),
+        "{{IMPORTE_OTROS_TRIBUTOS}}": formatAmount(voucher.ImpTrib || 0),
+        "{{IMPORTE_TOTAL}}": formatAmount(voucher.ImpTotal || 0),
         "{{CAE_NUMBER}}": voucher.CAE || "",
         "{{CAE_EXPIRY_DATE}}": formatDate(voucher.CAEFchVto || ""),
         "{{QR_CODE_DATA}}": qrDataUrl,
