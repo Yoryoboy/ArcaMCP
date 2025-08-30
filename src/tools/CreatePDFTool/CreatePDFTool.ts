@@ -21,7 +21,7 @@ export class CreatePDFTool {
   static readonly metadata = {
     title: "Crear PDF de factura",
     description:
-      "Genera HTML de factura dinámico (con QR e ítems) a partir del template bill.html y crea el PDF con AFIP SDK. El enlace expira a las 24 horas.",
+      "Genera un PDF dinámico de un comprobante electrónico combinando datos del voucher, emisor y receptor desde AFIP",
     inputSchema: CreatePDFInputSchema.shape,
   };
 
@@ -106,9 +106,9 @@ export class CreatePDFTool {
       }
 
       // 5) Crear PDF con AFIP SDK
-      const fileName = `Factura_${input.CbteTipo}_${String(input.PtoVta).padStart(5, "0")}_${
-        String(input.CbteNro).padStart(8, "0")
-      }`;
+      const fileName = `Factura_${input.CbteTipo}_${String(
+        input.PtoVta
+      ).padStart(5, "0")}_${String(input.CbteNro).padStart(8, "0")}`;
 
       const options = {
         width: 8, // pulgadas
@@ -133,7 +133,8 @@ export class CreatePDFTool {
               {
                 success: true,
                 phase: "pdf_created",
-                message: "PDF generado correctamente. El enlace expira en 24 horas.",
+                message:
+                  "PDF generado correctamente. El enlace expira en 24 horas.",
                 file: res?.file,
                 expiresInHours: 24,
               },
