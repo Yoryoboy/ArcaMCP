@@ -9,18 +9,19 @@ import {
   formatAmountAR,
   renderItems,
 } from "./CreatePDFTool.helpers.js";
+import afip from "../../services/afip/client.js";
 
 // ------------------------------
-// Tool implementation (Step 1: return populated HTML only)
+// Tool implementation: generate populated HTML and create PDF
 // ------------------------------
 
 export class CreatePDFTool {
   static readonly name = "create_pdf";
 
   static readonly metadata = {
-    title: "Crear HTML de factura (fase 1)",
+    title: "Crear PDF de factura",
     description:
-      "Genera HTML de factura dinámico a partir de placeholders del template bill.html. Incluye QR y render básico de ítems. No crea PDF en esta fase.",
+      "Genera HTML de factura dinámico (con QR e ítems) a partir del template bill.html y crea el PDF con AFIP SDK. El enlace expira a las 24 horas.",
     inputSchema: CreatePDFInputSchema.shape,
   };
 
@@ -104,7 +105,26 @@ export class CreatePDFTool {
         html = html.split(ph).join(val ?? "");
       }
 
-      // 5) Retorno (solo HTML)
+      // 5) Crear PDF con AFIP SDK
+      const fileName = `Factura_${input.CbteTipo}_${String(input.PtoVta).padStart(5, "0")}_${
+        String(input.CbteNro).padStart(8, "0")
+      }`;
+
+      const options = {
+        width: 8, // pulgadas
+        marginLeft: 0.4,
+        marginRight: 0.4,
+        marginTop: 0.4,
+        marginBottom: 0.4,
+      } as const;
+
+      const res = await afip.ElectronicBilling.createPDF({
+        html,
+        file_name: fileName,
+        options,
+      });
+
+      // 6) Retorno: URL del PDF y aviso de expiración 24h
       return {
         content: [
           {
@@ -112,9 +132,10 @@ export class CreatePDFTool {
             text: JSON.stringify(
               {
                 success: true,
-                phase: "html_only",
-                message: "HTML de factura generado",
-                html,
+                phase: "pdf_created",
+                message: "PDF generado correctamente. El enlace expira en 24 horas.",
+                file: res?.file,
+                expiresInHours: 24,
               },
               null,
               2
