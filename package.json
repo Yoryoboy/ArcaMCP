@@ -5,6 +5,7 @@
   "type": "module",
   "main": "index.ts",
   "scripts": {
+    "build": "tsc -p tsconfig.json",
     "dev": "npx tsx src/index.ts",
     "inspector": "npx -y @modelcontextprotocol/inspector npx -y tsx src/index.ts"
   },

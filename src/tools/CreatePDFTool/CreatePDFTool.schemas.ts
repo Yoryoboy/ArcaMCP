@@ -1,108 +1,76 @@
-import { z } from "zod";
+// ------------------------------
+// Minimal input schema (step 1)
+// ------------------------------
+// Notes:
+// - Accept numbers or strings for IDs, normalize to string internally to avoid precision/format issues.
+// - Dates: input as YYYYMMDD; we show DD/MM/YYYY in PDF and use YYYY-MM-DD for QR.
+// - Currency: format using es-AR.
 
-const normalizeDate = (v: unknown) => {
-  if (typeof v !== "string") return v as any;
-  const s = v.trim();
-  if (/^\d{8}$/.test(s))
-    return `${s.slice(6, 8)}/${s.slice(4, 6)}/${s.slice(0, 4)}`;
-  const m = s.match(/^(\d{4})-(\d{2})-(\d{2})$/);
-  if (m) return `${m[3]}/${m[2]}/${m[1]}`;
-  return s;
-};
+import z from "zod";
 
-export const InvoiceItemSchema = z.object({
-  code: z.string().optional().describe("Código del producto/servicio"),
-  description: z
-    .string()
-    .min(1, "Descripción requerida")
-    .describe("Producto / Servicio"),
-  quantity: z.number().min(0).optional().describe("Cantidad (default 1)"),
-  unit: z.string().optional().describe("Unidad de medida (default 'Unidad')"),
-  unitPrice: z.number().min(0).optional().describe("Precio unitario"),
-  discountPercent: z.number().min(0).optional().describe("% Bonificación"),
-  discountAmount: z.number().min(0).optional().describe("Importe bonificación"),
-  subtotal: z
-    .number()
-    .min(0)
-    .optional()
-    .describe("Subtotal (si no se provee se calcula)"),
+const IdAsString = z
+  .union([z.string(), z.number()])
+  .transform((v) => String(v));
+
+const InvoiceItemSchema = z.object({
+  descripcion: z.string().min(1),
+  cantidad: z.number().min(0).default(1),
+  precioUnitario: z.number().min(0).default(0),
+  importe: z.number().min(0),
 });
 
-export const CreatePDFSchema = z.object({
-  CbteNro: z.number().min(1).describe("Número de comprobante a generar PDF"),
-  PtoVta: z.number().min(1).describe("Punto de venta del comprobante"),
-  CbteTipo: z.number().min(1).describe("Tipo de comprobante"),
-  fileName: z.string().optional().describe("Nombre del archivo PDF (opcional)"),
+export const CreatePDFInputSchema = z.object({
+  // Emisor
+  CbteTipo: z.number().int().min(1),
+  NOMBRE_EMISOR: z.string().min(1),
+  CUIT_EMISOR: IdAsString,
+  DIRECCION_EMISOR: z.string().min(1),
+  CondicionIVAEmisor: z.string().min(1),
+  INGRESOS_BRUTOS: z.string().optional().default(""),
+  FECHA_INICIO_ACTIVIDADES: z.string().min(4).optional().default(""),
 
-  issuer: z
-    .object({
-      companyName: z
-        .string()
-        .optional()
-        .describe("Nombre o razón social del emisor"),
-      cuit: z
-        .union([z.string(), z.number()])
-        .optional()
-        .describe("CUIT del emisor"),
-      address: z.string().optional().describe("Domicilio comercial del emisor"),
-      taxCondition: z
-        .string()
-        .optional()
-        .describe("Condición frente al IVA del emisor"),
-      grossIncome: z.string().optional().describe("Ingresos Brutos del emisor"),
-      startDate: z
-        .string()
-        .optional()
-        .transform(normalizeDate)
-        .describe("Fecha de inicio de actividades del emisor"),
-    })
-    .optional(),
+  // Comprobante
+  PtoVta: z.number().int().min(1),
+  CbteNro: z.number().int().min(1),
+  CbteFch: z.string().regex(/^\d{8}$/), // YYYYMMDD
+  // Moneda
+  MonId: z.string().min(3).default("PES"), // Código de moneda (ej: PES)
+  MonCotiz: z.number().min(0).default(1), // Cotización moneda
 
-  recipient: z
-    .object({
-      name: z
-        .string()
-        .optional()
-        .describe("Apellido y Nombre / Razón social del receptor"),
-      cuit: z
-        .union([z.string(), z.number()])
-        .optional()
-        .describe("Documento del receptor (CUIT/CUIL/DNI)"),
-      address: z.string().optional().describe("Domicilio del receptor"),
-      taxCondition: z
-        .string()
-        .optional()
-        .describe("Condición frente al IVA del receptor"),
-    })
-    .optional(),
+  // Receptor
+  DocNro: IdAsString.optional(),
+  NOMBRE_RECEPTOR: z.string().min(1),
+  CondicionIVAReceptor: z.string().min(1),
+  DIRECCION_RECEPTOR: z.string().optional().default(""),
 
-  service: z
-    .object({
-      dateFrom: z
-        .string()
-        .optional()
-        .transform(normalizeDate)
-        .describe("Período facturado desde (yyyyMMdd o yyyy-MM-dd)"),
-      dateTo: z
-        .string()
-        .optional()
-        .transform(normalizeDate)
-        .describe("Período facturado hasta (yyyyMMdd o yyyy-MM-dd)"),
-      paymentDueDate: z
-        .string()
-        .optional()
-        .transform(normalizeDate)
-        .describe("Fecha de vencimiento para el pago (yyyyMMdd o yyyy-MM-dd)"),
-    })
-    .optional(),
-
-  paymentCondition: z
+  // Otros
+  CONDICION_PAGO: z.string().optional().default(""),
+  FchServDesde: z
     .string()
-    .optional()
-    .describe("Condición de venta (ej: Contado, Transferencia)"),
+    .regex(/^\d{8}$/)
+    .optional(),
+  FchServHasta: z
+    .string()
+    .regex(/^\d{8}$/)
+    .optional(),
+  FchVtoPago: z
+    .string()
+    .regex(/^\d{8}$/)
+    .optional(),
 
-  items: z
-    .array(InvoiceItemSchema)
-    .optional()
-    .describe("Ítems de la factura a renderizar"),
+  // Totales
+  SUBTOTAL: z.number().min(0),
+  IMPORTE_OTROS_TRIBUTOS: z.number().min(0).default(0),
+  IMPORTE_TOTAL: z.number().min(0),
+
+  // CAE
+  CAE_NUMBER: IdAsString,
+  CAE_EXPIRY_DATE: z.string().regex(/^\d{8}$/),
+  // Tipo de autorización del comprobante para QR: 'E' (CAE) o 'A' (CAEA)
+  TipoCodAut: z.enum(["E", "A"]).default("E"),
+
+  // Ítems de factura
+  INVOICE_ITEMS: z.array(InvoiceItemSchema).optional().default([]),
 });
+
+export type CreatePDFInput = z.infer<typeof CreatePDFInputSchema>;
