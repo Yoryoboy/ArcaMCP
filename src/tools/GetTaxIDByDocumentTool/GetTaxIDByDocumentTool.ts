@@ -3,8 +3,8 @@ import { GetTaxIDByDocumentParams } from "../types.js";
 import afip from "../../services/afip/client.js";
 import { MCPResponse } from "../../core/types.js";
 
-export class GetTaxIDByDocumentTool {
-  static readonly name = "get_tax_id_by_document";
+export class GetCuitFromDniTool {
+  static readonly name = "get_cuit_from_dni";
 
   static readonly metadata = {
     title: "Obtener CUIT a partir de DNI",
@@ -17,7 +17,9 @@ export class GetTaxIDByDocumentTool {
       const validatedParams = GetTaxIDByDocumentSchema.parse(params);
       const { nationalId } = validatedParams;
 
-      const result = await afip.RegisterScopeThirteen.getTaxIDByDocument(nationalId);
+      const result = await afip.RegisterScopeThirteen.getTaxIDByDocument(
+        nationalId
+      );
 
       if (result === null) {
         return {

@@ -16,10 +16,10 @@ import {
   GetTaxConditionTypesTool,
   GetVoucherInfoTool,
   GetTaxpayerDetailsTool,
-  GetTaxIDByDocumentTool,
   CreatePDFTool,
   GetInvoicesInDateRangeTool,
 } from "./tools/index.js";
+import { GetCuitFromDniTool } from "./tools/GetTaxIDByDocumentTool/GetTaxIDByDocumentTool.js";
 
 const server = new McpServer({
   name: "MonotributoMCP",
@@ -57,9 +57,9 @@ server.registerTool(
 );
 
 server.registerTool(
-  GetTaxIDByDocumentTool.name,
-  GetTaxIDByDocumentTool.metadata,
-  GetTaxIDByDocumentTool.execute
+  GetCuitFromDniTool.name,
+  GetCuitFromDniTool.metadata,
+  GetCuitFromDniTool.execute
 );
 
 server.registerTool(
