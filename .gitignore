@@ -138,6 +138,7 @@ jspm_packages/
 *.pem
 certificado.*
 private.*
+certs/
 
 # IDE and editor files
 .vscode/settings.json
