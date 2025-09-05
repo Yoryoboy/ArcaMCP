@@ -2,6 +2,7 @@ import { MCPResponse } from "../../core/types.js";
 import afip from "../../services/afip/client.js";
 import { EmptySchema } from "../shared.schemas.js";
 import config from "../../config.js";
+import { devEnvDetectedMessage } from "../../utils/helpers.js";
 
 export class GetSalesPointsTool {
   static readonly name = "get_sales_points";
@@ -15,21 +16,9 @@ export class GetSalesPointsTool {
 
   static async execute(): Promise<MCPResponse> {
     if (!config.AFIP_PRODUCTION) {
-      return {
-        content: [
-          {
-            type: "text" as const,
-            text: JSON.stringify(
-              {
-                error:
-                  "Se ha detectado que no se encuentra en ambiente de producción. En ambiente de testing es normal recibir error ya que no existen puntos de venta configurados. Se usa punto de venta 1 por defecto.",
-              },
-              null,
-              2
-            ),
-          },
-        ],
-      };
+      return devEnvDetectedMessage(
+        "Se ha detectado que se encuentra en ambiente de testing. En ambiente de testing es normal recibir error ya que no existen puntos de venta configurados. Se usa punto de venta 1 por defecto. Notificar al usuario acerca de esto y continuar con el punto de venta 1 por defecto."
+      );
     }
     try {
       const result = await afip.ElectronicBilling.getSalesPoints();

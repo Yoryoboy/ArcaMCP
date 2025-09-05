@@ -2,7 +2,7 @@ import { MCPResponse } from "../../core/types.js";
 import { VoucherParams } from "../types.js";
 import { VoucherSchema } from "./CreateVoucherTool.schemas.js";
 import afip from "../../services/afip/client.js";
-import { processAfipError } from "../../utils/errorProcessor.js";
+import { processAfipError } from "../../utils/errorProcessor/errorProcessor.js";
 
 export class CreateVoucherTool {
   static readonly name = "create_voucher";

@@ -2,7 +2,7 @@ import { MCPResponse } from "../../core/types.js";
 import { NextVoucherSchema } from "./CreateNextVoucherTool.schemas.js";
 import afip from "../../services/afip/client.js";
 import { NextVoucherParams } from "../types.js";
-import { processAfipError } from "../../utils/errorProcessor.js";
+import { processAfipError } from "../../utils/errorProcessor/errorProcessor.js";
 
 export class CreateNextVoucherTool {
   static readonly name = "create_next_voucher";
