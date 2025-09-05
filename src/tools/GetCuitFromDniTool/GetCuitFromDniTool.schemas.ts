@@ -1,5 +1,5 @@
 import { z } from "zod";
 
-export const GetTaxIDByDocumentSchema = z.object({
+export const GetCuitFromDniToolSchema = z.object({
   nationalId: z.number().describe("DNI del contribuyente"),
 });

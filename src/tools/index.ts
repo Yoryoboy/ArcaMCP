@@ -13,6 +13,6 @@ export { GetTaxTypesTool } from "./GetTaxTypesTool/GetTaxTypesTool.js";
 export { GetTaxConditionTypesTool } from "./GetTaxConditionTypesTool/GetTaxConditionTypesTool.js";
 export { GetVoucherInfoTool } from "./GetVoucherInfoTool/GetVoucherInfoTool.js";
 export { GetTaxpayerDetailsTool } from "./GetTaxpayerDetailsTool/GetTaxpayerDetailsTool.js";
-export { GetTaxIDByDocumentTool } from "./GetTaxIDByDocumentTool/GetTaxIDByDocumentTool.js";
+export { GetCuitFromDniTool } from "./GetCuitFromDniTool/GetCuitFromDniTool.js";
 export { CreatePDFTool } from "./CreatePDFTool/CreatePDFTool.js";
 export { GetInvoicesInDateRangeTool } from "./GetInvoicesInDateRangeTool/GetInvoicesInDateRangeTool.js";

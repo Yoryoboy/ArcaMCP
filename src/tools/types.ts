@@ -11,11 +11,8 @@ import { VoucherSchema } from "./CreateVoucherTool/CreateVoucherTool.schemas";
 import { GetExchangeRateSchema } from "./GetExchangeRateTool/GetExchangeRateTool.schemas";
 import { GetVoucherInfoSchema } from "./GetVoucherInfoTool/GetVoucherInfoTool.schemas";
 import { GetTaxpayerDetailsSchema } from "./GetTaxpayerDetailsTool/GetTaxpayerDetailsTool.schemas";
-import { GetTaxIDByDocumentSchema } from "./GetTaxIDByDocumentTool/GetTaxIDByDocumentTool.schemas";
-import {
-  CreatePDFSchema,
-  InvoiceItemSchema,
-} from "./CreatePDFTool/CreatePDFTool.schemas";
+import { GetCuitFromDniToolSchema } from "./GetCuitFromDniTool/GetCuitFromDniTool.schemas";
+import { CreatePDFInputSchema } from "./CreatePDFTool/CreatePDFTool.schemas";
 import { GetInvoicesInDateRangeSchema } from "./GetInvoicesInDateRangeTool/GetInvoicesInDateRangeTool.schemas";
 
 export type GetLastVoucherParams = z.infer<typeof GetLastVoucherSchema>;
@@ -45,13 +42,10 @@ export type GetVoucherInfoParams = z.infer<typeof GetVoucherInfoSchema>;
 
 export type GetTaxpayerDetailsParams = z.infer<typeof GetTaxpayerDetailsSchema>;
 
-export type GetTaxIDByDocumentParams = z.infer<typeof GetTaxIDByDocumentSchema>;
-
-// New: Invoice item structure for dynamic PDF rows
-export type InvoiceItem = z.infer<typeof InvoiceItemSchema>;
+export type GetCuitFromDniToolParams = z.infer<typeof GetCuitFromDniToolSchema>;
 
 // Expanded: PDF generation params now accept optional overrides and items
-export type CreatePDFParams = z.infer<typeof CreatePDFSchema>;
+export type CreatePDFParams = z.infer<typeof CreatePDFInputSchema>;
 
 export type GetInvoicesInDateRangeParams = z.infer<
   typeof GetInvoicesInDateRangeSchema

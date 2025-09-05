@@ -1,7 +1,9 @@
-import { GetTaxIDByDocumentSchema } from "./GetTaxIDByDocumentTool.schemas.js";
-import { GetTaxIDByDocumentParams } from "../types.js";
+import { GetCuitFromDniToolSchema } from "./GetCuitFromDniTool.schemas.js";
+import { GetCuitFromDniToolParams } from "../types.js";
 import afip from "../../services/afip/client.js";
 import { MCPResponse } from "../../core/types.js";
+import config from "src/config.js";
+import { devEnvDetectedMessage } from "src/utils/helpers.js";
 
 export class GetCuitFromDniTool {
   static readonly name = "get_cuit_from_dni";
@@ -9,12 +11,17 @@ export class GetCuitFromDniTool {
   static readonly metadata = {
     title: "Obtener CUIT a partir de DNI",
     description: "Obtiene el CUIT de un contribuyente a partir de su DNI",
-    inputSchema: GetTaxIDByDocumentSchema.shape,
+    inputSchema: GetCuitFromDniToolSchema.shape,
   };
 
-  static async execute(params: GetTaxIDByDocumentParams): Promise<MCPResponse> {
+  static async execute(params: GetCuitFromDniToolParams): Promise<MCPResponse> {
+    if (!config.AFIP_PRODUCTION) {
+      return devEnvDetectedMessage(
+        "Se ha detectado que se encuentra en ambiente de testing. Este endpoint no funciona en ambiente de testing."
+      );
+    }
     try {
-      const validatedParams = GetTaxIDByDocumentSchema.parse(params);
+      const validatedParams = GetCuitFromDniToolSchema.parse(params);
       const { nationalId } = validatedParams;
 
       const result = await afip.RegisterScopeThirteen.getTaxIDByDocument(
