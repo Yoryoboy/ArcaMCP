@@ -1,4 +1,4 @@
-import { MCPResponse } from "../core/types";
+import { MCPResponse } from "../core/types.js";
 
 export function devEnvDetectedMessage(message: string): MCPResponse {
   return {

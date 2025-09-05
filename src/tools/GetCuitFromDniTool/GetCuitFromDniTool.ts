@@ -2,8 +2,8 @@ import { GetCuitFromDniToolSchema } from "./GetCuitFromDniTool.schemas.js";
 import { GetCuitFromDniToolParams } from "../types.js";
 import afip from "../../services/afip/client.js";
 import { MCPResponse } from "../../core/types.js";
-import config from "src/config.js";
-import { devEnvDetectedMessage } from "src/utils/helpers.js";
+import config from "../../config.js";
+import { devEnvDetectedMessage } from "../../utils/helpers.js";
 
 export class GetCuitFromDniTool {
   static readonly name = "get_cuit_from_dni";

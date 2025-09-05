@@ -2,8 +2,8 @@ import { GetTaxpayerDetailsSchema } from "./GetTaxpayerDetailsTool.schemas.js";
 import { GetTaxpayerDetailsParams } from "../types.js";
 import afip from "../../services/afip/client.js";
 import { MCPResponse } from "../../core/types.js";
-import config from "src/config.js";
-import { devEnvDetectedMessage } from "src/utils/helpers.js";
+import config from "../../config.js";
+import { devEnvDetectedMessage } from "../../utils/helpers.js";
 import { PayerDetails } from "./GetTaxpayerDetailsTool.types.js";
 
 export class GetTaxpayerDetailsTool {
