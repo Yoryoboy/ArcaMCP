@@ -1,19 +1,19 @@
 import z from "zod";
-import { GetLastVoucherSchema } from "./GetLastVoucherTool/GetLastVoucherTool.schemas";
+import { GetLastVoucherSchema } from "./GetLastVoucherTool/GetLastVoucherTool.schemas.js";
 import {
   ComprobantesAsociadosSchema,
   IvaItemSchema,
   OpcionalesItemSchema,
   TributoItemSchema,
   VoucherCoreSchema,
-} from "./shared.schemas";
-import { VoucherSchema } from "./CreateVoucherTool/CreateVoucherTool.schemas";
-import { GetExchangeRateSchema } from "./GetExchangeRateTool/GetExchangeRateTool.schemas";
-import { GetVoucherInfoSchema } from "./GetVoucherInfoTool/GetVoucherInfoTool.schemas";
-import { GetTaxpayerDetailsSchema } from "./GetTaxpayerDetailsTool/GetTaxpayerDetailsTool.schemas";
-import { GetCuitFromDniToolSchema } from "./GetCuitFromDniTool/GetCuitFromDniTool.schemas";
-import { CreatePDFInputSchema } from "./CreatePDFTool/CreatePDFTool.schemas";
-import { GetInvoicesInDateRangeSchema } from "./GetInvoicesInDateRangeTool/GetInvoicesInDateRangeTool.schemas";
+} from "./shared.schemas.js";
+import { VoucherSchema } from "./CreateVoucherTool/CreateVoucherTool.schemas.js";
+import { GetExchangeRateSchema } from "./GetExchangeRateTool/GetExchangeRateTool.schemas.js";
+import { GetVoucherInfoSchema } from "./GetVoucherInfoTool/GetVoucherInfoTool.schemas.js";
+import { GetTaxpayerDetailsSchema } from "./GetTaxpayerDetailsTool/GetTaxpayerDetailsTool.schemas.js";
+import { GetCuitFromDniToolSchema } from "./GetCuitFromDniTool/GetCuitFromDniTool.schemas.js";
+import { CreatePDFInputSchema } from "./CreatePDFTool/CreatePDFTool.schemas.js";
+import { GetInvoicesInDateRangeSchema } from "./GetInvoicesInDateRangeTool/GetInvoicesInDateRangeTool.schemas.js";
 
 export type GetLastVoucherParams = z.infer<typeof GetLastVoucherSchema>;
 

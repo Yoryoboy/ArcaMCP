@@ -8,7 +8,7 @@
  * - Proveer una instrucción por defecto segura cuando el código sea desconocido.
  */
 
-import { ErrorCode, instructionMap } from "./errorProcessor.mapping";
+import { ErrorCode, instructionMap } from "./errorProcessor.mapping.js";
 
 export type ProcessedToolError = {
   /** Mensaje de error legible para humanos (preservado del error original) */

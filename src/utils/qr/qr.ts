@@ -1,6 +1,6 @@
 import QRCode from "qrcode";
 import { z } from "zod";
-import { QRDataSchema } from "./qr.schema";
+import { QRDataSchema } from "./qr.schema.js";
 
 export type QRData = z.infer<typeof QRDataSchema>;
 
