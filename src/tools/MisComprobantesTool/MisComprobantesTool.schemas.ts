@@ -82,21 +82,6 @@ export const MisComprobantesFiltersSchema = z
   );
 
 export const MisComprobantesInputSchema = z.object({
-  cuit: IdAsString
-    .transform((v) => v.replace(/\D+/g, ""))
-    .refine((v) => /^\d{11}$/.test(v), {
-      message:
-        "El CUIT debe tener 11 dígitos. Si el usuario no lo ha especificado, preguntarle y no asumir esta información.",
-    })
-    .describe(
-      "CUIT del contribuyente sobre el que se consultan comprobantes. Debe tener 11 dígitos (sin puntos ni guiones)."
-    ),
-  password: z
-    .string()
-    .min(6)
-    .describe(
-      "Password del usuario ARCA (el username es el mismo CUIT). Si el usuario no lo ha especificado, preguntarle y no asumir esta información."
-    ),
   filters: MisComprobantesFiltersSchema
     .optional()
     .describe(
@@ -106,7 +91,7 @@ export const MisComprobantesInputSchema = z.object({
     .boolean()
     .default(true)
     .describe(
-      "Si es true, se espera a que la automatización complete y se devuelven los resultados. Por defecto true para no continuar hasta recibir la respuesta."
+      "Si es true, se espera a que la automatización complete y se devuelven los resultados. Por defecto true para no continuar hasta recibir la respuesta. Las credenciales (CUIT, username y password) se toman desde la configuración del servidor (config)."
     ),
 });
 

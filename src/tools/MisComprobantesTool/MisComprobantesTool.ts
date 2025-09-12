@@ -1,5 +1,6 @@
 import { MCPResponse } from "../../core/types.js";
 import afip from "../../services/afip/client.js";
+import config from "../../config.js";
 import {
   MisComprobantesInputSchema,
 } from "./MisComprobantesTool.schemas.js";
@@ -17,12 +18,13 @@ export class MisComprobantesTool {
   static async execute(params: unknown): Promise<MCPResponse> {
     try {
       const input = MisComprobantesInputSchema.parse(params);
-      const { cuit, password, filters, wait } = input;
+      const { filters, wait } = input;
+      const { CUIT, PASSWORD } = config;
 
       const data = {
-        cuit,
-        username: cuit,
-        password,
+        cuit: CUIT,
+        username: CUIT,
+        password: PASSWORD,
         ...(filters ? { filters } : {}),
       } as const;
 
