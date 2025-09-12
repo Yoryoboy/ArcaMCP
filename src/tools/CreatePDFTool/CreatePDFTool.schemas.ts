@@ -16,7 +16,9 @@ const InvoiceItemSchema = z.object({
   descripcion: z
     .string()
     .min(1)
-    .describe("Descripción del ítem. Preguntarle al usuario"),
+    .describe(
+      "Descripción específica del ítem (producto/servicio). No inventar descripciones genéricas. Si el usuario no lo ha especificado, preguntar explícitamente y no asumir la información."
+    ),
   cantidad: z
     .number()
     .min(0)
@@ -104,8 +106,7 @@ export const CreatePDFInputSchema = z.object({
   MonCotiz: z.number().min(0).default(1).describe("Cotización moneda"),
 
   // Receptor
-  DocNro: IdAsString
-    .optional()
+  DocNro: IdAsString.optional()
     .transform((v) => (v === undefined || v === null ? "" : String(v).trim()))
     .refine((v) => v === "" || /^\d{11}$/.test(v), {
       message:
