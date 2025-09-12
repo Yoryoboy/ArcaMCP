@@ -104,9 +104,16 @@ export const CreatePDFInputSchema = z.object({
   MonCotiz: z.number().min(0).default(1).describe("Cotización moneda"),
 
   // Receptor
-  DocNro: IdAsString.optional().describe(
-    "Número de documento del receptor. En caso de no ser necesario declarar el receptor, se puede omitir. Dejar espacio en blanco"
-  ),
+  DocNro: IdAsString
+    .optional()
+    .transform((v) => (v === undefined || v === null ? "" : String(v).trim()))
+    .refine((v) => v === "" || /^\d{11}$/.test(v), {
+      message:
+        "DocNro debe ser CUIL/CUIT de 11 dígitos o bien vacío explícito si no corresponde declarar receptor.",
+    })
+    .describe(
+      "Número de documento del receptor (CUIL/CUIT). Debe ser de 11 dígitos, sin puntos ni guiones. Si no corresponde declarar receptor, dejar explícitamente en blanco (string vacío). No inventar números. Si el usuario no lo ha especificado y es necesario, preguntar: el LLM no debe asumir esta información."
+    ),
   NOMBRE_RECEPTOR: z
     .string()
     .min(1)
@@ -128,10 +135,25 @@ export const CreatePDFInputSchema = z.object({
 
   // Otros
   CONDICION_PAGO: z
-    .string()
-    .optional()
-    .default(
-      "Es como se ha pagado el comprobante. Ejemplo: 'Contado', 'Transferencia', 'Cheque', 'Débito', 'Crédito', 'Otros'"
+    .enum([
+      "Contado",
+      "Efectivo",
+      "Transferencia",
+      "Depósito",
+      "Tarjeta de Débito",
+      "Tarjeta de Crédito",
+      "Mercado Pago",
+      "Billetera virtual",
+      "Cheque",
+      "Cuenta Corriente",
+      "A crédito",
+      "Contraentrega",
+      "QR interoperable",
+      "Otros",
+    ])
+    .default("Contado")
+    .describe(
+      "Condición de venta / medio de pago. Seleccionar una opción del enum: Contado, Efectivo, Transferencia, Depósito, Tarjeta de Débito, Tarjeta de Crédito, Mercado Pago, Billetera virtual, Cheque, Cuenta Corriente, A crédito, Contraentrega, QR interoperable u Otros. Si el usuario no lo ha especificado, preguntarle y no asumir esta información."
     ),
   FchServDesde: z
     .string()
