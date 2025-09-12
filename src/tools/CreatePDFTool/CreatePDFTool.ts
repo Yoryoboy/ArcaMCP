@@ -21,7 +21,7 @@ export class CreatePDFTool {
   static readonly metadata = {
     title: "Crear PDF de factura",
     description:
-      "Genera un PDF dinámico de un comprobante electrónico combinando datos del voucher, emisor y receptor desde AFIP. La manera más recomendada de llenar la información para la factura de manera correcta es utilizar las herramientas apropiadas para recuperar los datos del CAE y los datos tanto del emisor como del receptor utilizando sus CUIT. El LLM no debe asumir ninguna información que no haya sido dada explícitamente o que no pueda inferir. Una vez todos los datos estén recopilados, se debe hacer un resumen de la factura tal cual como quedaría y mostrársela al usuario antes de proceder. Procederemos solo cuando tengamos la confirmación explícita del usuario.",
+      "Genera un PDF dinámico de un comprobante electrónico combinando datos del voucher, emisor y receptor desde AFIP. La manera más recomendada de llenar la información para la factura de manera correcta es utilizar las herramientas apropiadas para recuperar los datos del CAE y los datos tanto del emisor como del receptor utilizando sus CUIT. El LLM no debe asumir ninguna información que no haya sido dada explícitamente o que no pueda inferir. Una vez todos los datos estén recopilados, se debe hacer un resumen de la factura tal cual como quedaría y mostrársela al usuario antes de proceder. Procederemos solo cuando tengamos la confirmación explícita del usuario. Nota importante: este tool usa dos campos relacionados al tipo de comprobante para evitar ambigüedad: CbteTipo (código numérico AFIP para uso técnico/QR) y CbteLetra (A/B/C/M) únicamente para la visualización en el PDF.",
     inputSchema: CreatePDFInputSchema.shape,
   };
 
@@ -64,7 +64,7 @@ export class CreatePDFTool {
 
       // 4) Reemplazos de placeholders
       const replacements: Record<string, string> = {
-        "{{CbteTipo}}": String(input.CbteTipo),
+        "{{CbteLetra}}": String(input.CbteLetra),
         "{{NOMBRE_EMISOR}}": input.NOMBRE_EMISOR,
         "{{CUIT_EMISOR}}": input.CUIT_EMISOR,
         "{{DIRECCION_EMISOR}}": input.DIRECCION_EMISOR,
@@ -106,7 +106,7 @@ export class CreatePDFTool {
       }
 
       // 5) Crear PDF con AFIP SDK
-      const fileName = `Factura_${input.CbteTipo}_${String(
+      const fileName = `Factura_${input.CbteLetra}_${String(
         input.PtoVta
       ).padStart(5, "0")}_${String(input.CbteNro).padStart(8, "0")}`;
 

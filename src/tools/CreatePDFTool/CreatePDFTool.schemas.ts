@@ -40,7 +40,12 @@ export const CreatePDFInputSchema = z.object({
     .int()
     .min(1)
     .describe(
-      "Tipo de comprobante. Es el tipo de factura y se puede conseguir con el tool get_voucher_types. Se debe poner la letra del tipo de comprobante. Ej: Factura C, en este caso se pone C."
+      "Código numérico del tipo de comprobante según AFIP (por ejemplo, Factura C = 11). Este valor se utiliza para propósitos técnicos como la generación del QR y debe obtenerse con el tool get_voucher_types. IMPORTANTE: Para la letra que se muestra en el PDF (A/B/C/M), usar el campo CbteLetra."
+    ),
+  CbteLetra: z
+    .enum(["A", "B", "C", "M"])
+    .describe(
+      "Letra del comprobante para visualización en el PDF (A/B/C/M). No utilizar aquí el Id numérico devuelto por get_voucher_types. Si sólo se dispone de la descripción (p. ej., 'Factura C'), extraer la letra (C). Se define CbteLetra separado de CbteTipo para evitar ambigüedad: CbteTipo es el código numérico para AFIP/QR, mientras que CbteLetra es únicamente la representación visual en el PDF."
     ),
   NOMBRE_EMISOR: z
     .string()
