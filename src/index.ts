@@ -19,6 +19,7 @@ import {
   CreatePDFTool,
   GetInvoicesInDateRangeTool,
   GetCuitFromDniTool,
+  MisComprobantesTool,
 } from "./tools/index.js";
 
 const server = new McpServer({
@@ -132,6 +133,12 @@ server.registerTool(
   GetTaxConditionTypesTool.name,
   GetTaxConditionTypesTool.metadata,
   GetTaxConditionTypesTool.execute
+);
+
+server.registerTool(
+  MisComprobantesTool.name,
+  MisComprobantesTool.metadata,
+  MisComprobantesTool.execute
 );
 
 const transport = new StdioServerTransport();
