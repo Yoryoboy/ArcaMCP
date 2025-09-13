@@ -68,7 +68,7 @@ export class MisComprobantesTool {
         content: [
           {
             type: "text" as const,
-            text: `Automatización iniciada. ID: ${response.id}. Status: ${response.status}. Darle al usuario el ID, para que luego pueda consultarlo. Usa el tool 'get_automation_details' con este ID para consultar el estado o los resultados finales.`,
+            text: `Automatización iniciada. ID: ${response.id}. Status: ${response.status}. Darle al usuario el ID, para que luego pueda consultarlo.`,
           },
           {
             type: "text" as const,
