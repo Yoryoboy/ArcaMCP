@@ -17,3 +17,4 @@ export { GetCuitFromDniTool } from "./GetCuitFromDniTool/GetCuitFromDniTool.js";
 export { CreatePDFTool } from "./CreatePDFTool/CreatePDFTool.js";
 export { GetInvoicesInDateRangeTool } from "./GetInvoicesInDateRangeTool/GetInvoicesInDateRangeTool.js";
 export { MisComprobantesTool } from "./MisComprobantesTool/MisComprobantesTool.js";
+export { GetAutomationDetailsTool } from "./GetAutomationDetailsTool/GetAutomationDetailsTool.js";

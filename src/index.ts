@@ -20,6 +20,7 @@ import {
   GetInvoicesInDateRangeTool,
   GetCuitFromDniTool,
   MisComprobantesTool,
+  GetAutomationDetailsTool,
 } from "./tools/index.js";
 
 const server = new McpServer({
@@ -139,6 +140,12 @@ server.registerTool(
   MisComprobantesTool.name,
   MisComprobantesTool.metadata,
   MisComprobantesTool.execute
+);
+
+server.registerTool(
+  GetAutomationDetailsTool.name,
+  GetAutomationDetailsTool.metadata,
+  GetAutomationDetailsTool.execute
 );
 
 const transport = new StdioServerTransport();

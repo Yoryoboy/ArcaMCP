@@ -69,9 +69,9 @@ export const MisComprobantesInputObject = z.object({
   // Control de ejecución
   wait: z
     .boolean()
-    .default(true)
+    .default(false)
     .describe(
-      "Si es true, se espera a que la automatización complete y se devuelven los resultados. Por defecto true para no continuar hasta recibir la respuesta. Las credenciales (CUIT, username y password) se toman desde la configuración del servidor (config)."
+      "Ignorado: este tool siempre inicia la automatización en modo asíncrono (wait=false) y devuelve sólo { id, status }. Para obtener el resultado final, usar el tool 'get_automation_details' con el id devuelto. Las credenciales (CUIT, username y password) se toman desde la configuración del servidor (config)."
     ),
 });
 

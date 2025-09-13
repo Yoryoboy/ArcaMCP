@@ -6,7 +6,7 @@ import {
   MisComprobantesInputSchema,
   MisComprobantesInputObject,
 } from "./MisComprobantesTool.schemas.js";
-import { MisComprobantes } from "./MisComprobantesTool.types.js";
+import { AutomationStartResponse } from "./MisComprobantesTool.types.js";
 
 export class MisComprobantesTool {
   static readonly name = "mis_comprobantes";
@@ -14,7 +14,7 @@ export class MisComprobantesTool {
   static readonly metadata = {
     title: "Listar comprobantes (Mis Comprobantes)",
     description:
-      "Consulta el aplicativo 'Mis Comprobantes' de ARCA para descargar comprobantes emitidos o recibidos por un CUIT. Se requiere CUIT y password de ARCA (el username es el mismo CUIT). Los filtros son opcionales. Por defecto se espera a que finalice la automatización (wait=true) para no continuar hasta recibir la respuesta.",
+      "Inicia la automatización 'Mis Comprobantes' de ARCA para descargar comprobantes emitidos o recibidos por un CUIT. Este tool SIEMPRE ejecuta en modo asíncrono (wait=false) y devuelve sólo { id, status }. Para consultar el resultado final, usar el tool 'get_automation_details' con el id devuelto. Las credenciales (CUIT, username y password) se leen de la configuración.",
     inputSchema: MisComprobantesInputObject.shape,
   };
 
@@ -60,14 +60,16 @@ export class MisComprobantesTool {
         ...(Object.keys(filters).length > 0 ? { filters } : {}),
       } as const;
 
-      const response: MisComprobantes = await (afip as any).CreateAutomation(
-        "mis-comprobantes",
-        data,
-        wait ?? true
-      );
+      const response: AutomationStartResponse = await (
+        afip as any
+      ).CreateAutomation("mis-comprobantes", data, false);
 
       return {
         content: [
+          {
+            type: "text" as const,
+            text: `Automatización iniciada. ID: ${response.id}. Status: ${response.status}. Darle al usuario el ID, para que luego pueda consultarlo. Usa el tool 'get_automation_details' con este ID para consultar el estado o los resultados finales.`,
+          },
           {
             type: "text" as const,
             text: JSON.stringify(response, null, 2),
