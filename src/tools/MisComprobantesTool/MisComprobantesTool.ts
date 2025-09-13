@@ -6,6 +6,7 @@ import {
   MisComprobantesInputSchema,
   MisComprobantesInputObject,
 } from "./MisComprobantesTool.schemas.js";
+import { MisComprobantes } from "./MisComprobantesTool.types.js";
 
 export class MisComprobantesTool {
   static readonly name = "mis_comprobantes";
@@ -41,12 +42,16 @@ export class MisComprobantesTool {
       if (t !== undefined) filters.t = t;
       if (fechaEmision !== undefined) filters.fechaEmision = fechaEmision;
       if (puntosVenta !== undefined) filters.puntosVenta = puntosVenta;
-      if (tiposComprobantes !== undefined) filters.tiposComprobantes = tiposComprobantes;
-      if (comprobanteDesde !== undefined) filters.comprobanteDesde = comprobanteDesde;
-      if (comprobanteHasta !== undefined) filters.comprobanteHasta = comprobanteHasta;
+      if (tiposComprobantes !== undefined)
+        filters.tiposComprobantes = tiposComprobantes;
+      if (comprobanteDesde !== undefined)
+        filters.comprobanteDesde = comprobanteDesde;
+      if (comprobanteHasta !== undefined)
+        filters.comprobanteHasta = comprobanteHasta;
       if (tipoDoc !== undefined) filters.tipoDoc = tipoDoc;
       if (nroDoc !== undefined) filters.nroDoc = nroDoc;
-      if (codigoAutorizacion !== undefined) filters.codigoAutorizacion = codigoAutorizacion;
+      if (codigoAutorizacion !== undefined)
+        filters.codigoAutorizacion = codigoAutorizacion;
 
       const data = {
         cuit: CUIT,
@@ -55,7 +60,7 @@ export class MisComprobantesTool {
         ...(Object.keys(filters).length > 0 ? { filters } : {}),
       } as const;
 
-      const response = await (afip as any).CreateAutomation(
+      const response: MisComprobantes = await (afip as any).CreateAutomation(
         "mis-comprobantes",
         data,
         wait ?? true

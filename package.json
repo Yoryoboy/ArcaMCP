@@ -7,7 +7,7 @@
   "scripts": {
     "build": "tsc -p tsconfig.json",
     "dev": "npx tsx src/index.ts",
-    "inspector": "npx -y @modelcontextprotocol/inspector npx -y tsx src/index.ts"
+    "inspector": "npx -y @modelcontextprotocol/inspector -e MCP_SERVER_REQUEST_TIMEOUT=600000 -e MCP_REQUEST_TIMEOUT_RESET_ON_PROGRESS=true npx -y tsx src/index.ts"
   },
   "keywords": [
     "monotributo",
