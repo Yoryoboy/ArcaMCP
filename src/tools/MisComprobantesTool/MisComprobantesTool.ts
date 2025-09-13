@@ -2,7 +2,9 @@ import { MCPResponse } from "../../core/types.js";
 import afip from "../../services/afip/client.js";
 import config from "../../config.js";
 import {
+  MisComprobantesInputParams,
   MisComprobantesInputSchema,
+  MisComprobantesInputObject,
 } from "./MisComprobantesTool.schemas.js";
 
 export class MisComprobantesTool {
@@ -12,20 +14,45 @@ export class MisComprobantesTool {
     title: "Listar comprobantes (Mis Comprobantes)",
     description:
       "Consulta el aplicativo 'Mis Comprobantes' de ARCA para descargar comprobantes emitidos o recibidos por un CUIT. Se requiere CUIT y password de ARCA (el username es el mismo CUIT). Los filtros son opcionales. Por defecto se espera a que finalice la automatización (wait=true) para no continuar hasta recibir la respuesta.",
-    inputSchema: MisComprobantesInputSchema.shape,
+    inputSchema: MisComprobantesInputObject.shape,
   };
 
-  static async execute(params: unknown): Promise<MCPResponse> {
+  static async execute(
+    params: MisComprobantesInputParams
+  ): Promise<MCPResponse> {
     try {
       const input = MisComprobantesInputSchema.parse(params);
-      const { filters, wait } = input;
+      const {
+        wait,
+        t,
+        fechaEmision,
+        puntosVenta,
+        tiposComprobantes,
+        comprobanteDesde,
+        comprobanteHasta,
+        tipoDoc,
+        nroDoc,
+        codigoAutorizacion,
+      } = input as MisComprobantesInputParams;
       const { CUIT, PASSWORD } = config;
+
+      // Construir 'filters' sólo con campos presentes
+      const filters: Record<string, unknown> = {};
+      if (t !== undefined) filters.t = t;
+      if (fechaEmision !== undefined) filters.fechaEmision = fechaEmision;
+      if (puntosVenta !== undefined) filters.puntosVenta = puntosVenta;
+      if (tiposComprobantes !== undefined) filters.tiposComprobantes = tiposComprobantes;
+      if (comprobanteDesde !== undefined) filters.comprobanteDesde = comprobanteDesde;
+      if (comprobanteHasta !== undefined) filters.comprobanteHasta = comprobanteHasta;
+      if (tipoDoc !== undefined) filters.tipoDoc = tipoDoc;
+      if (nroDoc !== undefined) filters.nroDoc = nroDoc;
+      if (codigoAutorizacion !== undefined) filters.codigoAutorizacion = codigoAutorizacion;
 
       const data = {
         cuit: CUIT,
         username: CUIT,
         password: PASSWORD,
-        ...(filters ? { filters } : {}),
+        ...(Object.keys(filters).length > 0 ? { filters } : {}),
       } as const;
 
       const response = await (afip as any).CreateAutomation(

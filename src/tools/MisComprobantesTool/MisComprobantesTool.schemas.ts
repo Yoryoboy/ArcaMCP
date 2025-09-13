@@ -3,13 +3,16 @@ import z from "zod";
 // Username de ARCA = CUIT.
 // En este tool pedimos CUIT y password explícitamente y construimos el username = CUIT.
 
-const IdAsString = z.union([z.string(), z.number()]).transform((v) => String(v));
+const IdAsString = z
+  .union([z.string(), z.number()])
+  .transform((v) => String(v));
 
 // dd/mm/yyyy - dd/mm/yyyy
-const FechaRangoRegex = /^(\d{2})\/(\d{2})\/(\d{4})\s-\s(\d{2})\/(\d{2})\/(\d{4})$/;
+const FechaRangoRegex =
+  /^(\d{2})\/(\d{2})\/(\d{4})\s-\s(\d{2})\/(\d{2})\/(\d{4})$/;
 
-export const MisComprobantesFiltersSchema = z
-  .object({
+export const MisComprobantesInputObject = z.object({
+    // Campos de filtros al nivel superior para mejorar UX en el Inspector
     t: z
       .enum(["E", "R"]) // E = Emitidos, R = Recibidos
       .optional()
@@ -53,8 +56,7 @@ export const MisComprobantesFiltersSchema = z
       .describe(
         "Código de tipo de documento del receptor (p. ej., 80=CUIT). Usar get_document_types si se requiere."
       ),
-    nroDoc: IdAsString
-      .optional()
+    nroDoc: IdAsString.optional()
       .transform((v) => (v == null ? undefined : String(v).replace(/\D+/g, "")))
       .describe(
         "Número de documento del receptor. Sin puntos ni guiones (solo dígitos). Si no corresponde, omitir."
@@ -66,33 +68,27 @@ export const MisComprobantesFiltersSchema = z
       .describe(
         "Código de autorización (CAE) de 14 dígitos. Si no corresponde, omitir."
       ),
-  })
-  .refine(
-    (v) => {
-      if (v.comprobanteDesde != null && v.comprobanteHasta != null) {
-        return v.comprobanteDesde <= v.comprobanteHasta;
-      }
-      return true;
-    },
-    {
-      message:
-        "El rango de comprobantes es inválido: 'comprobanteDesde' debe ser menor o igual a 'comprobanteHasta'.",
-      path: ["comprobanteDesde"],
-    }
-  );
-
-export const MisComprobantesInputSchema = z.object({
-  filters: MisComprobantesFiltersSchema
-    .optional()
-    .describe(
-      "Filtros opcionales para delimitar la búsqueda: t (E/R), fechaEmision ('DD/MM/YYYY - DD/MM/YYYY'), puntosVenta, tiposComprobantes, comprobanteDesde/hasta, tipoDoc, nroDoc, codigoAutorizacion."
-    ),
-  wait: z
-    .boolean()
-    .default(true)
-    .describe(
-      "Si es true, se espera a que la automatización complete y se devuelven los resultados. Por defecto true para no continuar hasta recibir la respuesta. Las credenciales (CUIT, username y password) se toman desde la configuración del servidor (config)."
-    ),
+    // Control de ejecución
+    wait: z
+      .boolean()
+      .default(true)
+      .describe(
+        "Si es true, se espera a que la automatización complete y se devuelven los resultados. Por defecto true para no continuar hasta recibir la respuesta. Las credenciales (CUIT, username y password) se toman desde la configuración del servidor (config)."
+      ),
 });
 
-export type MisComprobantesInput = z.infer<typeof MisComprobantesInputSchema>;
+export const MisComprobantesInputSchema = MisComprobantesInputObject.refine(
+  (v) => {
+    if (v.comprobanteDesde != null && v.comprobanteHasta != null) {
+      return v.comprobanteDesde <= v.comprobanteHasta;
+    }
+    return true;
+  },
+  {
+    message:
+      "El rango de comprobantes es inválido: 'comprobanteDesde' debe ser menor o igual a 'comprobanteHasta'.",
+    path: ["comprobanteDesde"],
+  }
+);
+
+export type MisComprobantesInputParams = z.infer<typeof MisComprobantesInputSchema>;
