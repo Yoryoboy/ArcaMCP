@@ -19,7 +19,7 @@
   "license": "MIT",
   "dependencies": {
     "@afipsdk/afip.js": "^1.2.0",
-    "@modelcontextprotocol/sdk": "1.17.1",
+    "@modelcontextprotocol/sdk": "^1.18.0",
     "dotenv": "^16.4.5",
     "qrcode": "^1.5.4",
     "zod": "^3.25.67"
