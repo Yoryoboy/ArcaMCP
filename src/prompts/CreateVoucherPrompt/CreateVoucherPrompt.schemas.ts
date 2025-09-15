@@ -4,7 +4,7 @@ import { completable } from "@modelcontextprotocol/sdk/server/completable.js";
 // Args del prompt: todos opcionales y de tipo string, según requisito del SDK MCP
 // (PromptArgsRawShape: ZodString u opcional). El asistente debe parsear y validar.
 export const CreateVoucherPromptArgsSchema = z.object({
-  metodo: completable(
+  modoNumeracion: completable(
     z
       .string()
       .describe(
@@ -20,7 +20,7 @@ export const CreateVoucherPromptArgsSchema = z.object({
       .describe("Concepto del comprobante: 1=Productos, 2=Servicios, 3=Productos y Servicios"),
     (value) => ["1", "2", "3"].filter((v) => v.startsWith(value ?? ""))
   ).optional(),
-  cbteTipo: completable(
+  tipoComprobante: completable(
     z
       .string()
       .describe(
@@ -38,7 +38,7 @@ export const CreateVoucherPromptArgsSchema = z.object({
       return ordered.filter((v) => v.startsWith(base));
     }
   ).optional(),
-  ptoVta: completable(
+  puntoDeVenta: completable(
     z
       .string()
       .describe(
@@ -48,20 +48,20 @@ export const CreateVoucherPromptArgsSchema = z.object({
   ).optional(),
 
   // Moneda
-  monId: completable(
+  moneda: completable(
     z
       .string()
       .describe("Código de moneda (ej: PES, DOL, EUR). Si se omite, usar PES."),
     (value) => ["PES", "DOL", "EUR"].filter((v) => v.startsWith((value ?? "").toUpperCase()))
   ).optional(),
-  monCotiz: completable(
+  cotizacion: completable(
     z
       .string()
       .describe(
         "Cotización de la moneda. Para PES es 1. Si MonId != PES y no se provee, el asistente debe obtenerla con get_exchange_rate (fecha = CbteFch)."
       ),
     (value, context) => {
-      const monId = (context?.arguments?.["monId"] as string | undefined)?.toUpperCase();
+      const monId = (context?.arguments?.["moneda"] as string | undefined)?.toUpperCase();
       const base = (value ?? "").toString();
       if (!monId || monId === "PES") {
         return ["1"].filter((v) => v.startsWith(base));
@@ -71,7 +71,7 @@ export const CreateVoucherPromptArgsSchema = z.object({
   ).optional(),
 
   // Identificación del receptor
-  docTipo: completable(
+  tipoDocumento: completable(
     z
       .string()
       .describe(
@@ -79,13 +79,13 @@ export const CreateVoucherPromptArgsSchema = z.object({
       ),
     (value) => ["99", "96", "80"].filter((v) => v.startsWith(value ?? ""))
   ).optional(),
-  docNro: z
+  numeroDocumento: z
     .string()
     .optional()
     .describe(
       "Número de documento del comprador. Si es Consumidor Final y el monto es < $10.000.000 ARS, puede omitirse."
     ),
-  condicionIVAReceptorId: completable(
+  condicionIVAReceptor: completable(
     z
       .string()
       .describe(
@@ -98,7 +98,7 @@ export const CreateVoucherPromptArgsSchema = z.object({
   ).optional(),
 
   // Fechas
-  cbteFch: completable(
+  fechaComprobante: completable(
     z
       .string()
       .describe(
@@ -118,7 +118,7 @@ export const CreateVoucherPromptArgsSchema = z.object({
       return [fmt(now), fmt(yesterday), fmt(tomorrow)].filter((v) => v.startsWith(base));
     }
   ).optional(),
-  fchServDesde: completable(
+  fechaServicioDesde: completable(
     z
       .string()
       .describe(
@@ -128,13 +128,13 @@ export const CreateVoucherPromptArgsSchema = z.object({
       const base = value ?? "";
       const concepto = context?.arguments?.["concepto"] as string | undefined;
       if (concepto === "2" || concepto === "3") {
-        const today = context?.arguments?.["cbteFch"] as string | undefined;
+        const today = context?.arguments?.["fechaComprobante"] as string | undefined;
         return (today ? [today] : []).filter((v) => v.startsWith(base));
       }
       return [];
     }
   ).optional(),
-  fchServHasta: completable(
+  fechaServicioHasta: completable(
     z
       .string()
       .describe(
@@ -143,14 +143,14 @@ export const CreateVoucherPromptArgsSchema = z.object({
     (value, context) => {
       const base = value ?? "";
       const concepto = context?.arguments?.["concepto"] as string | undefined;
-      const desde = context?.arguments?.["fchServDesde"] as string | undefined;
+      const desde = context?.arguments?.["fechaServicioDesde"] as string | undefined;
       if (concepto === "2" || concepto === "3") {
         return (desde ? [desde] : []).filter((v) => v.startsWith(base));
       }
       return [];
     }
   ).optional(),
-  fchVtoPago: completable(
+  fechaVencimientoPago: completable(
     z
       .string()
       .describe(
@@ -158,13 +158,13 @@ export const CreateVoucherPromptArgsSchema = z.object({
       ),
     (value, context) => {
       const base = value ?? "";
-      const cbteFch = context?.arguments?.["cbteFch"] as string | undefined;
-      return (cbteFch ? [cbteFch] : []).filter((v) => v.startsWith(base));
+      const fc = context?.arguments?.["fechaComprobante"] as string | undefined;
+      return (fc ? [fc] : []).filter((v) => v.startsWith(base));
     }
   ).optional(),
 
   // Importes principales (como texto; el asistente debe parsear a número)
-  impTotal: completable(
+  importeTotal: completable(
     z
       .string()
       .describe(
@@ -172,9 +172,9 @@ export const CreateVoucherPromptArgsSchema = z.object({
       ),
     (value, context) => {
       const base = value ?? "";
-      const cbteTipo = context?.arguments?.["cbteTipo"] as string | undefined;
-      const impNeto = parseFloat(String(context?.arguments?.["impNeto"] ?? ""));
-      const impTrib = parseFloat(String(context?.arguments?.["impTrib"] ?? ""));
+      const cbteTipo = context?.arguments?.["tipoComprobante"] as string | undefined;
+      const impNeto = parseFloat(String(context?.arguments?.["importeNeto"] ?? ""));
+      const impTrib = parseFloat(String(context?.arguments?.["importeTributos"] ?? ""));
       if (cbteTipo === "11" && !Number.isNaN(impNeto) && !Number.isNaN(impTrib)) {
         const total = (impNeto + impTrib).toString();
         return [total].filter((v) => v.startsWith(base));
@@ -182,13 +182,13 @@ export const CreateVoucherPromptArgsSchema = z.object({
       return [];
     }
   ).optional(),
-  impNeto: z
+  importeNeto: z
     .string()
     .optional()
     .describe(
       "Importe neto. En Factura C corresponde al Subtotal. Si no se provee, el asistente debe inferirlo del monto o ítems."
     ),
-  impTrib: completable(
+  importeTributos: completable(
     z
       .string()
       .describe("Suma de tributos (por defecto 0 si no aplica)"),
@@ -196,15 +196,15 @@ export const CreateVoucherPromptArgsSchema = z.object({
   ).optional(),
 
   // Manual numbering extras (solo si metodo = manual)
-  cantReg: completable(
+  cantidadRegistros: completable(
     z.string().describe("Cantidad de registros (por defecto 1)"),
     (value) => ["1"].filter((v) => v.startsWith(value ?? ""))
   ).optional(),
-  cbteDesde: z
+  comprobanteDesde: z
     .string()
     .optional()
     .describe("Número de comprobante desde (requerido en modo manual)"),
-  cbteHasta: z
+  comprobanteHasta: z
     .string()
     .optional()
     .describe("Número de comprobante hasta (requerido en modo manual)"),

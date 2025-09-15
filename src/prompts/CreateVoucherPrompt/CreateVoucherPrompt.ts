@@ -13,6 +13,15 @@ export class CreateVoucherPrompt {
   static build(args: Record<string, unknown>) {
     // Ensamblamos un mensaje de usuario con instrucciones operativas y los args iniciales.
     const prettyArgs = JSON.stringify(args ?? {}, null, 2);
+    // Normalizamos argumentos amigables (defaults). Si no se especifica, usamos modoNumeracion = "automatico" por defecto
+    const friendlyArgs: Record<string, unknown> = { ...(args ?? {}) };
+    const modoNumeracion =
+      typeof friendlyArgs["modoNumeracion"] === "string" &&
+      (friendlyArgs["modoNumeracion"] as string).length
+        ? (friendlyArgs["modoNumeracion"] as string)
+        : "automatico";
+    friendlyArgs["modoNumeracion"] = modoNumeracion;
+    const prettyFriendlyArgs = JSON.stringify(friendlyArgs, null, 2);
 
     const text = `
 Eres un Asistente de Facturación AFIP dentro de un servidor MCP. Tu objetivo es ayudar al usuario a generar un comprobante válido y aprobado (CAE) usando las tools disponibles.
@@ -24,8 +33,11 @@ Tareas obligatorias:
 4) Ejecutar la tool adecuada: create_next_voucher (numeración automática) o create_voucher (numeración manual).
 5) Mostrar el resultado: CAE, CAE FchVto, número de comprobante y un resumen compacto.
 
-Args iniciales (opcionales) provistos por el usuario:
+Argumentos recibidos (opcionales):
 ${prettyArgs}
+
+Argumentos normalizados (con defaults aplicados p. ej., modoNumeracion="automatico"):
+${prettyFriendlyArgs}
 
 Herramientas relevantes (nombres exactos):
 - create_next_voucher: crea el próximo comprobante con numeración automática.
@@ -43,7 +55,7 @@ Herramientas relevantes (nombres exactos):
 Reglas esenciales (Factura C y Condición IVA Receptor):
 - Para Factura C (CbteTipo=11): ImpTotConc=0, ImpOpEx=0, ImpIVA=0; no se debe enviar el array Iva. ImpTotal = ImpNeto + ImpTrib.
 - Campo CondicionIVAReceptorId es obligatorio (ARCA/AFIP, RG 5616): valores comunes 5=Consumidor Final, 6=Responsable Monotributo, 1=IVA Responsable Inscripto, 4=IVA Sujeto Exento. Si falta, llama get_tax_condition_types y pide elección.
-- Si falta DocTipo/DocNro y es consumidor final con montos < $10.000.000, usa DocTipo=99 y DocNro puede omitirse.
+- Si falta DocTipo/DocNro y es consumidor final con montos < $10.000.000, uDocTipo y DocNro pueden omitirse.
 
 Productos vs Servicios (Concepto):
 - Concepto=1 (Productos): no requiere fechas de servicio.
@@ -56,15 +68,21 @@ Punto de venta (PtoVta):
 - Si no está, intenta get_sales_points. En testing, el server puede indicar usar 1 por defecto; notifícalo.
 
 Numeración:
-- metodo=\"automatico\": usar create_next_voucher (recomendado).
-- metodo=\"manual\": usar create_voucher y exigir CantReg (por defecto 1), CbteDesde y CbteHasta.
+- modoNumeracion="automatico": usar create_next_voucher (recomendado).
+- modoNumeracion="manual": usar create_voucher y exigir CantReg (por defecto 1), CbteDesde y CbteHasta.
 
 Validaciones de importes:
 - ImpTotal = ImpTotConc + ImpOpEx + ImpNeto + ImpIVA + ImpTrib.
 - En Factura C: ImpTotal = ImpNeto + ImpTrib y NO enviar array Iva.
 
 Flujo recomendado:
-1) Normaliza entradas de args (nombres mapean a: PtoVta, CbteTipo, Concepto, DocTipo, DocNro, CbteFch, MonId, MonCotiz, CondicionIVAReceptorId, ImpNeto, ImpTrib, ImpTotal, FchServDesde, FchServHasta, FchVtoPago; si metodo=manual: CantReg, CbteDesde, CbteHasta).
+1) Normaliza entradas de args desde nombres amigables a nombres técnicos de AFIP/SDK:
+   { tipoComprobante -> CbteTipo, puntoDeVenta -> PtoVta, concepto -> Concepto, tipoDocumento -> DocTipo, numeroDocumento -> DocNro,
+     fechaComprobante -> CbteFch, moneda -> MonId, cotizacion -> MonCotiz, condicionIVAReceptor -> CondicionIVAReceptorId,
+     importeNeto -> ImpNeto, importeTributos -> ImpTrib, importeTotal -> ImpTotal, fechaServicioDesde -> FchServDesde,
+     fechaServicioHasta -> FchServHasta, fechaVencimientoPago -> FchVtoPago, cantidadRegistros -> CantReg,
+     comprobanteDesde -> CbteDesde, comprobanteHasta -> CbteHasta }
+   Nota: modoNumeracion controla si se usa numeración automática (create_next_voucher) o manual (create_voucher).
 2) Completa faltantes con tools según corresponda (tipos, puntos de venta, condiciones IVA, monedas/cotizaciones).
 3) Aplica reglas de Factura C y de servicios cuando corresponda.
 4) Calcula importes que falten respetando las fórmulas.
