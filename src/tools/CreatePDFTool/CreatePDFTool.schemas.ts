@@ -107,13 +107,17 @@ export const CreatePDFInputSchema = z.object({
 
   // Receptor
   DocNro: IdAsString.optional()
-    .transform((v) => (v === undefined || v === null ? "" : String(v).trim()))
+    .transform((v) => {
+      const s = v === undefined || v === null ? "" : String(v).trim();
+      // Normalizamos "0" o cadenas compuestas solo por ceros a vacío explícito
+      return s === "0" || /^0+$/.test(s) ? "" : s;
+    })
     .refine((v) => v === "" || /^\d{11}$/.test(v), {
       message:
         "DocNro debe ser CUIL/CUIT de 11 dígitos o bien vacío explícito si no corresponde declarar receptor.",
     })
     .describe(
-      "Número de documento del receptor (CUIL/CUIT). Debe ser de 11 dígitos, sin puntos ni guiones. Si no corresponde declarar receptor, dejar explícitamente en blanco (string vacío). No inventar números. Si el usuario no lo ha especificado y es necesario, preguntar: el LLM no debe asumir esta información."
+      "Número de documento del receptor (CUIL/CUIT). Debe ser de 11 dígitos, sin puntos ni guiones. Si no corresponde declarar receptor, dejar explícitamente en blanco (string vacío). Este schema normaliza 0 o cadenas de solo ceros ('000...') a vacío. No inventar números. Si el usuario no lo ha especificado y es necesario, preguntar: el LLM no debe asumir esta información."
     ),
   NOMBRE_RECEPTOR: z
     .string()
