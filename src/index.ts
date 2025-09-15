@@ -22,6 +22,7 @@ import {
   MisComprobantesTool,
   GetAutomationDetailsTool,
 } from "./tools/index.js";
+import { CreateVoucherPrompt } from "./prompts/index.js";
 
 const server = new McpServer({
   name: "MonotributoMCP",
@@ -146,6 +147,12 @@ server.registerTool(
   GetAutomationDetailsTool.name,
   GetAutomationDetailsTool.metadata,
   GetAutomationDetailsTool.execute
+);
+
+server.registerPrompt(
+  CreateVoucherPrompt.name,
+  CreateVoucherPrompt.metadata,
+  (args) => CreateVoucherPrompt.build(args)
 );
 
 const transport = new StdioServerTransport();
