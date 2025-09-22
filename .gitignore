@@ -46,7 +46,7 @@ certificado.*
 private.*
 
 ### Project folders to ignore
-docs/
+docs
 tmp/
 temp/
 
