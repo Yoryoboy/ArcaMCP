@@ -175,6 +175,7 @@ Asegúrate de asociar correctamente el PDV al servicio de facturación electrón
   - Uso: `npx tsx scripts/authService.ts <service>`
   - Ejemplos de `<service>`: `wsfe`, `ws_sr_padron_a13`.
   - Valida que la automatización retorne `status="complete"` y `data.status="created"`.
+  - Importante: Para que todas las herramientas funcionen correctamente, es obligatorio autorizar previamente los servicios `wsfe` y `ws_sr_padron_a13` en AFIP.
 
 ## Herramientas adicionales del MCP
 
@@ -219,6 +220,7 @@ Luego, para consultar el resultado:
 ```
 
 Notas:
+
 - Las credenciales (`CUIT`, `username`, `password`) se leen de la configuración (`src/config.ts`).
 - Mientras `status` indique ejecución en curso, vuelve a consultar más tarde con el mismo `id`.
 
@@ -243,6 +245,7 @@ Respuesta típica:
 ```
 
 Recomendación:
+
 - Usa la numeración automática al emitir el comprobante (ver sección del prompt) para asegurar que `CbteNro` sea el correcto antes de crear el PDF.
 
 ## Solución de problemas (troubleshooting)
