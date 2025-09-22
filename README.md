@@ -176,6 +176,75 @@ Asegúrate de asociar correctamente el PDV al servicio de facturación electrón
   - Ejemplos de `<service>`: `wsfe`, `ws_sr_padron_a13`.
   - Valida que la automatización retorne `status="complete"` y `data.status="created"`.
 
+## Herramientas adicionales del MCP
+
+### Mis Comprobantes (asíncrono con consulta por ID)
+
+La tool `mis_comprobantes` inicia la automatización "Mis Comprobantes" de ARCA para listar comprobantes emitidos/recibidos. Por diseño, se ejecuta en modo asíncrono (wait=false):
+
+- Entrada: filtros opcionales como `t`, `fechaEmision`, `puntosVenta`, `tiposComprobantes`, `comprobanteDesde`, `comprobanteHasta`, `tipoDoc`, `nroDoc`, `codigoAutorizacion`.
+- Salida inmediata: un objeto con `id` y `status`. No contiene todavía los datos finales; es el identificador de la ejecución.
+- Consulta del resultado: usa posteriormente el tool `get_automation_details` con ese `id` para verificar si finalizó y recuperar los datos.
+
+Ejemplo de uso conceptual (cliente MCP):
+
+```json
+{
+  "tool": "mis_comprobantes",
+  "params": {
+    "t": "emitidos",
+    "fechaEmision": "2025-09-01..2025-09-22",
+    "puntosVenta": [1],
+    "tiposComprobantes": [11]
+  }
+}
+```
+
+Respuesta típica inicial:
+
+```json
+{
+  "id": "abc123",
+  "status": "running"
+}
+```
+
+Luego, para consultar el resultado:
+
+```json
+{
+  "tool": "get_automation_details",
+  "params": { "id": "abc123" }
+}
+```
+
+Notas:
+- Las credenciales (`CUIT`, `username`, `password`) se leen de la configuración (`src/config.ts`).
+- Mientras `status` indique ejecución en curso, vuelve a consultar más tarde con el mismo `id`.
+
+### Crear PDF de comprobante (enlace válido 24 h)
+
+La tool `create_pdf` genera un PDF a partir de un HTML dinámico y datos del comprobante (incluyendo QR AFIP). Internamente usa `ElectronicBilling.createPDF` de la SDK de AFIP.
+
+- Entrada: datos del comprobante (emisor, receptor, importes, fechas, `CbteTipo`, `CbteLetra`, `PtoVta`, `CbteNro`, `CbteFch`, `CAE_NUMBER`, `CAE_EXPIRY_DATE`, moneda, cotización y los ítems de la factura, entre otros).
+- Proceso recomendado: primero recupera los datos con las tools del MCP (voucher, emisor, receptor). El asistente debe mostrar un resumen y requerir confirmación explícita antes de generar el PDF.
+- Salida: un objeto con `file` (URL descargable) y aviso de expiración. El enlace al PDF es válido por 24 horas.
+
+Respuesta típica:
+
+```json
+{
+  "success": true,
+  "phase": "pdf_created",
+  "message": "PDF generado correctamente. El enlace expira en 24 horas.",
+  "file": "https://.../Factura_C_00001_00000001.pdf",
+  "expiresInHours": 24
+}
+```
+
+Recomendación:
+- Usa la numeración automática al emitir el comprobante (ver sección del prompt) para asegurar que `CbteNro` sea el correcto antes de crear el PDF.
+
 ## Solución de problemas (troubleshooting)
 
 - Certificados no encontrados o error `ENOENT`:
