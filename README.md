@@ -26,11 +26,7 @@ Además, incluye scripts en `scripts/` que automatizan pasos críticos de onboar
      npm install
      ```
 3. Copia/crea un archivo `.env` en la raíz con las variables necesarias (ver sección Configuración).
-4. Ejecuta en modo desarrollo (servidor MCP):
-   ```bash
-   npm run dev
-   ```
-5. (Opcional) Inspecciona el servidor MCP con el Inspector:
+4. (Opcional) Inspecciona el servidor MCP con el Inspector:
    ```bash
    npm run inspector
    ```
