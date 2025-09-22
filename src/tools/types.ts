@@ -13,7 +13,6 @@ import { GetVoucherInfoSchema } from "./GetVoucherInfoTool/GetVoucherInfoTool.sc
 import { GetTaxpayerDetailsSchema } from "./GetTaxpayerDetailsTool/GetTaxpayerDetailsTool.schemas.js";
 import { GetCuitFromDniToolSchema } from "./GetCuitFromDniTool/GetCuitFromDniTool.schemas.js";
 import { CreatePDFInputSchema } from "./CreatePDFTool/CreatePDFTool.schemas.js";
-import { GetInvoicesInDateRangeSchema } from "./GetInvoicesInDateRangeTool/GetInvoicesInDateRangeTool.schemas.js";
 
 export type GetLastVoucherParams = z.infer<typeof GetLastVoucherSchema>;
 
@@ -46,10 +45,6 @@ export type GetCuitFromDniToolParams = z.infer<typeof GetCuitFromDniToolSchema>;
 
 // Expanded: PDF generation params now accept optional overrides and items
 export type CreatePDFParams = z.infer<typeof CreatePDFInputSchema>;
-
-export type GetInvoicesInDateRangeParams = z.infer<
-  typeof GetInvoicesInDateRangeSchema
->;
 
 export interface VoucherSummary {
   cbteNro: number;

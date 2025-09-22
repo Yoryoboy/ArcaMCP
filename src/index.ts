@@ -17,7 +17,6 @@ import {
   GetVoucherInfoTool,
   GetTaxpayerDetailsTool,
   CreatePDFTool,
-  GetInvoicesInDateRangeTool,
   GetCuitFromDniTool,
   MisComprobantesTool,
   GetAutomationDetailsTool,
@@ -69,12 +68,6 @@ server.registerTool(
   CreatePDFTool.name,
   CreatePDFTool.metadata,
   CreatePDFTool.execute
-);
-
-server.registerTool(
-  GetInvoicesInDateRangeTool.name,
-  GetInvoicesInDateRangeTool.metadata,
-  GetInvoicesInDateRangeTool.execute
 );
 
 server.registerTool(
