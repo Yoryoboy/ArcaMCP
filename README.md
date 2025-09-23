@@ -1,3 +1,5 @@
+[![MseeP.ai Security Assessment Badge](https://mseep.net/pr/yoryoboy-arcamcp-badge.png)](https://mseep.ai/app/yoryoboy-arcamcp)
+
 # ARCA MCP (Model Context Protocol) para AFIP/ARCA
 
 Este proyecto implementa un servidor MCP (Model Context Protocol) orientado a integrarse con AFIP (Argentina) y automatizar tareas claves del flujo de facturación electrónica y consulta de padrones. Aprovecha la SDK oficial de AFIP (`@afipsdk/afip.js`) y automatizaciones para:
