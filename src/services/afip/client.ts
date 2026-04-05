@@ -12,19 +12,12 @@ const {
   PROD_KEY_PATH,
 } = config;
 
-const afip = AFIP_PRODUCTION
-  ? new Afip({
-      cert: fs.readFileSync(PROD_CERT_PATH, "utf8"),
-      key: fs.readFileSync(PROD_KEY_PATH, "utf8"),
-      CUIT,
-      production: AFIP_PRODUCTION,
-      access_token: ACCESS_TOKEN,
-    })
-  : new Afip({
-      cert: fs.readFileSync(DEV_CERT_PATH, "utf8"),
-      key: fs.readFileSync(DEV_KEY_PATH, "utf8"),
-      CUIT,
-      production: AFIP_PRODUCTION,
-    });
+const afip = new Afip({
+  cert: fs.readFileSync(AFIP_PRODUCTION ? PROD_CERT_PATH : DEV_CERT_PATH, "utf8"),
+  key: fs.readFileSync(AFIP_PRODUCTION ? PROD_KEY_PATH : DEV_KEY_PATH, "utf8"),
+  CUIT,
+  production: AFIP_PRODUCTION,
+  access_token: ACCESS_TOKEN,
+});
 
 export default afip;
