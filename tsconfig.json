@@ -11,8 +11,7 @@
     "noEmit": false,
     "outDir": "dist",
     "rootDir": "src",
-    "types": ["node"],
-    "baseUrl": "."
+    "types": ["node"]
   },
   "include": ["src/**/*", "templates/**/*", "docs/**/*"],
   "exclude": ["node_modules", "dist"]
