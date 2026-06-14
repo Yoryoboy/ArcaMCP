@@ -18,13 +18,10 @@ export class MisComprobantesTool {
     inputSchema: MisComprobantesInputObject.shape,
   };
 
-  static async execute(
-    params: MisComprobantesInputParams
-  ): Promise<MCPResponse> {
+  static async execute(params: MisComprobantesInputParams): Promise<MCPResponse> {
     try {
       const input = MisComprobantesInputSchema.parse(params);
       const {
-        wait,
         t,
         fechaEmision,
         puntosVenta,
@@ -42,16 +39,12 @@ export class MisComprobantesTool {
       if (t !== undefined) filters.t = t;
       if (fechaEmision !== undefined) filters.fechaEmision = fechaEmision;
       if (puntosVenta !== undefined) filters.puntosVenta = puntosVenta;
-      if (tiposComprobantes !== undefined)
-        filters.tiposComprobantes = tiposComprobantes;
-      if (comprobanteDesde !== undefined)
-        filters.comprobanteDesde = comprobanteDesde;
-      if (comprobanteHasta !== undefined)
-        filters.comprobanteHasta = comprobanteHasta;
+      if (tiposComprobantes !== undefined) filters.tiposComprobantes = tiposComprobantes;
+      if (comprobanteDesde !== undefined) filters.comprobanteDesde = comprobanteDesde;
+      if (comprobanteHasta !== undefined) filters.comprobanteHasta = comprobanteHasta;
       if (tipoDoc !== undefined) filters.tipoDoc = tipoDoc;
       if (nroDoc !== undefined) filters.nroDoc = nroDoc;
-      if (codigoAutorizacion !== undefined)
-        filters.codigoAutorizacion = codigoAutorizacion;
+      if (codigoAutorizacion !== undefined) filters.codigoAutorizacion = codigoAutorizacion;
 
       const data = {
         cuit: CUIT,
@@ -60,9 +53,11 @@ export class MisComprobantesTool {
         ...(Object.keys(filters).length > 0 ? { filters } : {}),
       } as const;
 
-      const response: AutomationStartResponse = await (
-        afip as any
-      ).CreateAutomation("mis-comprobantes", data, false);
+      const response: AutomationStartResponse = await (afip as any).CreateAutomation(
+        "mis-comprobantes",
+        data,
+        false,
+      );
 
       return {
         content: [
@@ -87,7 +82,7 @@ export class MisComprobantesTool {
                 error: error instanceof Error ? error.message : String(error),
               },
               null,
-              2
+              2,
             ),
           },
         ],
