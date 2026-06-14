@@ -28,7 +28,13 @@ export const ComprobantesAsociadosSchema = z.object({
     .describe("Código de tipo de comprobante. Consultar FEParamGetTiposCbte"),
   PtoVta: z.number().describe("Punto de venta"),
   Nro: z.number().describe("Número de comprobante"),
-  Cuit: z.string().optional().describe("CUIT emisor del comprobante"),
+  // @owner-or-third-party
+  Cuit: z
+    .string()
+    .optional()
+    .describe(
+      "CUIT emisor del comprobante asociado (puede ser el emisor actual o un tercero). NO se autocompleta: el LLM debe pedirlo explícitamente."
+    ),
 });
 
 export const OpcionalesItemSchema = z.object({
