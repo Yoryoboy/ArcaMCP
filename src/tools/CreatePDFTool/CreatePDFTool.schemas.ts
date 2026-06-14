@@ -85,9 +85,11 @@ export const CreatePDFInputSchema = z.object({
     ),
   FECHA_INICIO_ACTIVIDADES: z
     .string()
-    .min(4)
     .optional()
     .default("")
+    .refine((value) => value === "" || value.length >= 4, {
+      message: "FECHA_INICIO_ACTIVIDADES debe ser AAAA-MM o vacío",
+    })
     .describe(
       "Fecha de inicio de actividades. Si el usuario no lo ha especificado, se deberá encontrar las opciones disponibles utilizando el tool get_taxpayer_details, es el key periodoActividadPrincipal y viene en formato AAAA-MM. Ejemplo: 2022-01"
     ),

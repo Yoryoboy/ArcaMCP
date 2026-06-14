@@ -66,6 +66,39 @@ describe("CreatePDFInputSchema", () => {
     );
   });
 
+  it("defaults FECHA_INICIO_ACTIVIDADES to an empty string when omitted", async () => {
+    const { CreatePDFInputSchema } = await import("./CreatePDFTool.schemas.js");
+
+    const { FECHA_INICIO_ACTIVIDADES } = CreatePDFInputSchema.parse({
+      ...createValidInput(),
+      FECHA_INICIO_ACTIVIDADES: undefined,
+    });
+
+    expect(FECHA_INICIO_ACTIVIDADES).toBe("");
+  });
+
+  it("fails when FECHA_INICIO_ACTIVIDADES is an explicit short non-empty value", async () => {
+    const { CreatePDFInputSchema } = await import("./CreatePDFTool.schemas.js");
+
+    expect(() =>
+      CreatePDFInputSchema.parse({
+        ...createValidInput(),
+        FECHA_INICIO_ACTIVIDADES: "202",
+      }),
+    ).toThrow("FECHA_INICIO_ACTIVIDADES debe ser AAAA-MM o vacío");
+  });
+
+  it("accepts an explicit empty FECHA_INICIO_ACTIVIDADES value", async () => {
+    const { CreatePDFInputSchema } = await import("./CreatePDFTool.schemas.js");
+
+    const result = CreatePDFInputSchema.parse({
+      ...createValidInput(),
+      FECHA_INICIO_ACTIVIDADES: "",
+    });
+
+    expect(result.FECHA_INICIO_ACTIVIDADES).toBe("");
+  });
+
   it("preserves an explicit CUIT_EMISOR provided by the caller", async () => {
     const { CreatePDFInputSchema } = await import("./CreatePDFTool.schemas.js");
 

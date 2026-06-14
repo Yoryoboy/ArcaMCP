@@ -21,5 +21,11 @@ export function resolveOwnerCuitOrThrow(): string {
     );
   }
 
+  if (!/^\d{11}$/.test(ownerCuit)) {
+    throw new Error(
+      "AFIP_CUIT must be exactly 11 digits when CreatePDFTool omits CUIT_EMISOR",
+    );
+  }
+
   return ownerCuit;
 }
