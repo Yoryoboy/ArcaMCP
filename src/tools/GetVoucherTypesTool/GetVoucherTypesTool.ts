@@ -1,36 +1,10 @@
-import { MCPResponse } from '../../core/types.js';
-import afip from '../../services/afip/client.js';
-import { EmptySchema } from '../shared.schemas.js';
+import afip from "../../services/afip/client.js";
+import { createCatalogTool } from "../catalogToolFactory.js";
 
-export class GetVoucherTypesTool {
-  static readonly name = "get_voucher_types";
-
-  static readonly metadata = {
-    title: "Obtener tipos de comprobantes",
-    description: "Obtiene los tipos de comprobantes disponibles en AFIP (Factura A, B, C, Nota de Crédito, etc.).",
-    inputSchema: EmptySchema.shape,
-  };
-
-  static async execute(): Promise<MCPResponse> {
-    try {
-      const result = await afip.ElectronicBilling.getVoucherTypes();
-      return {
-        content: [{
-          type: "text" as const,
-          text: JSON.stringify(result, null, 2)
-        }]
-      };
-    } catch (error) {
-      return {
-        content: [{
-          type: "text" as const,
-          text: JSON.stringify({
-            error: error instanceof Error ? error.message : "Error desconocido",
-            details: error
-          }, null, 2)
-        }],
-        isError: true
-      };
-    }
-  }
-}
+export const GetVoucherTypesTool = createCatalogTool({
+  name: "get_voucher_types",
+  title: "Obtener tipos de comprobantes",
+  description:
+    "Obtiene los tipos de comprobantes disponibles en AFIP (Factura A, B, C, Nota de Crédito, etc.).",
+  fetcher: () => afip.ElectronicBilling.getVoucherTypes(),
+});
