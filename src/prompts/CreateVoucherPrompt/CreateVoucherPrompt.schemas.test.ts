@@ -1,5 +1,16 @@
 import { afterEach, describe, expect, it, vi } from "vitest";
+import { getCompleter } from "@modelcontextprotocol/sdk/server/completable.js";
 import { CreateVoucherPromptArgsSchema } from "./CreateVoucherPrompt.schemas.js";
+
+function requiredCompleter<T extends Parameters<typeof getCompleter>[0]>(field: T) {
+  const completer = getCompleter(field);
+
+  if (!completer) {
+    throw new Error("Expected completer to be defined");
+  }
+
+  return completer;
+}
 
 describe("CreateVoucherPromptArgsSchema", () => {
   afterEach(() => {
@@ -51,22 +62,22 @@ describe("CreateVoucherPromptArgsSchema", () => {
     const importeTributosField = CreateVoucherPromptArgsSchema.shape.importeTributos.unwrap();
     const cantidadRegistrosField = CreateVoucherPromptArgsSchema.shape.cantidadRegistros.unwrap();
 
-    expect(modoNumeracionField._def.complete("AU")).toEqual(["automatico"]);
+    expect(requiredCompleter(modoNumeracionField)("AU")).toEqual(["automatico"]);
     expect(
-      tipoComprobanteField._def.complete("1", { arguments: { concepto: "2" } }),
+      requiredCompleter(tipoComprobanteField)("1", { arguments: { concepto: "2" } }),
     ).toEqual(["11", "1"]);
-    expect(monedaField._def.complete("d")).toEqual(["DOL"]);
-    expect(cotizacionField._def.complete("", { arguments: { moneda: "DOL" } })).toEqual([]);
-    expect(cotizacionField._def.complete("1", { arguments: {} })).toEqual(["1"]);
-    expect(condicionIVAReceptorField._def.complete("1")).toEqual([
+    expect(requiredCompleter(monedaField)("d")).toEqual(["DOL"]);
+    expect(requiredCompleter(cotizacionField)("", { arguments: { moneda: "DOL" } })).toEqual([]);
+    expect(requiredCompleter(cotizacionField)("1", { arguments: {} })).toEqual(["1"]);
+    expect(requiredCompleter(condicionIVAReceptorField)("1")).toEqual([
       "1",
       "10",
       "13",
       "15",
       "16",
     ]);
-    expect(importeTributosField._def.complete("")).toEqual(["0"]);
-    expect(cantidadRegistrosField._def.complete("")).toEqual(["1"]);
+    expect(requiredCompleter(importeTributosField)("")).toEqual(["0"]);
+    expect(requiredCompleter(cantidadRegistrosField)("")).toEqual(["1"]);
   });
 
   it("suggests fallback values for nullable concept, sales point, and document completions", () => {
@@ -74,12 +85,12 @@ describe("CreateVoucherPromptArgsSchema", () => {
     const puntoDeVentaField = CreateVoucherPromptArgsSchema.shape.puntoDeVenta.unwrap();
     const tipoDocumentoField = CreateVoucherPromptArgsSchema.shape.tipoDocumento.unwrap();
 
-    expect(conceptoField._def.complete(undefined)).toEqual(["1", "2", "3"]);
-    expect(conceptoField._def.complete("3")).toEqual(["3"]);
-    expect(puntoDeVentaField._def.complete(undefined)).toEqual(["1"]);
-    expect(puntoDeVentaField._def.complete("9")).toEqual([]);
-    expect(tipoDocumentoField._def.complete(undefined)).toEqual(["99", "96", "80"]);
-    expect(tipoDocumentoField._def.complete("8")).toEqual(["80"]);
+    expect(requiredCompleter(conceptoField)("")).toEqual(["1", "2", "3"]);
+    expect(requiredCompleter(conceptoField)("3")).toEqual(["3"]);
+    expect(requiredCompleter(puntoDeVentaField)("")).toEqual(["1"]);
+    expect(requiredCompleter(puntoDeVentaField)("9")).toEqual([]);
+    expect(requiredCompleter(tipoDocumentoField)("")).toEqual(["99", "96", "80"]);
+    expect(requiredCompleter(tipoDocumentoField)("8")).toEqual(["80"]);
   });
 
   it("suggests nearby voucher dates deterministically", () => {
@@ -88,12 +99,12 @@ describe("CreateVoucherPromptArgsSchema", () => {
 
     const fechaComprobanteField = CreateVoucherPromptArgsSchema.shape.fechaComprobante.unwrap();
 
-    expect(fechaComprobanteField._def.complete("")).toEqual([
+    expect(requiredCompleter(fechaComprobanteField)("")).toEqual([
       "20260614",
       "20260613",
       "20260615",
     ]);
-    expect(fechaComprobanteField._def.complete("2026061")).toEqual([
+    expect(requiredCompleter(fechaComprobanteField)("2026061")).toEqual([
       "20260614",
       "20260613",
       "20260615",
@@ -109,45 +120,45 @@ describe("CreateVoucherPromptArgsSchema", () => {
       CreateVoucherPromptArgsSchema.shape.fechaVencimientoPago.unwrap();
 
     expect(
-      fechaServicioDesdeField._def.complete("", {
+      requiredCompleter(fechaServicioDesdeField)("", {
         arguments: { concepto: "2", fechaComprobante: "20260614" },
       }),
     ).toEqual(["20260614"]);
     expect(
-      fechaServicioDesdeField._def.complete("", {
+      requiredCompleter(fechaServicioDesdeField)("", {
         arguments: { concepto: "1", fechaComprobante: "20260614" },
       }),
     ).toEqual([]);
 
     expect(
-      fechaServicioHastaField._def.complete("", {
+      requiredCompleter(fechaServicioHastaField)("", {
         arguments: { concepto: "3", fechaServicioDesde: "20260610" },
       }),
     ).toEqual(["20260610"]);
     expect(
-      fechaServicioHastaField._def.complete("", {
+      requiredCompleter(fechaServicioHastaField)("", {
         arguments: { concepto: "3" },
       }),
     ).toEqual([]);
     expect(
-      fechaServicioHastaField._def.complete("", {
+      requiredCompleter(fechaServicioHastaField)("", {
         arguments: { concepto: "1", fechaServicioDesde: "20260610" },
       }),
     ).toEqual([]);
 
     expect(
-      fechaVencimientoPagoField._def.complete("", {
+      requiredCompleter(fechaVencimientoPagoField)("", {
         arguments: { fechaComprobante: "20260614" },
       }),
     ).toEqual(["20260614"]);
-    expect(fechaVencimientoPagoField._def.complete("", { arguments: {} })).toEqual([]);
+    expect(requiredCompleter(fechaVencimientoPagoField)("", { arguments: {} })).toEqual([]);
   });
 
   it("only suggests computed totals for factura C with numeric inputs", () => {
     const importeTotalField = CreateVoucherPromptArgsSchema.shape.importeTotal.unwrap();
 
     expect(
-      importeTotalField._def.complete("", {
+      requiredCompleter(importeTotalField)("", {
         arguments: {
           tipoComprobante: "11",
           importeNeto: "100",
@@ -156,7 +167,7 @@ describe("CreateVoucherPromptArgsSchema", () => {
       }),
     ).toEqual(["105"]);
     expect(
-      importeTotalField._def.complete("", {
+      requiredCompleter(importeTotalField)("", {
         arguments: {
           tipoComprobante: "6",
           importeNeto: "100",
@@ -165,7 +176,7 @@ describe("CreateVoucherPromptArgsSchema", () => {
       }),
     ).toEqual([]);
     expect(
-      importeTotalField._def.complete("", {
+      requiredCompleter(importeTotalField)("", {
         arguments: {
           tipoComprobante: "11",
           importeNeto: "abc",

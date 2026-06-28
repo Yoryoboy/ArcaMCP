@@ -38,7 +38,7 @@ describe("automation tools", () => {
   it("only sends defined mis comprobantes filters and keeps async execution forced", async () => {
     mocks.afip.CreateAutomation.mockResolvedValue({ id: "auto-2", status: "in_process" });
 
-    await MisComprobantesTool.execute({
+      await MisComprobantesTool.execute({
       t: "R",
       fechaEmision: "01/06/2026 - 30/06/2026",
       tipoDoc: 80,
@@ -66,11 +66,12 @@ describe("automation tools", () => {
   it("preserves explicitly empty filter arrays for mis comprobantes", async () => {
     mocks.afip.CreateAutomation.mockResolvedValue({ id: "auto-3", status: "in_process" });
 
-    await MisComprobantesTool.execute({
+      await MisComprobantesTool.execute({
       t: "E",
       fechaEmision: "01/06/2026 - 30/06/2026",
       puntosVenta: [],
       tiposComprobantes: [],
+      wait: true,
     });
 
     expect(mocks.afip.CreateAutomation).toHaveBeenCalledWith(
@@ -96,6 +97,7 @@ describe("automation tools", () => {
       comprobanteDesde: 25,
       comprobanteHasta: 29,
       codigoAutorizacion: "12345678901234",
+      wait: true,
     });
 
     expect(mocks.afip.CreateAutomation).toHaveBeenCalledWith(
@@ -122,10 +124,14 @@ describe("automation tools", () => {
 
     expect(
       parseContent(
-        await MisComprobantesTool.execute({ t: "E", fechaEmision: "01/06/2026 - 30/06/2026" }),
+        await MisComprobantesTool.execute({
+          t: "E",
+          fechaEmision: "01/06/2026 - 30/06/2026",
+          wait: true,
+        }),
       ),
     ).toEqual({ success: false, error: "automation failed" });
-    expect(parseContent(await GetAutomationDetailsTool.execute({ id: "auto-1" }))).toEqual({
+    expect(parseContent(await GetAutomationDetailsTool.execute({ id: "auto-1", wait: true }))).toEqual({
       success: false,
       error: "details failed",
     });
@@ -137,6 +143,7 @@ describe("automation tools", () => {
     const response = await MisComprobantesTool.execute({
       t: "E",
       fechaEmision: "01/06/2026 - 30/06/2026",
+      wait: true,
     });
 
     expect(response.isError).toBe(true);

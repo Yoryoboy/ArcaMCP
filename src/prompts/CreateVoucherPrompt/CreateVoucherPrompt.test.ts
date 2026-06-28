@@ -1,6 +1,17 @@
 import { describe, expect, it } from "vitest";
+import { getCompleter } from "@modelcontextprotocol/sdk/server/completable.js";
 import { CreateVoucherPrompt } from "./CreateVoucherPrompt.js";
 import { CreateVoucherPromptArgsSchema } from "./CreateVoucherPrompt.schemas.js";
+
+function requiredCompleter<T extends Parameters<typeof getCompleter>[0]>(field: T) {
+  const completer = getCompleter(field);
+
+  if (!completer) {
+    throw new Error("Expected completer to be defined");
+  }
+
+  return completer;
+}
 
 describe("CreateVoucherPrompt", () => {
   it("builds the prompt with normalized default numbering mode", () => {
@@ -44,15 +55,15 @@ describe("CreateVoucherPrompt", () => {
     const importeTotalField = CreateVoucherPromptArgsSchema.shape.importeTotal.unwrap();
 
     expect(
-      tipoComprobanteField._def.complete("", { arguments: { concepto: "1" } }),
+      requiredCompleter(tipoComprobanteField)("", { arguments: { concepto: "1" } }),
     ).toEqual(["11", "6", "1"]);
 
     expect(
-      cotizacionField._def.complete("", { arguments: { moneda: "PES" } }),
+      requiredCompleter(cotizacionField)("", { arguments: { moneda: "PES" } }),
     ).toEqual(["1"]);
 
     expect(
-      importeTotalField._def.complete("", {
+      requiredCompleter(importeTotalField)("", {
         arguments: {
           tipoComprobante: "11",
           importeNeto: "100",

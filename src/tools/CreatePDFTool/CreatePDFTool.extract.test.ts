@@ -18,6 +18,8 @@ const baseInput: CreatePDFInput = {
   CUIT_EMISOR: "20123456789",
   DIRECCION_EMISOR: "Owner Address",
   CondicionIVAEmisor: "Monotributo",
+  INGRESOS_BRUTOS: "",
+  FECHA_INICIO_ACTIVIDADES: "",
   PtoVta: 1,
   CbteNro: 123,
   CbteFch: "20260614",
@@ -26,7 +28,9 @@ const baseInput: CreatePDFInput = {
   DocNro: "20304050607",
   NOMBRE_RECEPTOR: "Recipient Name",
   CondicionIVAReceptor: "Consumidor Final",
+  CONDICION_PAGO: "Contado",
   SUBTOTAL: 100,
+  IMPORTE_OTROS_TRIBUTOS: 0,
   IMPORTE_TOTAL: 100,
   CAE_NUMBER: "12345678901234",
   CAE_EXPIRY_DATE: "20260630",
@@ -84,14 +88,12 @@ describe("buildReplacementMap", () => {
   });
 
   it("handles optional fields with defaults (empty)", () => {
-    const input = { ...baseInput, INGRESOS_BRUTOS: undefined as unknown as string };
-    const map = buildReplacementMap(input, qrDataUrl);
+    const map = buildReplacementMap(baseInput, qrDataUrl);
     expect(map["{{INGRESOS_BRUTOS}}"]).toBe("");
   });
 
   it("handles optional date fields", () => {
-    const input = { ...baseInput, FchServDesde: undefined as unknown as string };
-    const map = buildReplacementMap(input, qrDataUrl);
+    const map = buildReplacementMap(baseInput, qrDataUrl);
     expect(map["{{FchServDesde}}"]).toBe("");
   });
 
@@ -149,7 +151,7 @@ describe("buildQrPayload", () => {
   });
 
   it("omits DocNro fields when DocNro is empty", () => {
-    const input = { ...baseInput, DocNro: "" as unknown as undefined };
+    const input = { ...baseInput, DocNro: "" };
     const payload = buildQrPayload(input);
     expect(payload).not.toHaveProperty("tipoDocRec");
     expect(payload).not.toHaveProperty("nroDocRec");

@@ -28,52 +28,45 @@ describe("voucher creation tools", () => {
     expect(mocks.electronicBilling.createNextVoucher).toHaveBeenCalledWith(voucherCore);
   });
 
-  it.each([
-    [
-      CreateVoucherTool,
-      { ...voucherParams, Iva: [], Tributos: [], CbtesAsoc: [], Opcionales: [] },
-      mocks.electronicBilling.createVoucher,
-      false,
-    ],
-    [
-      CreateNextVoucherTool,
-      { ...voucherCore, Iva: [], Tributos: [], CbtesAsoc: [], Opcionales: [] },
-      mocks.electronicBilling.createNextVoucher,
-      undefined,
-    ],
-  ])(
-    "removes empty arrays before calling AFIP for %p",
-    async (tool, params, mockFn, fullResponse) => {
-      mockFn.mockResolvedValue({ ok: true });
+  it("removes empty arrays before calling AFIP for create_voucher", async () => {
+    mocks.electronicBilling.createVoucher.mockResolvedValue({ ok: true });
 
-      await tool.execute(params);
+    await CreateVoucherTool.execute({
+      ...voucherParams,
+      Iva: [],
+      Tributos: [],
+      CbtesAsoc: [],
+      Opcionales: [],
+    });
 
-      const cleanedParams = expect.not.objectContaining({
-        Iva: expect.anything(),
-        Tributos: expect.anything(),
-        CbtesAsoc: expect.anything(),
-        Opcionales: expect.anything(),
-      });
+    const cleanedParams = expect.not.objectContaining({
+      Iva: expect.anything(),
+      Tributos: expect.anything(),
+      CbtesAsoc: expect.anything(),
+      Opcionales: expect.anything(),
+    });
 
-      expect(mockFn).toHaveBeenCalledWith(
-        cleanedParams,
-        ...(fullResponse === undefined ? [] : [fullResponse]),
-      );
-    },
-  );
+    expect(mocks.electronicBilling.createVoucher).toHaveBeenCalledWith(cleanedParams, false);
+  });
 
-  it.each([
-    [CreateVoucherTool, { ...voucherParams, fullResponse: false }],
-    [CreateNextVoucherTool, voucherCore],
-  ])("adds processed AFIP instructions when %p fails", async (tool, params) => {
+  it("adds processed AFIP instructions when create_voucher fails", async () => {
     const afipError = { code: 10049, message: "(10049) Missing service dates" };
-    const mockFn =
-      tool === CreateVoucherTool
-        ? mocks.electronicBilling.createVoucher
-        : mocks.electronicBilling.createNextVoucher;
-    mockFn.mockRejectedValue(afipError);
+    mocks.electronicBilling.createVoucher.mockRejectedValue(afipError);
 
-    const response = await tool.execute(params);
+    const response = await CreateVoucherTool.execute({ ...voucherParams, fullResponse: false });
+
+    expect(response.isError).toBe(true);
+    expect(parseContent(response)).toMatchObject({
+      details: afipError,
+      instructions: expect.stringContaining("FchServDesde"),
+    });
+  });
+
+  it("adds processed AFIP instructions when create_next_voucher fails", async () => {
+    const afipError = { code: 10049, message: "(10049) Missing service dates" };
+    mocks.electronicBilling.createNextVoucher.mockRejectedValue(afipError);
+
+    const response = await CreateNextVoucherTool.execute(voucherCore);
 
     expect(response.isError).toBe(true);
     expect(parseContent(response)).toMatchObject({

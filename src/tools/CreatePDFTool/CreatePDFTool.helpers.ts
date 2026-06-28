@@ -32,7 +32,9 @@ export function formatAmountAR(n: number): string {
   });
 }
 
-export function renderItems(items: CreatePDFInput["INVOICE_ITEMS"]): string {
+export function renderItems(
+  items: CreatePDFInput["INVOICE_ITEMS"] | undefined,
+): string {
   if (!items || items.length === 0) {
     return "";
   }
