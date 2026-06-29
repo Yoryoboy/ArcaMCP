@@ -43,6 +43,7 @@ export function registerErrorInstructionsBatch(
 function toStringSafe(value: unknown): string {
   if (typeof value === "string") return value;
   if (value instanceof Error) return value.message || "Error desconocido";
+  if (isObjectLike(value) && typeof value.message === "string") return value.message;
   try {
     return JSON.stringify(value);
   } catch {
@@ -57,6 +58,41 @@ function parseNumericCodeFromMessage(message: string): number | undefined {
   return undefined;
 }
 
+const MAX_CODE_SEARCH_DEPTH = 2;
+const DIRECT_CODE_PROPERTY = "code" as const;
+const ALTERNATE_CODE_PROPERTIES = ["errCode", "statusCode"] as const;
+
+function isObjectLike(value: unknown): value is Record<string, unknown> {
+  return typeof value === "object" && value !== null;
+}
+
+function readCodeLikeValue(value: unknown): number | string | undefined {
+  if (typeof value === "number" || typeof value === "string") return value;
+  return undefined;
+}
+
+function readOwnCodeFromObject(obj: Record<string, unknown>): number | string | undefined {
+  return readCodeLikeValue(obj[DIRECT_CODE_PROPERTY]);
+}
+
+function readAlternateCodeFromObject(
+  obj: Record<string, unknown>
+): number | string | undefined {
+  for (const property of ALTERNATE_CODE_PROPERTIES) {
+    const code = readCodeLikeValue(obj[property]);
+    if (code !== undefined) return code;
+  }
+
+  return undefined;
+}
+
+function readNestedDetailsCode(
+  obj: Record<string, unknown>,
+  depth: number
+): number | string | undefined {
+  return extractCodeFromObject(obj.details, depth + 1);
+}
+
 /**
  * Intentar extraer un código de error desde objetos arbitrarios con una profundidad acotada.
  * Busca propiedades comunes como `code` y `details.code` anidado.
@@ -65,23 +101,13 @@ function extractCodeFromObject(
   obj: any,
   depth = 0
 ): number | string | undefined {
-  if (!obj || typeof obj !== "object" || depth > 2) return undefined;
+  if (!isObjectLike(obj) || depth > MAX_CODE_SEARCH_DEPTH) return undefined;
 
-  if (typeof obj.code === "number" || typeof obj.code === "string")
-    return obj.code;
-
-  // Formas anidadas comunes
-  if (obj.details) {
-    const nested = extractCodeFromObject(obj.details, depth + 1);
-    if (nested !== undefined) return nested;
-  }
-
-  // Nombres de propiedades alternativos que a veces aparecen
-  if (typeof obj.errCode === "number" || typeof obj.errCode === "string")
-    return obj.errCode;
-  if (typeof obj.statusCode === "number") return obj.statusCode;
-
-  return undefined;
+  return (
+    readOwnCodeFromObject(obj) ??
+    readNestedDetailsCode(obj, depth) ??
+    readAlternateCodeFromObject(obj)
+  );
 }
 
 /** Verificación heurística de errores de validación de Zod sin importar los tipos de Zod. */

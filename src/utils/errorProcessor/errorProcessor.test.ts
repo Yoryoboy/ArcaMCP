@@ -28,6 +28,31 @@ describe("processAfipError", () => {
     expect(result.error).toContain("(10049)");
   });
 
+  it("prefers a direct code over nested and alternate codes", () => {
+    registerErrorInstructions(777777, "Use the direct recovery steps.");
+
+    const result = processAfipError({
+      code: 777777,
+      details: { code: 10031 },
+      errCode: 10035,
+      statusCode: 10007,
+      message: "direct code should win",
+    });
+
+    expect(result.instructions).toBe("Use the direct recovery steps.");
+  });
+
+  it("checks nested details.code before errCode and statusCode", () => {
+    const result = processAfipError({
+      details: { code: 10031 },
+      errCode: 10035,
+      statusCode: 10007,
+      message: "nested code should win",
+    });
+
+    expect(result.instructions).toContain("FchServDesde");
+  });
+
   it("uses the zod validation branch for schema errors", () => {
     const zodLikeError = {
       name: "ZodError",
@@ -61,6 +86,30 @@ describe("processAfipError", () => {
     expect(result.instructions).toContain(expectedText);
   });
 
+  it("keeps traversing nested details objects until the depth limit", () => {
+    const result = processAfipError({
+      details: {
+        details: { code: 10031 },
+      },
+      message: "nested failure",
+    });
+
+    expect(result.instructions).toContain("FchServDesde");
+  });
+
+  it("stops extracting once the depth limit is exceeded", () => {
+    const result = processAfipError({
+      details: {
+        details: {
+          details: { code: 10031 },
+        },
+      },
+      message: "too deep",
+    });
+
+    expect(result.instructions).toContain("error desconocido");
+  });
+
   it("supports registering custom instruction batches for string error codes", () => {
     registerErrorInstructionsBatch([
       ["AFIP_TIMEOUT", "Wait for the upstream service before retrying."],
@@ -75,6 +124,20 @@ describe("processAfipError", () => {
     const result = processAfipError("plain failure message");
 
     expect(result.error).toBe("plain failure message");
+    expect(result.instructions).toContain("error desconocido");
+  });
+
+  it("prefers an object-shaped error message over JSON stringification", () => {
+    const result = processAfipError({ message: "human-friendly failure", meta: 1 });
+
+    expect(result.error).toBe("human-friendly failure");
+    expect(result.instructions).toContain("error desconocido");
+  });
+
+  it("keeps plain empty objects stringified as {}", () => {
+    const result = processAfipError({});
+
+    expect(result.error).toBe("{}");
     expect(result.instructions).toContain("error desconocido");
   });
 
