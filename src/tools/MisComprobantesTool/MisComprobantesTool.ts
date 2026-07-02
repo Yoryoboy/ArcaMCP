@@ -8,6 +8,7 @@ import {
 } from "./MisComprobantesTool.schemas.js";
 import { AutomationStartResponse } from "./MisComprobantesTool.types.js";
 import { buildMisComprobantesAutomationData } from "./MisComprobantesTool.helpers.js";
+import { executeAutomationTool } from "../automationToolExecution.helpers.js";
 
 export class MisComprobantesTool {
   static readonly name = "mis_comprobantes";
@@ -20,46 +21,29 @@ export class MisComprobantesTool {
   };
 
   static async execute(params: MisComprobantesInputParams): Promise<MCPResponse> {
-    try {
-      const input = MisComprobantesInputSchema.parse(params);
-      const { CUIT, PASSWORD } = config;
-      const data = buildMisComprobantesAutomationData(input, { CUIT, PASSWORD });
+    return executeAutomationTool({
+      params,
+      schema: MisComprobantesInputSchema,
+      invoke: async (input) => {
+        const { CUIT, PASSWORD } = config;
+        const data = buildMisComprobantesAutomationData(input, { CUIT, PASSWORD });
 
-      const response: AutomationStartResponse = await (afip as any).CreateAutomation(
-        "mis-comprobantes",
-        data,
-        false,
-      );
-
-      return {
-        content: [
-          {
-            type: "text" as const,
-            text: `Automatización iniciada. ID: ${response.id}. Status: ${response.status}. Darle al usuario el ID, para que luego pueda consultarlo.`,
-          },
-          {
-            type: "text" as const,
-            text: JSON.stringify(response, null, 2),
-          },
-        ],
-      };
-    } catch (error) {
-      return {
-        content: [
-          {
-            type: "text" as const,
-            text: JSON.stringify(
-              {
-                success: false,
-                error: error instanceof Error ? error.message : String(error),
-              },
-              null,
-              2,
-            ),
-          },
-        ],
-        isError: true,
-      };
-    }
+        return (afip as any).CreateAutomation(
+          "mis-comprobantes",
+          data,
+          false,
+        ) as Promise<AutomationStartResponse>;
+      },
+      serializeSuccess: (response) => [
+        {
+          type: "text" as const,
+          text: `Automatización iniciada. ID: ${response.id}. Status: ${response.status}. Darle al usuario el ID, para que luego pueda consultarlo.`,
+        },
+        {
+          type: "text" as const,
+          text: JSON.stringify(response, null, 2),
+        },
+      ],
+    });
   }
 }

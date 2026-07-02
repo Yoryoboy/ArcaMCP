@@ -6,6 +6,7 @@ import {
   GetAutomationDetailsInputSchema,
 } from "./GetAutomationDetailsTool.schemas.js";
 import { MisComprobantes } from "./GetAutomationDetailsTool.types.js";
+import { executeAutomationTool } from "../automationToolExecution.helpers.js";
 
 export class GetAutomationDetailsTool {
   static readonly name = "get_automation_details";
@@ -20,39 +21,20 @@ export class GetAutomationDetailsTool {
   static async execute(
     params: GetAutomationDetailsInput
   ): Promise<MCPResponse> {
-    try {
-      const input = GetAutomationDetailsInputSchema.parse(params);
-      const { id } = input;
-
-      const response: AutomationStartResponse | MisComprobantes = await (
-        afip as any
-      ).GetAutomationDetails(id, false);
-
-      return {
-        content: [
-          {
-            type: "text" as const,
-            text: JSON.stringify(response, null, 2),
-          },
-        ],
-      };
-    } catch (error) {
-      return {
-        content: [
-          {
-            type: "text" as const,
-            text: JSON.stringify(
-              {
-                success: false,
-                error: error instanceof Error ? error.message : String(error),
-              },
-              null,
-              2
-            ),
-          },
-        ],
-        isError: true,
-      };
-    }
+    return executeAutomationTool({
+      params,
+      schema: GetAutomationDetailsInputSchema,
+      invoke: async ({ id }) =>
+        (afip as any).GetAutomationDetails(
+          id,
+          false,
+        ) as Promise<AutomationStartResponse | MisComprobantes>,
+      serializeSuccess: (response) => [
+        {
+          type: "text" as const,
+          text: JSON.stringify(response, null, 2),
+        },
+      ],
+    });
   }
 }
