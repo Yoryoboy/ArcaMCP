@@ -5,7 +5,9 @@ export interface CatalogToolConfig {
   name: string;
   title: string;
   description: string;
+  guard?: () => MCPResponse | null | undefined;
   fetcher: () => Promise<unknown>;
+  onError?: (error: unknown) => Record<string, unknown>;
 }
 
 export interface CatalogTool {
@@ -27,6 +29,12 @@ export function createCatalogTool(config: CatalogToolConfig): CatalogTool {
       inputSchema: EmptySchema.shape,
     },
     async execute(): Promise<MCPResponse> {
+      const guardedResponse = config.guard?.();
+
+      if (guardedResponse) {
+        return guardedResponse;
+      }
+
       try {
         const result = await config.fetcher();
         return {
@@ -49,6 +57,7 @@ export function createCatalogTool(config: CatalogToolConfig): CatalogTool {
                       ? error.message
                       : "Error desconocido",
                   details: error,
+                  ...(config.onError?.(error) ?? {}),
                 },
                 null,
                 2,

@@ -45,6 +45,49 @@ describe("createCatalogTool", () => {
     expect(parsed.error).toBe("AFIP down");
   });
 
+  it("short-circuits when a guard returns a response", async () => {
+    const guardedFetcher = vi.fn();
+    const guardedTool = createCatalogTool({
+      name: "guarded_tool",
+      title: "Guarded tool",
+      description: "Tool with a dev guard.",
+      guard: () => ({
+        content: [
+          {
+            type: "text" as const,
+            text: JSON.stringify({ message: "Guarded" }, null, 2),
+          },
+        ],
+      }),
+      fetcher: guardedFetcher,
+    });
+
+    const response = await guardedTool.execute();
+
+    expect(response.isError).toBeUndefined();
+    expect(JSON.parse(response.content[0].text)).toEqual({ message: "Guarded" });
+    expect(guardedFetcher).not.toHaveBeenCalled();
+  });
+
+  it("merges extra error payload fields", async () => {
+    const noteFetcher = vi.fn().mockRejectedValueOnce(new Error("AFIP down"));
+    const noteTool = createCatalogTool({
+      name: "noted_tool",
+      title: "Noted tool",
+      description: "Tool with an extra error note.",
+      fetcher: noteFetcher,
+      onError: () => ({ note: "Use point 1" }),
+    });
+
+    const response = await noteTool.execute();
+
+    const parsed = JSON.parse(response.content[0].text);
+    expect(parsed).toMatchObject({
+      error: "AFIP down",
+      note: "Use point 1",
+    });
+  });
+
   it("handles non-Error rejections gracefully", async () => {
     fetcher.mockRejectedValueOnce("raw string error");
 

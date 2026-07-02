@@ -27,6 +27,17 @@ describe("tools with environment guards", () => {
     });
   });
 
+  it("short-circuits CUIT lookup before schema validation in testing", async () => {
+    mocks.config.AFIP_PRODUCTION = false;
+
+    const response = await GetCuitFromDniTool.execute({} as never);
+
+    expect(response.isError).toBeUndefined();
+    expect(parseContent(response)).toMatchObject({
+      message: expect.stringContaining("ambiente de testing"),
+    });
+  });
+
   it("handles happy and error paths for guarded tools in production", async () => {
     mocks.afip.RegisterScopeThirteen.getTaxpayerDetails
       .mockResolvedValueOnce({ taxId: 20368506345 })
