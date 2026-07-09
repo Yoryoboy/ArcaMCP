@@ -7,7 +7,16 @@
   "scripts": {
     "build": "tsc -p tsconfig.json",
     "dev": "npx tsx src/index.ts",
-    "inspector": "npx -y @modelcontextprotocol/inspector@latest npx -y tsx src/index.ts"
+    "inspector": "npx -y @modelcontextprotocol/inspector@latest npx -y tsx src/index.ts",
+    "typecheck": "tsc --noEmit",
+    "test": "vitest run",
+    "test:watch": "vitest",
+    "test:coverage": "vitest run --coverage",
+    "lint": "eslint \"src/**/*.ts\"",
+    "lint:fix": "eslint \"src/**/*.ts\" --fix",
+    "format": "prettier --write eslint.config.mjs vitest.config.ts package.json \"src/services/afip/client.ts\" \"src/**/*.test.ts\"",
+    "format:check": "prettier --check eslint.config.mjs vitest.config.ts package.json \"src/services/afip/client.ts\" \"src/**/*.test.ts\"",
+    "quality": "npm run typecheck && npm run lint && npm run format:check && npm run test && npm run test:coverage"
   },
   "keywords": [
     "monotributo",
@@ -25,8 +34,15 @@
     "zod": "^3.25.67"
   },
   "devDependencies": {
+    "@eslint/js": "^9.39.1",
+    "@vitest/coverage-v8": "^4.0.7",
     "@types/node": "^24.3.0",
     "@types/qrcode": "^1.5.5",
-    "typescript": "5.8.3"
+    "eslint": "^9.39.1",
+    "eslint-config-prettier": "^10.1.8",
+    "prettier": "^3.6.2",
+    "typescript": "5.8.3",
+    "typescript-eslint": "^8.46.2",
+    "vitest": "^4.0.7"
   }
 }

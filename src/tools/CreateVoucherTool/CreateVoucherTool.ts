@@ -2,7 +2,7 @@ import { MCPResponse } from "../../core/types.js";
 import { VoucherParams } from "../types.js";
 import { VoucherSchema } from "./CreateVoucherTool.schemas.js";
 import afip from "../../services/afip/client.js";
-import { processAfipError } from "../../utils/errorProcessor/errorProcessor.js";
+import { executeVoucherTool } from "../voucherToolExecution.helpers.js";
 
 export class CreateVoucherTool {
   static readonly name = "create_voucher";
@@ -14,54 +14,21 @@ export class CreateVoucherTool {
   };
 
   static async execute(params: VoucherParams): Promise<MCPResponse> {
-    try {
-      // Validar parámetros
-      const validatedParams = VoucherSchema.parse(params);
+    return executeVoucherTool({
+      params,
+      schema: VoucherSchema,
+      invoke: async ({ validatedParams, cleanedParams }) => {
+        const { fullResponse } = validatedParams;
+        const cleanedVoucherData = {
+          ...cleanedParams,
+        } as typeof cleanedParams & { fullResponse?: boolean };
+        delete cleanedVoucherData.fullResponse;
 
-      // Extraer el parámetro fullResponse y removerlo del objeto de datos
-      const { fullResponse, ...voucherData } = validatedParams;
-
-      // Filtrar arrays vacíos para evitar errores de AFIP
-      const cleanedParams = { ...voucherData };
-      if (cleanedParams.Iva && cleanedParams.Iva.length === 0) {
-        delete cleanedParams.Iva;
-      }
-      if (cleanedParams.Tributos && cleanedParams.Tributos.length === 0) {
-        delete cleanedParams.Tributos;
-      }
-      if (cleanedParams.CbtesAsoc && cleanedParams.CbtesAsoc.length === 0) {
-        delete cleanedParams.CbtesAsoc;
-      }
-      if (cleanedParams.Opcionales && cleanedParams.Opcionales.length === 0) {
-        delete cleanedParams.Opcionales;
-      }
-
-      // Crear el comprobante usando el SDK de AFIP con el segundo parámetro booleano
-      const result = await afip.ElectronicBilling.createVoucher(
-        cleanedParams,
-        fullResponse || false
-      );
-
-      return {
-        content: [
-          {
-            type: "text" as const,
-            text: JSON.stringify(result, null, 2),
-          },
-        ],
-      };
-    } catch (error) {
-      // Centralized error processing: preserve error + details, add deterministic instructions
-      const processed = processAfipError(error);
-      return {
-        content: [
-          {
-            type: "text" as const,
-            text: JSON.stringify(processed, null, 2),
-          },
-        ],
-        isError: true,
-      };
-    }
+        return afip.ElectronicBilling.createVoucher(
+          cleanedVoucherData,
+          fullResponse ?? false,
+        );
+      },
+    });
   }
 }

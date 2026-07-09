@@ -2,6 +2,7 @@ import { MCPResponse } from "../../core/types.js";
 import afip from "../../services/afip/client.js";
 import { GetExchangeRateSchema } from "./GetExchangeRateTool.schemas.js";
 import { GetExchangeRateParams } from "../types.js";
+import { executeJsonTool } from "../toolExecution.helpers.js";
 
 export class GetExchangeRateTool {
   static readonly name = "get_exchange_rate";
@@ -14,43 +15,14 @@ export class GetExchangeRateTool {
   };
 
   static async execute(params: GetExchangeRateParams): Promise<MCPResponse> {
-    try {
-      const validatedParams = GetExchangeRateSchema.parse(params);
-
-      const result = await afip.ElectronicBilling.executeRequest(
-        "FEParamGetCotizacion",
-        {
+    return executeJsonTool({
+      params,
+      schema: GetExchangeRateSchema,
+      invoke: async (validatedParams) =>
+        afip.ElectronicBilling.executeRequest("FEParamGetCotizacion", {
           MonId: validatedParams.MonId,
           FchCotiz: validatedParams.FchCotiz,
-        }
-      );
-
-      return {
-        content: [
-          {
-            type: "text" as const,
-            text: JSON.stringify(result, null, 2),
-          },
-        ],
-      };
-    } catch (error) {
-      return {
-        content: [
-          {
-            type: "text" as const,
-            text: JSON.stringify(
-              {
-                error:
-                  error instanceof Error ? error.message : "Error desconocido",
-                details: error,
-              },
-              null,
-              2
-            ),
-          },
-        ],
-        isError: true,
-      };
-    }
+        }),
+    });
   }
 }

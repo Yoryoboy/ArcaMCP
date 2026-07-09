@@ -91,7 +91,7 @@ Flujo recomendado:
 7) Muestra resultado: CAE, CAE FchVto y número de comprobante (en algunas respuestas, tomar CbteDesde dentro de FECAEDetResponse para el número efectivo).
 
 Manejo de errores:
-- Si aparece 10246/10242 sobre \"Condición IVA receptor\", agrega CondicionIVAReceptorId y reintenta tras confirmación.
+- Si aparece 10246/10242 sobre "Condición IVA receptor", agrega CondicionIVAReceptorId y reintenta tras confirmación.
 - Registra mensajes claros cuando un dato obligatorio falta y evita suposiciones; consulta al usuario.
 
 Salida esperada antes de ejecutar (ejemplo de resumen):
