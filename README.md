@@ -115,6 +115,8 @@ Usa el script `scripts/getProdCerts.ts` para crear/descargar el certificado y la
 
 El script invoca la automatización `create-cert-prod` vía `CreateAutomation(...)` del cliente AFIP. Si falla, revisa credenciales y permisos en AFIP.
 
+> **Nota:** si ejecutás el MCP desde la raíz del proyecto (por ejemplo, arrancando `src/index.ts` directamente), el servidor carga automáticamente las variables desde `.env` mediante `dotenv.config()`. En ese caso no hace falta duplicar `AFIP_CUIT`, `AFIP_PASSWORD`, rutas de certificados ni otras variables en la configuración del cliente MCP. Si lo ejecutás desde otro contexto, mantener la configuración explícita en el cliente puede seguir siendo útil.
+
 ### 4) Autorizar los Web Services (wsfe, ws_sr_padron_a13)
 
 Con certificados listos, autoriza los servicios necesarios en AFIP. Este repo incluye `scripts/authService.ts` que llama a la automatización `auth-web-service-prod`.
