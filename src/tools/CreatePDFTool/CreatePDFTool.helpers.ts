@@ -32,7 +32,9 @@ export function formatAmountAR(n: number): string {
   });
 }
 
-export function renderItems(items: CreatePDFInput["INVOICE_ITEMS"]): string {
+export function renderItems(
+  items: CreatePDFInput["INVOICE_ITEMS"] | undefined,
+): string {
   if (!items || items.length === 0) {
     return "";
   }
@@ -72,4 +74,109 @@ export function findTemplate(): string {
     );
   }
   return fs.readFileSync(found, "utf8");
+}
+
+// ---------------------------------------------------------------------------
+// Extracted pure functions to reduce execute() complexity (FA-003)
+// ---------------------------------------------------------------------------
+
+/**
+ * Converts optional DocNro string to a number if safe; returns undefined otherwise.
+ * Omits values exceeding MAX_SAFE_INTEGER to avoid precision loss in QR data.
+ */
+function maybeToNumber(v?: string): number | undefined {
+  if (!v) return undefined;
+  if (/^\d+$/.test(v) && v.length <= 15) return Number(v);
+  return undefined;
+}
+
+/**
+ * Builds the raw QR payload object (before schema validation) from the parsed input.
+ */
+export function buildQrPayload(input: CreatePDFInput) {
+  return {
+    ver: 1 as const,
+    fecha: formatDateISO(input.CbteFch),
+    cuit: Number(input.CUIT_EMISOR),
+    ptoVta: input.PtoVta,
+    tipoCmp: input.CbteTipo,
+    nroCmp: input.CbteNro,
+    importe: input.IMPORTE_TOTAL,
+    moneda: input.MonId,
+    ctz: input.MonCotiz,
+    ...(input.DocNro ? { tipoDocRec: 80 as number } : {}),
+    ...(input.DocNro ? { nroDocRec: maybeToNumber(input.DocNro) } : {}),
+    tipoCodAut: input.TipoCodAut,
+    codAut: Number(input.CAE_NUMBER),
+  };
+}
+
+/**
+ * Builds the placeholder → value replacement map for the HTML template.
+ */
+export function buildReplacementMap(
+  input: CreatePDFInput,
+  qrDataUrl: string,
+): Record<string, string> {
+  return {
+    "{{CbteLetra}}": String(input.CbteLetra),
+    "{{NOMBRE_EMISOR}}": input.NOMBRE_EMISOR,
+    "{{CUIT_EMISOR}}": input.CUIT_EMISOR,
+    "{{DIRECCION_EMISOR}}": input.DIRECCION_EMISOR,
+    "{{CondicionIVAEmisor}}": input.CondicionIVAEmisor,
+    "{{INGRESOS_BRUTOS}}": input.INGRESOS_BRUTOS ?? "",
+    "{{FECHA_INICIO_ACTIVIDADES}}": input.FECHA_INICIO_ACTIVIDADES
+      ? formatDateDDMMYYYY(input.FECHA_INICIO_ACTIVIDADES)
+      : "",
+    "{{PtoVta}}": input.PtoVta.toString().padStart(5, "0"),
+    "{{CbteNro}}": input.CbteNro.toString().padStart(8, "0"),
+    "{{CbteFch}}": formatDateDDMMYYYY(input.CbteFch),
+    "{{DocNro}}": input.DocNro ? String(input.DocNro) : "",
+    "{{NOMBRE_RECEPTOR}}": input.NOMBRE_RECEPTOR,
+    "{{CondicionIVAReceptor}}": input.CondicionIVAReceptor,
+    "{{DIRECCION_RECEPTOR}}": input.DIRECCION_RECEPTOR ?? "",
+    "{{CONDICION_PAGO}}": input.CONDICION_PAGO ?? "",
+    "{{FchServDesde}}": input.FchServDesde
+      ? formatDateDDMMYYYY(input.FchServDesde)
+      : "",
+    "{{FchServHasta}}": input.FchServHasta
+      ? formatDateDDMMYYYY(input.FchServHasta)
+      : "",
+    "{{FchVtoPago}}": input.FchVtoPago
+      ? formatDateDDMMYYYY(input.FchVtoPago)
+      : "",
+    "{{SUBTOTAL}}": formatAmountAR(input.SUBTOTAL),
+    "{{IMPORTE_OTROS_TRIBUTOS}}": formatAmountAR(
+      input.IMPORTE_OTROS_TRIBUTOS ?? 0,
+    ),
+    "{{IMPORTE_TOTAL}}": formatAmountAR(input.IMPORTE_TOTAL),
+    "{{CAE_NUMBER}}": String(input.CAE_NUMBER),
+    "{{CAE_EXPIRY_DATE}}": formatDateDDMMYYYY(input.CAE_EXPIRY_DATE),
+    "{{QR_CODE_DATA}}": qrDataUrl,
+    "{{INVOICE_ITEMS}}": renderItems(input.INVOICE_ITEMS),
+  };
+}
+
+/**
+ * Applies placeholder replacements to the HTML template string.
+ */
+export function applyReplacements(
+  html: string,
+  replacements: Record<string, string>,
+): string {
+  let result = html;
+  for (const [ph, val] of Object.entries(replacements)) {
+    result = result.split(ph).join(val ?? "");
+  }
+  return result;
+}
+
+/**
+ * Builds the PDF filename from input fields.
+ */
+export function buildFileName(input: CreatePDFInput): string {
+  return `Factura_${input.CbteLetra}_${String(input.PtoVta).padStart(
+    5,
+    "0",
+  )}_${String(input.CbteNro).padStart(8, "0")}`;
 }

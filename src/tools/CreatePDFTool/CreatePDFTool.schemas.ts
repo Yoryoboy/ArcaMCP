@@ -8,9 +8,14 @@
 
 import z from "zod";
 
+import { resolveOwnerCuitOrThrow } from "../../identity.js";
+
 const IdAsString = z
   .union([z.string(), z.number()])
   .transform((v) => String(v));
+
+// Identity boundary reference: src/identity.ts
+const OwnerCuitAsString = IdAsString.optional().default(() => resolveOwnerCuitOrThrow());
 
 const InvoiceItemSchema = z.object({
   descripcion: z
@@ -55,7 +60,10 @@ export const CreatePDFInputSchema = z.object({
     .describe(
       "Nombre del emisor. Se debe usar el nombre obtenido de get_taxpayer_details, keys: nombre y apellido"
     ),
-  CUIT_EMISOR: IdAsString.describe("CUIT del emisor"),
+  // @owner
+  CUIT_EMISOR: OwnerCuitAsString.describe(
+    "CUIT del emisor. Si se omite, se usa el CUIT del servidor desde AFIP_CUIT. Sobrescribir solo cuando el emisor sea un tercero."
+  ),
   DIRECCION_EMISOR: z
     .string()
     .min(1)
@@ -77,9 +85,11 @@ export const CreatePDFInputSchema = z.object({
     ),
   FECHA_INICIO_ACTIVIDADES: z
     .string()
-    .min(4)
     .optional()
     .default("")
+    .refine((value) => value === "" || value.length >= 4, {
+      message: "FECHA_INICIO_ACTIVIDADES debe ser AAAA-MM o vacío",
+    })
     .describe(
       "Fecha de inicio de actividades. Si el usuario no lo ha especificado, se deberá encontrar las opciones disponibles utilizando el tool get_taxpayer_details, es el key periodoActividadPrincipal y viene en formato AAAA-MM. Ejemplo: 2022-01"
     ),
@@ -106,6 +116,7 @@ export const CreatePDFInputSchema = z.object({
   MonCotiz: z.number().min(0).default(1).describe("Cotización moneda"),
 
   // Receptor
+  // @third-party
   DocNro: IdAsString.optional()
     .transform((v) => {
       const s = v === undefined || v === null ? "" : String(v).trim();

@@ -11,7 +11,7 @@ Además, incluye scripts en `scripts/` que automatizan pasos críticos de onboar
 
 ## Requisitos
 
-- Node.js 18 LTS o superior (recomendado 20+)
+- Node.js 20 o superior
 - npm 9+ o pnpm/yarn equivalente
 - Acceso a tu CUIT y a tu cuenta de AFIP
 - Clave Fiscal nivel 3 o superior
@@ -253,7 +253,7 @@ Recomendación:
 - Error de autorización de servicio:
   - Verifica que el CUIT tiene Clave Fiscal 3 y permisos para el servicio (ej. `wsfe`, `ws_sr_padron_a13`).
 - Versiones de Node incompatibles:
-  - Asegúrate de usar Node 18+ (recomendado 20+). Ejecuta `node -v`.
+  - Asegúrate de usar Node 20+ y confirma la versión con `node -v`.
 - Variables de entorno sin definir:
   - `src/config.ts` usa `!` (non-null assertion). Si falta una variable, el proceso puede fallar. Completa todas las requeridas.
 

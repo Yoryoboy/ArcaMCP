@@ -47,6 +47,8 @@ private.*
 
 ### Project folders to ignore
 docs
+.atl/
+.codegraph/
 tmp/
 temp/
 

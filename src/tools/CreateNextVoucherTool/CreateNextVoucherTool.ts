@@ -2,7 +2,7 @@ import { MCPResponse } from "../../core/types.js";
 import { NextVoucherSchema } from "./CreateNextVoucherTool.schemas.js";
 import afip from "../../services/afip/client.js";
 import { NextVoucherParams } from "../types.js";
-import { processAfipError } from "../../utils/errorProcessor/errorProcessor.js";
+import { executeVoucherTool } from "../voucherToolExecution.helpers.js";
 
 export class CreateNextVoucherTool {
   static readonly name = "create_next_voucher";
@@ -19,47 +19,11 @@ export class CreateNextVoucherTool {
   };
 
   static async execute(params: NextVoucherParams): Promise<MCPResponse> {
-    try {
-      const validatedParams = NextVoucherSchema.parse(params);
-
-      const cleanedParams = { ...validatedParams };
-      if (cleanedParams.Iva && cleanedParams.Iva.length === 0) {
-        delete cleanedParams.Iva;
-      }
-      if (cleanedParams.Tributos && cleanedParams.Tributos.length === 0) {
-        delete cleanedParams.Tributos;
-      }
-      if (cleanedParams.CbtesAsoc && cleanedParams.CbtesAsoc.length === 0) {
-        delete cleanedParams.CbtesAsoc;
-      }
-      if (cleanedParams.Opcionales && cleanedParams.Opcionales.length === 0) {
-        delete cleanedParams.Opcionales;
-      }
-
-      const result = await afip.ElectronicBilling.createNextVoucher(
-        cleanedParams
-      );
-
-      return {
-        content: [
-          {
-            type: "text" as const,
-            text: JSON.stringify(result, null, 2),
-          },
-        ],
-      };
-    } catch (error) {
-      // Centralized error processing: preserve error + details, add deterministic instructions
-      const processed = processAfipError(error);
-      return {
-        content: [
-          {
-            type: "text" as const,
-            text: JSON.stringify(processed, null, 2),
-          },
-        ],
-        isError: true,
-      };
-    }
+    return executeVoucherTool({
+      params,
+      schema: NextVoucherSchema,
+      invoke: async ({ cleanedParams }) =>
+        afip.ElectronicBilling.createNextVoucher(cleanedParams),
+    });
   }
 }

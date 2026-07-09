@@ -4,6 +4,7 @@ import afip from "../../services/afip/client.js";
 import { MCPResponse } from "../../core/types.js";
 import config from "../../config.js";
 import { devEnvDetectedMessage } from "../../utils/helpers.js";
+import { executeJsonTool } from "../toolExecution.helpers.js";
 
 export class GetCuitFromDniTool {
   static readonly name = "get_cuit_from_dni";
@@ -15,60 +16,32 @@ export class GetCuitFromDniTool {
   };
 
   static async execute(params: GetCuitFromDniToolParams): Promise<MCPResponse> {
-    if (!config.AFIP_PRODUCTION) {
-      return devEnvDetectedMessage(
-        "Se ha detectado que se encuentra en ambiente de testing. Este endpoint no funciona en ambiente de testing."
-      );
-    }
-    try {
-      const validatedParams = GetCuitFromDniToolSchema.parse(params);
-      const { nationalId } = validatedParams;
+    return executeJsonTool({
+      params,
+      schema: GetCuitFromDniToolSchema,
+      guard: () => {
+        if (!config.AFIP_PRODUCTION) {
+          return devEnvDetectedMessage(
+            "Se ha detectado que se encuentra en ambiente de testing. Este endpoint no funciona en ambiente de testing."
+          );
+        }
 
-      const result = await afip.RegisterScopeThirteen.getTaxIDByDocument(
-        nationalId
-      );
-
-      if (result === null) {
-        return {
-          content: [
-            {
-              type: "text" as const,
-              text: JSON.stringify(
-                { message: "No se encontró CUIT para el DNI proporcionado" },
-                null,
-                2
-              ),
-            },
-          ],
-        };
-      }
-
-      return {
-        content: [
-          {
-            type: "text" as const,
-            text: JSON.stringify(result, null, 2),
-          },
-        ],
-      };
-    } catch (error) {
-      return {
+        return null;
+      },
+      invoke: async (validatedParams) =>
+        afip.RegisterScopeThirteen.getTaxIDByDocument(validatedParams.nationalId),
+      onNullResult: () => ({
         content: [
           {
             type: "text" as const,
             text: JSON.stringify(
-              {
-                error:
-                  error instanceof Error ? error.message : "Error desconocido",
-                details: error,
-              },
+              { message: "No se encontró CUIT para el DNI proporcionado" },
               null,
               2
             ),
           },
         ],
-        isError: true,
-      };
-    }
+      }),
+    });
   }
 }
