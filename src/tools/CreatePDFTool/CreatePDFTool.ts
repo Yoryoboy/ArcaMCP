@@ -1,7 +1,7 @@
 import { MCPResponse } from "../../core/types.js";
 import { generateQRCode } from "../../utils/qr/qr.js";
 import { QRDataSchema } from "../../utils/qr/qr.schema.js";
-import { CreatePDFInputSchema } from "./CreatePDFTool.schemas.js";
+import { CreatePDFInputBaseSchema, CreatePDFInputSchema } from "./CreatePDFTool.schemas.js";
 import {
   findTemplate,
   buildQrPayload,
@@ -22,7 +22,7 @@ export class CreatePDFTool {
     title: "Crear PDF de factura",
     description:
       "Genera un PDF dinámico de un comprobante electrónico combinando datos del voucher, emisor y receptor desde AFIP. La manera más recomendada de llenar la información para la factura de manera correcta es utilizar las herramientas apropiadas para recuperar los datos del CAE y los datos tanto del emisor como del receptor utilizando sus CUIT. El LLM no debe asumir ninguna información que no haya sido dada explícitamente o que no pueda inferir. Una vez todos los datos estén recopilados, se debe hacer un resumen de la factura tal cual como quedaría y mostrársela al usuario antes de proceder. Procederemos solo cuando tengamos la confirmación explícita del usuario. Nota importante: este tool usa dos campos relacionados al tipo de comprobante para evitar ambigüedad: CbteTipo (código numérico AFIP para uso técnico/QR) y CbteLetra (A/B/C/M) únicamente para la visualización en el PDF.",
-    inputSchema: CreatePDFInputSchema.shape,
+    inputSchema: CreatePDFInputBaseSchema.shape,
   };
 
   static async execute(params: unknown): Promise<MCPResponse> {
@@ -67,8 +67,7 @@ export class CreatePDFTool {
               {
                 success: true,
                 phase: "pdf_created",
-                message:
-                  "PDF generado correctamente. El enlace expira en 24 horas.",
+                message: "PDF generado correctamente. El enlace expira en 24 horas.",
                 file: res?.file,
                 expiresInHours: 24,
               },

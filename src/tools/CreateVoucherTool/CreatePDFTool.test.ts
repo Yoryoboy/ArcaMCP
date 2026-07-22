@@ -11,26 +11,26 @@ describe("CreatePDFTool", () => {
     // This proves the full template-population contract: placeholder→value,
     // AR formatting, padding, QR injection, item rows, and no leftover {{…}}.
     const template = [
-      '<!DOCTYPE html><html><body>',
+      "<!DOCTYPE html><html><body>",
       '<div class="bill-type">{{CbteLetra}}</div>',
-      '<p>{{NOMBRE_EMISOR}}</p>',
-      '<p>{{DIRECCION_EMISOR}}</p>',
-      '<p>{{CondicionIVAEmisor}}</p>',
-      '<p>Punto de Venta: {{PtoVta}} Comp. Nro: {{CbteNro}}</p>',
-      '<p>Fecha de Emisión: {{CbteFch}} CUIT: {{CUIT_EMISOR}}</p>',
-      '<p>Ingresos Brutos: {{INGRESOS_BRUTOS}}</p>',
-      '<p>{{FECHA_INICIO_ACTIVIDADES}}</p>',
-      '<p>{{FchServDesde}} | {{FchServHasta}} | {{FchVtoPago}}</p>',
-      '<p>CUIL/CUIT: {{DocNro}}</p>',
-      '<p>{{NOMBRE_RECEPTOR}}</p>',
-      '<p>{{CondicionIVAReceptor}}</p>',
-      '<p>{{DIRECCION_RECEPTOR}}</p>',
-      '<p>{{CONDICION_PAGO}}</p>',
-      '<p>Subtotal $ {{SUBTOTAL}} Otros $ {{IMPORTE_OTROS_TRIBUTOS}} Total $ {{IMPORTE_TOTAL}}</p>',
-      '<p>CAE N°: {{CAE_NUMBER}} Vto: {{CAE_EXPIRY_DATE}}</p>',
+      "<p>{{NOMBRE_EMISOR}}</p>",
+      "<p>{{DIRECCION_EMISOR}}</p>",
+      "<p>{{CondicionIVAEmisor}}</p>",
+      "<p>Punto de Venta: {{PtoVta}} Comp. Nro: {{CbteNro}}</p>",
+      "<p>Fecha de Emisión: {{CbteFch}} CUIT: {{CUIT_EMISOR}}</p>",
+      "<p>Ingresos Brutos: {{INGRESOS_BRUTOS}}</p>",
+      "<p>{{FECHA_INICIO_ACTIVIDADES}}</p>",
+      "<p>{{FchServDesde}} | {{FchServHasta}} | {{FchVtoPago}}</p>",
+      "<p>CUIL/CUIT: {{DocNro}}</p>",
+      "<p>{{NOMBRE_RECEPTOR}}</p>",
+      "<p>{{CondicionIVAReceptor}}</p>",
+      "<p>{{DIRECCION_RECEPTOR}}</p>",
+      "<p>{{CONDICION_PAGO}}</p>",
+      "<p>Subtotal $ {{SUBTOTAL}} Otros $ {{IMPORTE_OTROS_TRIBUTOS}} Total $ {{IMPORTE_TOTAL}}</p>",
+      "<p>CAE N°: {{CAE_NUMBER}} Vto: {{CAE_EXPIRY_DATE}}</p>",
       '<img src="{{QR_CODE_DATA}}">',
-      '{{INVOICE_ITEMS}}',
-      '</body></html>',
+      "{{INVOICE_ITEMS}}",
+      "</body></html>",
     ].join("");
 
     mocks.findTemplate.mockReturnValue(template);
@@ -50,24 +50,24 @@ describe("CreatePDFTool", () => {
     const htmlSent = mocks.electronicBilling.createPDF.mock.calls[0][0].html;
 
     // -- user-visible data was rendered --
-    expect(htmlSent).toContain("C");                     // CbteLetra
-    expect(htmlSent).toContain("Owner Name");            // NOMBRE_EMISOR
-    expect(htmlSent).toContain("Owner Address");         // DIRECCION_EMISOR
-    expect(htmlSent).toContain("Monotributo");           // CondicionIVAEmisor
-    expect(htmlSent).toContain("00001");                 // PtoVta padded
-    expect(htmlSent).toContain("00000123");              // CbteNro padded
-    expect(htmlSent).toContain("14/06/2026");            // CbteFch DD/MM/YYYY
-    expect(htmlSent).toContain("20123456789");           // CUIT_EMISOR
-    expect(htmlSent).toContain("20304050607");           // DocNro
-    expect(htmlSent).toContain("Recipient Name");        // NOMBRE_RECEPTOR
-    expect(htmlSent).toContain("Consumidor Final");      // CondicionIVAReceptor
-    expect(htmlSent).toContain("Contado");               // CONDICION_PAGO default
-    expect(htmlSent).toContain("100,00");                // SUBTOTAL es-AR
-    expect(htmlSent).toContain("0,00");                  // IMPORTE_OTROS_TRIBUTOS default
-    expect(htmlSent).toContain("12345678901234");        // CAE_NUMBER
-    expect(htmlSent).toContain("30/06/2026");            // CAE_EXPIRY_DATE DD/MM/YYYY
+    expect(htmlSent).toContain("C"); // CbteLetra
+    expect(htmlSent).toContain("Owner Name"); // NOMBRE_EMISOR
+    expect(htmlSent).toContain("Owner Address"); // DIRECCION_EMISOR
+    expect(htmlSent).toContain("Monotributo"); // CondicionIVAEmisor
+    expect(htmlSent).toContain("00001"); // PtoVta padded
+    expect(htmlSent).toContain("00000123"); // CbteNro padded
+    expect(htmlSent).toContain("14/06/2026"); // CbteFch DD/MM/YYYY
+    expect(htmlSent).toContain("20123456789"); // CUIT_EMISOR
+    expect(htmlSent).toContain("20304050607"); // DocNro
+    expect(htmlSent).toContain("Recipient Name"); // NOMBRE_RECEPTOR
+    expect(htmlSent).toContain("Consumidor Final"); // CondicionIVAReceptor
+    expect(htmlSent).toContain("Contado"); // CONDICION_PAGO default
+    expect(htmlSent).toContain("100,00"); // SUBTOTAL es-AR
+    expect(htmlSent).toContain("0,00"); // IMPORTE_OTROS_TRIBUTOS default
+    expect(htmlSent).toContain("12345678901234"); // CAE_NUMBER
+    expect(htmlSent).toContain("30/06/2026"); // CAE_EXPIRY_DATE DD/MM/YYYY
     expect(htmlSent).toContain("data:image/png;base64,qr"); // QR_CODE_DATA
-    expect(htmlSent).toContain("Consulting");            // INVOICE_ITEMS
+    expect(htmlSent).toContain("Consulting"); // INVOICE_ITEMS
 
     // -- NO unreplaced {{…}} placeholder leaked through --
     expect(htmlSent).not.toMatch(/\{\{.+?\}\}/);
@@ -120,5 +120,30 @@ describe("CreatePDFTool", () => {
 
     expect(response.isError).toBe(true);
     expect(parseContent(response)).toEqual({ success: false, error: "pdf failed" });
+  });
+
+  it("rejects invalid refined input before template, QR, or AFIP work", async () => {
+    const response = await CreatePDFTool.execute({
+      ...pdfParams,
+      Concepto: 2,
+    });
+
+    expect(response.isError).toBe(true);
+    expect(mocks.findTemplate).not.toHaveBeenCalled();
+    expect(mocks.generateQRCode).not.toHaveBeenCalled();
+    expect(mocks.electronicBilling.createPDF).not.toHaveBeenCalled();
+  });
+
+  it("renders omitted product service dates as blank values", async () => {
+    mocks.findTemplate.mockReturnValue("{{FchServDesde}}|{{FchServHasta}}|{{FchVtoPago}}");
+    mocks.generateQRCode.mockResolvedValue("data:image/png;base64,qr");
+    mocks.electronicBilling.createPDF.mockResolvedValue({ file: "product.pdf" });
+
+    const response = await CreatePDFTool.execute(pdfParams);
+
+    expect(response.isError).not.toBe(true);
+    expect(mocks.electronicBilling.createPDF).toHaveBeenCalledWith(
+      expect.objectContaining({ html: "||" }),
+    );
   });
 });

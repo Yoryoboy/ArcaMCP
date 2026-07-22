@@ -10,9 +10,7 @@ import z from "zod";
 
 import { resolveOwnerCuitOrThrow } from "../../identity.js";
 
-const IdAsString = z
-  .union([z.string(), z.number()])
-  .transform((v) => String(v));
+const IdAsString = z.union([z.string(), z.number()]).transform((v) => String(v));
 
 // Identity boundary reference: src/identity.ts
 const OwnerCuitAsString = IdAsString.optional().default(() => resolveOwnerCuitOrThrow());
@@ -22,66 +20,68 @@ const InvoiceItemSchema = z.object({
     .string()
     .min(1)
     .describe(
-      "Descripción específica del ítem (producto/servicio). No inventar descripciones genéricas. Si el usuario no lo ha especificado, preguntar explícitamente y no asumir la información."
+      "Descripción específica del ítem (producto/servicio). No inventar descripciones genéricas. Si el usuario no lo ha especificado, preguntar explícitamente y no asumir la información.",
     ),
-  cantidad: z
-    .number()
-    .min(0)
-    .default(1)
-    .describe("Cantidad del ítem. Preguntarle al usuario"),
+  cantidad: z.number().min(0).default(1).describe("Cantidad del ítem. Preguntarle al usuario"),
   precioUnitario: z
     .number()
     .min(0)
     .default(0)
     .describe("Precio unitario del ítem. Preguntarle al usuario"),
-  importe: z
-    .number()
-    .min(0)
-    .describe("Importe del ítem. Preguntarle al usuario"),
+  importe: z.number().min(0).describe("Importe del ítem. Preguntarle al usuario"),
 });
 
-export const CreatePDFInputSchema = z.object({
+export const CreatePDFInputBaseSchema = z.object({
   // Emisor
   CbteTipo: z
     .number()
     .int()
     .min(1)
     .describe(
-      "Código numérico del tipo de comprobante según AFIP (por ejemplo, Factura C = 11). Este valor se utiliza para propósitos técnicos como la generación del QR y debe obtenerse con el tool get_voucher_types. IMPORTANTE: Para la letra que se muestra en el PDF (A/B/C/M), usar el campo CbteLetra."
+      "Código numérico del tipo de comprobante según AFIP (por ejemplo, Factura C = 11). Este valor se utiliza para propósitos técnicos como la generación del QR y debe obtenerse con el tool get_voucher_types. IMPORTANTE: Para la letra que se muestra en el PDF (A/B/C/M), usar el campo CbteLetra.",
     ),
   CbteLetra: z
     .enum(["A", "B", "C", "M"])
     .describe(
-      "Letra del comprobante para visualización en el PDF (A/B/C/M). No utilizar aquí el Id numérico devuelto por get_voucher_types. Si sólo se dispone de la descripción (p. ej., 'Factura C'), extraer la letra (C). Se define CbteLetra separado de CbteTipo para evitar ambigüedad: CbteTipo es el código numérico para AFIP/QR, mientras que CbteLetra es únicamente la representación visual en el PDF."
+      "Letra del comprobante para visualización en el PDF (A/B/C/M). No utilizar aquí el Id numérico devuelto por get_voucher_types. Si sólo se dispone de la descripción (p. ej., 'Factura C'), extraer la letra (C). Se define CbteLetra separado de CbteTipo para evitar ambigüedad: CbteTipo es el código numérico para AFIP/QR, mientras que CbteLetra es únicamente la representación visual en el PDF.",
     ),
+  Concepto: z
+    .union([z.literal(1), z.literal(2), z.literal(3)])
+    .describe("Concepto del comprobante: 1=Productos, 2=Servicios, 3=Productos y Servicios"),
   NOMBRE_EMISOR: z
     .string()
-    .min(1)
+    .refine((value) => value.trim().length > 0, {
+      message: "NOMBRE_EMISOR no puede estar vacío",
+    })
     .describe(
-      "Nombre del emisor. Se debe usar el nombre obtenido de get_taxpayer_details, keys: nombre y apellido"
+      "Nombre del emisor. Se debe usar el nombre obtenido de get_taxpayer_details, keys: nombre y apellido",
     ),
   // @owner
-  CUIT_EMISOR: OwnerCuitAsString.describe(
-    "CUIT del emisor. Si se omite, se usa el CUIT del servidor desde AFIP_CUIT. Sobrescribir solo cuando el emisor sea un tercero."
+  CUIT_EMISOR: OwnerCuitAsString.refine((value) => /^\d{11}$/.test(value), {
+    message: "CUIT_EMISOR debe contener exactamente 11 dígitos",
+  }).describe(
+    "CUIT del emisor. Si se omite, se usa el CUIT del servidor desde AFIP_CUIT. Sobrescribir solo cuando el emisor sea un tercero.",
   ),
   DIRECCION_EMISOR: z
     .string()
-    .min(1)
-    .describe(
-      "Dirección del emisor, obtener de get_taxpayer_details, key: domicilio"
-    ),
+    .refine((value) => value.trim().length > 0, {
+      message: "DIRECCION_EMISOR no puede estar vacío",
+    })
+    .describe("Dirección del emisor, obtener de get_taxpayer_details, key: domicilio"),
   CondicionIVAEmisor: z
     .string()
-    .min(1)
+    .refine((value) => value.trim().length > 0, {
+      message: "CondicionIVAEmisor no puede estar vacío",
+    })
     .describe(
-      "Condición frente al IVA del emisor. Si el usuario no lo ha especificado, se deberá encontrar las opciones disponibles utilizando el tool get_tax_condition_types y se le deberá preguntar al usuario. Esta información nunca debe ser asumida, tiene que ser confirmada por el usuario."
+      "Condición frente al IVA del emisor. Si el usuario no lo ha especificado, se deberá encontrar las opciones disponibles utilizando el tool get_tax_condition_types y se le deberá preguntar al usuario. Esta información nunca debe ser asumida, tiene que ser confirmada por el usuario.",
     ),
   INGRESOS_BRUTOS: z
     .string()
     .optional()
     .default("")
     .describe(
-      "En AFIP/ARCA el campo de Ingresos Brutos en una factura no es un campo fijo del servicio web (WSFEv1), sino que se suele completar dentro de los datos del emisor (como el número de inscripción en IIBB o la condición frente a ese impuesto). Las opciones más comunes que se usan en ese campo son: Exento (cuando el emisor no tributa Ingresos Brutos en ninguna jurisdicción), Convenio Multilateral (cuando el contribuyente está inscripto en varias jurisdicciones bajo ese régimen), Local (por ejemplo, “IIBB CABA”, “IIBB PBA”, indicando la inscripción provincial correspondiente con el número de padrón), No inscripto (en algunos sistemas aparece esta opción cuando el contribuyente aún no tiene inscripción). Para encontrar tu número de IIBB: si sos Monotributista, en la mayoría de los casos estás exento salvo inscripción de oficio; si sos Responsable Inscripto, debés consultar en la web de tu Agencia de Recaudación Provincial (ej. AGIP, ARBA); y si operás en varias provincias, probablemente estés en Convenio Multilateral, lo cual figura en el padrón de tu jurisdicción sede."
+      "En AFIP/ARCA el campo de Ingresos Brutos en una factura no es un campo fijo del servicio web (WSFEv1), sino que se suele completar dentro de los datos del emisor (como el número de inscripción en IIBB o la condición frente a ese impuesto). Las opciones más comunes que se usan en ese campo son: Exento (cuando el emisor no tributa Ingresos Brutos en ninguna jurisdicción), Convenio Multilateral (cuando el contribuyente está inscripto en varias jurisdicciones bajo ese régimen), Local (por ejemplo, “IIBB CABA”, “IIBB PBA”, indicando la inscripción provincial correspondiente con el número de padrón), No inscripto (en algunos sistemas aparece esta opción cuando el contribuyente aún no tiene inscripción). Para encontrar tu número de IIBB: si sos Monotributista, en la mayoría de los casos estás exento salvo inscripción de oficio; si sos Responsable Inscripto, debés consultar en la web de tu Agencia de Recaudación Provincial (ej. AGIP, ARBA); y si operás en varias provincias, probablemente estés en Convenio Multilateral, lo cual figura en el padrón de tu jurisdicción sede.",
     ),
   FECHA_INICIO_ACTIVIDADES: z
     .string()
@@ -91,7 +91,7 @@ export const CreatePDFInputSchema = z.object({
       message: "FECHA_INICIO_ACTIVIDADES debe ser AAAA-MM o vacío",
     })
     .describe(
-      "Fecha de inicio de actividades. Si el usuario no lo ha especificado, se deberá encontrar las opciones disponibles utilizando el tool get_taxpayer_details, es el key periodoActividadPrincipal y viene en formato AAAA-MM. Ejemplo: 2022-01"
+      "Fecha de inicio de actividades. Si el usuario no lo ha especificado, se deberá encontrar las opciones disponibles utilizando el tool get_taxpayer_details, es el key periodoActividadPrincipal y viene en formato AAAA-MM. Ejemplo: 2022-01",
     ),
 
   // Comprobante
@@ -100,7 +100,7 @@ export const CreatePDFInputSchema = z.object({
     .int()
     .min(1)
     .describe(
-      "Punto de venta del comprobante. Se le debe agregar '0000' al inicio. Por ejemplo, si es 2, se pone '00002'"
+      "Punto de venta del comprobante. Se le debe agregar '0000' al inicio. Por ejemplo, si es 2, se pone '00002'",
     ),
   CbteNro: z.number().int().min(1).describe("Número del comprobante"),
   CbteFch: z
@@ -108,11 +108,7 @@ export const CreatePDFInputSchema = z.object({
     .regex(/^\d{8}$/)
     .describe("Fecha del comprobante"), // YYYYMMDD
   // Moneda
-  MonId: z
-    .string()
-    .min(3)
-    .default("PES")
-    .describe("Código de moneda (ej: PES)"),
+  MonId: z.string().min(3).default("PES").describe("Código de moneda (ej: PES)"),
   MonCotiz: z.number().min(0).default(1).describe("Cotización moneda"),
 
   // Receptor
@@ -128,25 +124,23 @@ export const CreatePDFInputSchema = z.object({
         "DocNro debe ser CUIL/CUIT de 11 dígitos o bien vacío explícito si no corresponde declarar receptor.",
     })
     .describe(
-      "Número de documento del receptor (CUIL/CUIT). Debe ser de 11 dígitos, sin puntos ni guiones. Si no corresponde declarar receptor, dejar explícitamente en blanco (string vacío). Este schema normaliza 0 o cadenas de solo ceros ('000...') a vacío. No inventar números. Si el usuario no lo ha especificado y es necesario, preguntar: el LLM no debe asumir esta información."
+      "Número de documento del receptor (CUIL/CUIT). Debe ser de 11 dígitos, sin puntos ni guiones. Si no corresponde declarar receptor, dejar explícitamente en blanco (string vacío). Este schema normaliza 0 o cadenas de solo ceros ('000...') a vacío. No inventar números. Si el usuario no lo ha especificado y es necesario, preguntar: el LLM no debe asumir esta información.",
     ),
   NOMBRE_RECEPTOR: z
     .string()
     .min(1)
     .describe(
-      "Nombre del receptor. En caso de no ser necesario declarar el receptor, se puede omitir. Dejar espacio en blanco"
+      "Nombre del receptor. En caso de no ser necesario declarar el receptor, se puede omitir. Dejar espacio en blanco",
     ),
   CondicionIVAReceptor: z
     .string()
     .min(1)
-    .describe(
-      "En caso de ser consumidor final, simplemente poner 'Consumidor Final'"
-    ),
+    .describe("En caso de ser consumidor final, simplemente poner 'Consumidor Final'"),
   DIRECCION_RECEPTOR: z
     .string()
     .optional()
     .describe(
-      "Dirección del receptor. En caso de no ser necesario declarar el receptor, se puede omitir. Dejar espacio en blanco. Si es necesario declarar el receptor, se puede encontrar la informacion del receptor usando el tool get_taxpayer_details"
+      "Dirección del receptor. En caso de no ser necesario declarar el receptor, se puede omitir. Dejar espacio en blanco. Si es necesario declarar el receptor, se puede encontrar la informacion del receptor usando el tool get_taxpayer_details",
     ),
 
   // Otros
@@ -169,37 +163,33 @@ export const CreatePDFInputSchema = z.object({
     ])
     .default("Contado")
     .describe(
-      "Condición de venta / medio de pago. Seleccionar una opción del enum: Contado, Efectivo, Transferencia, Depósito, Tarjeta de Débito, Tarjeta de Crédito, Mercado Pago, Billetera virtual, Cheque, Cuenta Corriente, A crédito, Contraentrega, QR interoperable u Otros. Si el usuario no lo ha especificado, preguntarle y no asumir esta información."
+      "Condición de venta / medio de pago. Seleccionar una opción del enum: Contado, Efectivo, Transferencia, Depósito, Tarjeta de Débito, Tarjeta de Crédito, Mercado Pago, Billetera virtual, Cheque, Cuenta Corriente, A crédito, Contraentrega, QR interoperable u Otros. Si el usuario no lo ha especificado, preguntarle y no asumir esta información.",
     ),
   FchServDesde: z
     .string()
     .regex(/^\d{8}$/)
     .optional()
     .describe(
-      "Fecha de inicio de servicio. En caso de no ser necesario declarar el servicio, se puede omitir. Dejar espacio en blanco. Lo ideal sería obtener la información del CAE al que se le está generando esta factura para obtener los datos de las fechas de inicio, fin y pago del servicio."
+      "Fecha de inicio de servicio. En caso de no ser necesario declarar el servicio, se puede omitir. Dejar espacio en blanco. Lo ideal sería obtener la información del CAE al que se le está generando esta factura para obtener los datos de las fechas de inicio, fin y pago del servicio.",
     ),
   FchServHasta: z
     .string()
     .regex(/^\d{8}$/)
     .optional()
     .describe(
-      "Fecha de fin de servicio. En caso de no ser necesario declarar el servicio, se puede omitir. Dejar espacio en blanco. Lo ideal sería obtener la información del CAE al que se le está generando esta factura para obtener los datos de las fechas de inicio, fin y pago del servicio."
+      "Fecha de fin de servicio. En caso de no ser necesario declarar el servicio, se puede omitir. Dejar espacio en blanco. Lo ideal sería obtener la información del CAE al que se le está generando esta factura para obtener los datos de las fechas de inicio, fin y pago del servicio.",
     ),
   FchVtoPago: z
     .string()
     .regex(/^\d{8}$/)
     .optional()
     .describe(
-      "Fecha de vencimiento de pago. En caso de no ser necesario declarar el servicio, se puede omitir. Dejar espacio en blanco. Lo ideal sería obtener la información del CAE al que se le está generando esta factura para obtener los datos de las fechas de inicio, fin y pago del servicio."
+      "Fecha de vencimiento de pago. En caso de no ser necesario declarar el servicio, se puede omitir. Dejar espacio en blanco. Lo ideal sería obtener la información del CAE al que se le está generando esta factura para obtener los datos de las fechas de inicio, fin y pago del servicio.",
     ),
 
   // Totales
   SUBTOTAL: z.number().min(0).describe("Subtotal de la factura"),
-  IMPORTE_OTROS_TRIBUTOS: z
-    .number()
-    .min(0)
-    .default(0)
-    .describe("Importe de otros tributos"),
+  IMPORTE_OTROS_TRIBUTOS: z.number().min(0).default(0).describe("Importe de otros tributos"),
   IMPORTE_TOTAL: z.number().min(0).describe("Importe total de la factura"),
 
   // CAE
@@ -212,16 +202,80 @@ export const CreatePDFInputSchema = z.object({
   TipoCodAut: z
     .enum(["E", "A"])
     .default("E")
-    .describe(
-      "Tipo de autorización del comprobante para QR: 'E' (CAE) o 'A' (CAEA)"
-    ),
+    .describe("Tipo de autorización del comprobante para QR: 'E' (CAE) o 'A' (CAEA)"),
 
   // Ítems de factura
-  INVOICE_ITEMS: z
-    .array(InvoiceItemSchema)
-    .optional()
-    .default([])
-    .describe("Ítems de factura"),
+  INVOICE_ITEMS: z.array(InvoiceItemSchema).optional().default([]).describe("Ítems de factura"),
+});
+
+function isCalendarDate(value: string): boolean {
+  if (!/^\d{8}$/.test(value)) return false;
+
+  const year = Number(value.slice(0, 4));
+  const month = Number(value.slice(4, 6));
+  const day = Number(value.slice(6, 8));
+  if (year < 1 || month < 1 || month > 12 || day < 1) return false;
+
+  const leapYear = year % 4 === 0 && (year % 100 !== 0 || year % 400 === 0);
+  const daysInMonth = [31, leapYear ? 29 : 28, 31, 30, 31, 30, 31, 31, 30, 31, 30, 31];
+  return day <= daysInMonth[month - 1];
+}
+
+function addDateIssue(
+  context: z.RefinementCtx,
+  path: "CbteFch" | "FchServDesde" | "FchServHasta" | "FchVtoPago",
+  message: string,
+) {
+  context.addIssue({ code: z.ZodIssueCode.custom, path: [path], message });
+}
+
+export const CreatePDFInputSchema = CreatePDFInputBaseSchema.superRefine((input, context) => {
+  if (!isCalendarDate(input.CbteFch)) {
+    addDateIssue(
+      context,
+      "CbteFch",
+      "CbteFch debe ser una fecha calendario válida en formato yyyyMMdd",
+    );
+  }
+
+  const serviceDates = ["FchServDesde", "FchServHasta", "FchVtoPago"] as const;
+  for (const field of serviceDates) {
+    const value = input[field];
+    if (value !== undefined && !isCalendarDate(value)) {
+      addDateIssue(
+        context,
+        field,
+        `${field} debe ser una fecha calendario válida en formato yyyyMMdd`,
+      );
+    }
+  }
+
+  if (input.Concepto === 2 || input.Concepto === 3) {
+    for (const field of serviceDates) {
+      if (input[field] === undefined) {
+        addDateIssue(context, field, `${field} es obligatorio para Concepto ${input.Concepto}`);
+      }
+    }
+
+    if (
+      input.FchServDesde &&
+      input.FchServHasta &&
+      isCalendarDate(input.FchServDesde) &&
+      isCalendarDate(input.FchServHasta) &&
+      input.FchServHasta < input.FchServDesde
+    ) {
+      addDateIssue(context, "FchServHasta", "FchServHasta no puede ser anterior a FchServDesde");
+    }
+
+    if (
+      input.FchVtoPago &&
+      isCalendarDate(input.FchVtoPago) &&
+      isCalendarDate(input.CbteFch) &&
+      input.FchVtoPago < input.CbteFch
+    ) {
+      addDateIssue(context, "FchVtoPago", "FchVtoPago no puede ser anterior a CbteFch");
+    }
+  }
 });
 
 export type CreatePDFInput = z.infer<typeof CreatePDFInputSchema>;

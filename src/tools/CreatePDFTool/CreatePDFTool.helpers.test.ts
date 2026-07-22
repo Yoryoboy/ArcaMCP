@@ -36,6 +36,11 @@ describe("CreatePDFTool helpers", () => {
     expect(formatDateISO(input)).toBe(expected);
   });
 
+  it("keeps omitted product service dates blank for PDF replacements", () => {
+    expect(formatDateDDMMYYYY(undefined)).toBe("");
+    expect(formatDateISO(undefined)).toBe("");
+  });
+
   it("formats AR amounts with two decimals", () => {
     expect(formatAmountAR(1234.5)).toBe("1.234,50");
   });
@@ -81,5 +86,4 @@ describe("CreatePDFTool helpers", () => {
 
     expect(findTemplate()).toBe(templateContents);
   });
-
 });

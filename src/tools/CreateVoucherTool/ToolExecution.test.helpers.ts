@@ -91,6 +91,7 @@ export const voucherParams = {
 export const pdfParams = {
   CbteTipo: 11,
   CbteLetra: "C" as const,
+  Concepto: 1 as const,
   NOMBRE_EMISOR: "Owner Name",
   CUIT_EMISOR: "20123456789",
   DIRECCION_EMISOR: "Owner Address",

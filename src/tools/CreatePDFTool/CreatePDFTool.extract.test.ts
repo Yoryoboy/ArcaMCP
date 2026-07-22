@@ -14,6 +14,7 @@ import {
 const baseInput: CreatePDFInput = {
   CbteTipo: 11,
   CbteLetra: "C",
+  Concepto: 1,
   NOMBRE_EMISOR: "Owner Name",
   CUIT_EMISOR: "20123456789",
   DIRECCION_EMISOR: "Owner Address",
@@ -35,9 +36,7 @@ const baseInput: CreatePDFInput = {
   CAE_NUMBER: "12345678901234",
   CAE_EXPIRY_DATE: "20260630",
   TipoCodAut: "E",
-  INVOICE_ITEMS: [
-    { descripcion: "Consulting", cantidad: 1, precioUnitario: 100, importe: 100 },
-  ],
+  INVOICE_ITEMS: [{ descripcion: "Consulting", cantidad: 1, precioUnitario: 100, importe: 100 }],
 };
 
 const qrDataUrl = "data:image/png;base64,fakeQr";
