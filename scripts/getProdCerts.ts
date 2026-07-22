@@ -1,9 +1,14 @@
-import afip from "../src/services/afip/client.js";
+import Afip from "@afipsdk/afip.js";
 import config from "../src/config.js";
 import fs from "fs";
 import path from "path";
 
 const { CUIT } = config;
+const afip = new Afip({
+  CUIT,
+  production: true,
+  access_token: config.ACCESS_TOKEN,
+});
 
 export interface CreateCertResponse {
   id: string;
@@ -23,63 +28,40 @@ const data = {
   alias: config.CERT_ALIAS,
 };
 
-try {
-  // Ejecutamos la automatizacion
-  const response: CreateCertResponse = await (afip as any).CreateAutomation(
-    "create-cert-prod",
-    data,
-    true
+const response = (await afip.CreateAutomation(
+  "create-cert-prod",
+  data,
+  true,
+)) as CreateCertResponse;
+
+if (!response || response.status !== "complete") {
+  throw new Error(
+    `Certificate automation did not complete successfully. Status: ${response?.status ?? "unknown"}`,
   );
-
-  // Validamos la respuesta
-  if (!response || response.status !== "complete") {
-    throw new Error(
-      `La automatización no se completó correctamente. Estado: ${
-        response?.status ?? "desconocido"
-      }`
-    );
-  }
-
-  if (!response.data?.cert || !response.data?.key) {
-    throw new Error("La respuesta no contiene los campos 'cert' y 'key'.");
-  }
-
-  // Ruta base donde se ejecuta el script
-  const baseDir = process.cwd();
-  const targetDir = path.join(baseDir, "certs", "prod");
-
-  // Creamos los directorios si no existen
-  try {
-    if (!fs.existsSync(targetDir)) {
-      fs.mkdirSync(targetDir, { recursive: true });
-    }
-  } catch (dirErr) {
-    throw new Error(
-      `No se pudo crear el directorio de destino: ${targetDir}. Detalle: ${
-        (dirErr as Error).message
-      }`
-    );
-  }
-
-  // Definimos rutas de archivos
-  const certPath = path.join(targetDir, "prod_certificado.crt");
-  const keyPath = path.join(targetDir, "prod_private.key");
-
-  // Escribimos los archivos
-  try {
-    fs.writeFileSync(certPath, response.data.cert, { encoding: "utf-8" });
-    fs.writeFileSync(keyPath, response.data.key, { encoding: "utf-8" });
-  } catch (writeErr) {
-    throw new Error(
-      `Error al guardar los archivos de certificado/clave. Detalle: ${
-        (writeErr as Error).message
-      }`
-    );
-  }
-
-  console.log(
-    `Certificados guardados correctamente:\n- Certificado: ${certPath}\n- Clave privada: ${keyPath}`
-  );
-} catch (error) {
-  console.error(error);
 }
+
+if (!response.data?.cert || !response.data?.key) {
+  throw new Error("Certificate automation response is missing 'cert' or 'key'.");
+}
+
+const targetDir = path.join(process.cwd(), "certs", "prod");
+
+try {
+  fs.mkdirSync(targetDir, { recursive: true });
+} catch (error) {
+  throw new Error(`Failed to create certificate directory: ${targetDir}`, { cause: error });
+}
+
+const certPath = path.join(targetDir, "prod_certificado.crt");
+const keyPath = path.join(targetDir, "prod_private.key");
+
+try {
+  fs.writeFileSync(certPath, response.data.cert, { encoding: "utf-8" });
+  fs.writeFileSync(keyPath, response.data.key, { encoding: "utf-8" });
+} catch (error) {
+  throw new Error("Failed to save production certificate files", { cause: error });
+}
+
+console.log(
+  `Production certificates saved:\n- Certificate: ${certPath}\n- Private key: ${keyPath}`,
+);
