@@ -1,7 +1,11 @@
 import { MCPResponse } from "../../core/types.js";
 import { generateQRCode } from "../../utils/qr/qr.js";
 import { QRDataSchema } from "../../utils/qr/qr.schema.js";
-import { CreatePDFInputBaseSchema, CreatePDFInputSchema } from "./CreatePDFTool.schemas.js";
+import {
+  CreatePDFInputBaseSchema,
+  PublicRefinedSchema,
+  ResolvedRefinedSchema,
+} from "./CreatePDFTool.schemas.js";
 import {
   findTemplate,
   buildQrPayload,
@@ -10,6 +14,10 @@ import {
   buildFileName,
 } from "./CreatePDFTool.helpers.js";
 import afip from "../../services/afip/client.js";
+import {
+  configuredOwnerCuit,
+  resolveOwnerProfile,
+} from "../../services/afip/ownerTaxpayerProfile.js";
 
 // ------------------------------
 // Tool implementation: generate populated HTML and create PDF
@@ -28,7 +36,10 @@ export class CreatePDFTool {
   static async execute(params: unknown): Promise<MCPResponse> {
     try {
       // 1) Validate and normalize input
-      const input = CreatePDFInputSchema.parse(params);
+      const publicInput = PublicRefinedSchema.parse(params);
+      const ownerCuit = configuredOwnerCuit();
+      const ownerProfile = await resolveOwnerProfile(ownerCuit);
+      const input = ResolvedRefinedSchema.parse({ ...publicInput, ...ownerProfile });
 
       // 2) Read HTML template
       const html = findTemplate();

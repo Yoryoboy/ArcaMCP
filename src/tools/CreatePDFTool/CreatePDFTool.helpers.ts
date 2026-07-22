@@ -1,4 +1,4 @@
-import type { CreatePDFInput } from "./CreatePDFTool.schemas.js";
+import type { CreatePDFResolvedInput } from "./CreatePDFTool.schemas.js";
 import path from "path";
 import * as fs from "fs";
 import { fileURLToPath } from "url";
@@ -10,19 +10,13 @@ const __dirname = path.dirname(__filename);
 export function formatDateDDMMYYYY(yyyymmdd?: string): string {
   if (!yyyymmdd) return "";
   if (!/^\d{8}$/.test(yyyymmdd)) return yyyymmdd;
-  return `${yyyymmdd.slice(6, 8)}/${yyyymmdd.slice(4, 6)}/${yyyymmdd.slice(
-    0,
-    4
-  )}`;
+  return `${yyyymmdd.slice(6, 8)}/${yyyymmdd.slice(4, 6)}/${yyyymmdd.slice(0, 4)}`;
 }
 
 export function formatDateISO(yyyymmdd?: string): string {
   if (!yyyymmdd) return "";
   if (!/^\d{8}$/.test(yyyymmdd)) return yyyymmdd;
-  return `${yyyymmdd.slice(0, 4)}-${yyyymmdd.slice(4, 6)}-${yyyymmdd.slice(
-    6,
-    8
-  )}`;
+  return `${yyyymmdd.slice(0, 4)}-${yyyymmdd.slice(4, 6)}-${yyyymmdd.slice(6, 8)}`;
 }
 
 export function formatAmountAR(n: number): string {
@@ -32,14 +26,12 @@ export function formatAmountAR(n: number): string {
   });
 }
 
-export function renderItems(
-  items: CreatePDFInput["INVOICE_ITEMS"] | undefined,
-): string {
+export function renderItems(items: CreatePDFResolvedInput["INVOICE_ITEMS"] | undefined): string {
   if (!items || items.length === 0) {
     return "";
   }
   const rows = items
-    .map((it: CreatePDFInput["INVOICE_ITEMS"][number], idx: number) => {
+    .map((it: CreatePDFResolvedInput["INVOICE_ITEMS"][number], idx: number) => {
       const cantidad = formatAmountAR(it.cantidad);
       const precioUnit = formatAmountAR(it.precioUnitario);
       const importe = formatAmountAR(it.importe);
@@ -70,7 +62,7 @@ export function findTemplate(): string {
   const found = candidates.find((p) => fs.existsSync(p));
   if (!found) {
     throw new Error(
-      "No se encontró la plantilla HTML 'templates/bill.html'. Asegúrate de que exista en la raíz del proyecto."
+      "No se encontró la plantilla HTML 'templates/bill.html'. Asegúrate de que exista en la raíz del proyecto.",
     );
   }
   return fs.readFileSync(found, "utf8");
@@ -93,7 +85,7 @@ function maybeToNumber(v?: string): number | undefined {
 /**
  * Builds the raw QR payload object (before schema validation) from the parsed input.
  */
-export function buildQrPayload(input: CreatePDFInput) {
+export function buildQrPayload(input: CreatePDFResolvedInput) {
   return {
     ver: 1 as const,
     fecha: formatDateISO(input.CbteFch),
@@ -115,7 +107,7 @@ export function buildQrPayload(input: CreatePDFInput) {
  * Builds the placeholder → value replacement map for the HTML template.
  */
 export function buildReplacementMap(
-  input: CreatePDFInput,
+  input: CreatePDFResolvedInput,
   qrDataUrl: string,
 ): Record<string, string> {
   return {
@@ -124,10 +116,8 @@ export function buildReplacementMap(
     "{{CUIT_EMISOR}}": input.CUIT_EMISOR,
     "{{DIRECCION_EMISOR}}": input.DIRECCION_EMISOR,
     "{{CondicionIVAEmisor}}": input.CondicionIVAEmisor,
-    "{{INGRESOS_BRUTOS}}": input.INGRESOS_BRUTOS ?? "",
-    "{{FECHA_INICIO_ACTIVIDADES}}": input.FECHA_INICIO_ACTIVIDADES
-      ? formatDateDDMMYYYY(input.FECHA_INICIO_ACTIVIDADES)
-      : "",
+    "{{INGRESOS_BRUTOS}}": renderIngresosBrutos(input.INGRESOS_BRUTOS),
+    "{{FECHA_INICIO_ACTIVIDADES}}": `${input.FECHA_INICIO_ACTIVIDADES.slice(8, 10)}/${input.FECHA_INICIO_ACTIVIDADES.slice(5, 7)}/${input.FECHA_INICIO_ACTIVIDADES.slice(0, 4)}`,
     "{{PtoVta}}": input.PtoVta.toString().padStart(5, "0"),
     "{{CbteNro}}": input.CbteNro.toString().padStart(8, "0"),
     "{{CbteFch}}": formatDateDDMMYYYY(input.CbteFch),
@@ -136,19 +126,11 @@ export function buildReplacementMap(
     "{{CondicionIVAReceptor}}": input.CondicionIVAReceptor,
     "{{DIRECCION_RECEPTOR}}": input.DIRECCION_RECEPTOR ?? "",
     "{{CONDICION_PAGO}}": input.CONDICION_PAGO ?? "",
-    "{{FchServDesde}}": input.FchServDesde
-      ? formatDateDDMMYYYY(input.FchServDesde)
-      : "",
-    "{{FchServHasta}}": input.FchServHasta
-      ? formatDateDDMMYYYY(input.FchServHasta)
-      : "",
-    "{{FchVtoPago}}": input.FchVtoPago
-      ? formatDateDDMMYYYY(input.FchVtoPago)
-      : "",
+    "{{FchServDesde}}": input.FchServDesde ? formatDateDDMMYYYY(input.FchServDesde) : "",
+    "{{FchServHasta}}": input.FchServHasta ? formatDateDDMMYYYY(input.FchServHasta) : "",
+    "{{FchVtoPago}}": input.FchVtoPago ? formatDateDDMMYYYY(input.FchVtoPago) : "",
     "{{SUBTOTAL}}": formatAmountAR(input.SUBTOTAL),
-    "{{IMPORTE_OTROS_TRIBUTOS}}": formatAmountAR(
-      input.IMPORTE_OTROS_TRIBUTOS ?? 0,
-    ),
+    "{{IMPORTE_OTROS_TRIBUTOS}}": formatAmountAR(input.IMPORTE_OTROS_TRIBUTOS ?? 0),
     "{{IMPORTE_TOTAL}}": formatAmountAR(input.IMPORTE_TOTAL),
     "{{CAE_NUMBER}}": String(input.CAE_NUMBER),
     "{{CAE_EXPIRY_DATE}}": formatDateDDMMYYYY(input.CAE_EXPIRY_DATE),
@@ -160,10 +142,7 @@ export function buildReplacementMap(
 /**
  * Applies placeholder replacements to the HTML template string.
  */
-export function applyReplacements(
-  html: string,
-  replacements: Record<string, string>,
-): string {
+export function applyReplacements(html: string, replacements: Record<string, string>): string {
   let result = html;
   for (const [ph, val] of Object.entries(replacements)) {
     result = result.split(ph).join(val ?? "");
@@ -174,7 +153,14 @@ export function applyReplacements(
 /**
  * Builds the PDF filename from input fields.
  */
-export function buildFileName(input: CreatePDFInput): string {
+export function renderIngresosBrutos(ingresos: CreatePDFResolvedInput["INGRESOS_BRUTOS"]): string {
+  if (ingresos.condicion === "Local" || ingresos.condicion === "Convenio Multilateral") {
+    return `${ingresos.condicion} - Inscripción IIBB: ${ingresos.numeroInscripcion}`;
+  }
+  return ingresos.condicion;
+}
+
+export function buildFileName(input: CreatePDFResolvedInput): string {
   return `Factura_${input.CbteLetra}_${String(input.PtoVta).padStart(
     5,
     "0",

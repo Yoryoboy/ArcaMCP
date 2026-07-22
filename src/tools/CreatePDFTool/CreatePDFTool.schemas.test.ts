@@ -1,13 +1,18 @@
-import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
+import { describe, expect, it } from "vitest";
 
-const createValidInput = () => ({
+import {
+  CreatePDFInputSchema,
+  CreatePDFInputBaseSchema,
+  ResolvedRefinedSchema,
+} from "./CreatePDFTool.schemas.js";
+
+const validPublicInput = () => ({
   CbteTipo: 11,
   CbteLetra: "C" as const,
   Concepto: 1 as const,
-  NOMBRE_EMISOR: "Owner Name",
-  DIRECCION_EMISOR: "Owner Address",
   CondicionIVAEmisor: "Monotributo",
-  FECHA_INICIO_ACTIVIDADES: "2022-01",
+  INGRESOS_BRUTOS: { condicion: "Local" as const, numeroInscripcion: "123" },
+  FECHA_INICIO_ACTIVIDADES: "2022-01-31",
   PtoVta: 1,
   CbteNro: 123,
   CbteFch: "20260614",
@@ -20,162 +25,112 @@ const createValidInput = () => ({
   CAE_EXPIRY_DATE: "20260630",
 });
 
-describe("CreatePDFInputSchema", () => {
-  const originalAfipCuit = process.env.AFIP_CUIT;
-
-  beforeEach(() => {
-    vi.resetModules();
-    process.env.AFIP_CUIT = "20123456789";
+describe("CreatePDF schemas", () => {
+  it("exposes only caller-owned fields in metadata", () => {
+    expect(CreatePDFInputBaseSchema.shape).not.toHaveProperty("CUIT_EMISOR");
+    expect(CreatePDFInputBaseSchema.shape).not.toHaveProperty("NOMBRE_EMISOR");
+    expect(CreatePDFInputBaseSchema.shape).not.toHaveProperty("DIRECCION_EMISOR");
+    expect(CreatePDFInputBaseSchema.shape).toHaveProperty("FECHA_INICIO_ACTIVIDADES");
   });
 
-  afterEach(() => {
-    vi.resetModules();
+  it.each(["CUIT_EMISOR", "NOMBRE_EMISOR", "DIRECCION_EMISOR"])(
+    "rejects legacy owner field %s",
+    (field) => {
+      const result = CreatePDFInputSchema.safeParse({ ...validPublicInput(), [field]: "legacy" });
+      expect(result.success).toBe(false);
+      if (!result.success)
+        expect(result.error.issues).toContainEqual(expect.objectContaining({ path: [field] }));
+    },
+  );
 
-    if (originalAfipCuit === undefined) {
-      delete process.env.AFIP_CUIT;
-      return;
-    }
-
-    process.env.AFIP_CUIT = originalAfipCuit;
+  it.each([
+    ["2022-01-31", true],
+    [undefined, false],
+    ["2022-01", false],
+    ["2022-02-30", false],
+    ["20220131", false],
+    ["2022-13-01", false],
+  ] as const)("validates caller activity start date %s", (FECHA_INICIO_ACTIVIDADES, success) => {
+    const result = CreatePDFInputSchema.safeParse({
+      ...validPublicInput(),
+      FECHA_INICIO_ACTIVIDADES,
+    });
+    expect(result.success).toBe(success);
+    if (result.success) expect(result.data.FECHA_INICIO_ACTIVIDADES).toBe("2022-01-31");
+    else
+      expect(result.error.issues).toContainEqual(
+        expect.objectContaining({ path: ["FECHA_INICIO_ACTIVIDADES"] }),
+      );
   });
 
-  it("defaults CUIT_EMISOR from the configured owner CUIT when omitted", async () => {
-    const { CreatePDFInputSchema } = await import("./CreatePDFTool.schemas.js");
-
-    const result = CreatePDFInputSchema.parse(createValidInput());
-
-    expect(result.CUIT_EMISOR).toBe("20123456789");
-  });
-
-  it("fails when CUIT_EMISOR is omitted and the configured owner CUIT is blank", async () => {
-    process.env.AFIP_CUIT = "";
-
-    const { CreatePDFInputSchema } = await import("./CreatePDFTool.schemas.js");
-
-    expect(() => CreatePDFInputSchema.parse(createValidInput())).toThrow(
-      "AFIP_CUIT must be configured when CreatePDFTool omits CUIT_EMISOR",
+  it("rejects unknown metadata fields", () => {
+    expect(CreatePDFInputSchema.safeParse({ ...validPublicInput(), unknown: true }).success).toBe(
+      false,
     );
   });
 
-  it("fails when CUIT_EMISOR is omitted and the configured owner CUIT is only whitespace", async () => {
-    process.env.AFIP_CUIT = "   ";
-
-    const { CreatePDFInputSchema } = await import("./CreatePDFTool.schemas.js");
-
-    expect(() => CreatePDFInputSchema.parse(createValidInput())).toThrow(
-      "AFIP_CUIT must be configured when CreatePDFTool omits CUIT_EMISOR",
-    );
-  });
-
-  it("fails when CUIT_EMISOR is omitted and the configured owner CUIT has invalid syntax", async () => {
-    process.env.AFIP_CUIT = "2012345678";
-
-    const { CreatePDFInputSchema } = await import("./CreatePDFTool.schemas.js");
-
-    expect(() => CreatePDFInputSchema.parse(createValidInput())).toThrow(
-      "AFIP_CUIT must be exactly 11 digits when CreatePDFTool omits CUIT_EMISOR",
-    );
-  });
-
-  it("defaults FECHA_INICIO_ACTIVIDADES to an empty string when omitted", async () => {
-    const { CreatePDFInputSchema } = await import("./CreatePDFTool.schemas.js");
-
-    const { FECHA_INICIO_ACTIVIDADES } = CreatePDFInputSchema.parse({
-      ...createValidInput(),
-      FECHA_INICIO_ACTIVIDADES: undefined,
-    });
-
-    expect(FECHA_INICIO_ACTIVIDADES).toBe("");
-  });
-
-  it("fails when FECHA_INICIO_ACTIVIDADES is an explicit short non-empty value", async () => {
-    const { CreatePDFInputSchema } = await import("./CreatePDFTool.schemas.js");
-
-    expect(() =>
-      CreatePDFInputSchema.parse({
-        ...createValidInput(),
-        FECHA_INICIO_ACTIVIDADES: "202",
-      }),
-    ).toThrow("FECHA_INICIO_ACTIVIDADES debe ser AAAA-MM o vacío");
-  });
-
-  it("accepts an explicit empty FECHA_INICIO_ACTIVIDADES value", async () => {
-    const { CreatePDFInputSchema } = await import("./CreatePDFTool.schemas.js");
-
-    const result = CreatePDFInputSchema.parse({
-      ...createValidInput(),
-      FECHA_INICIO_ACTIVIDADES: "",
-    });
-
-    expect(result.FECHA_INICIO_ACTIVIDADES).toBe("");
-  });
-
-  it("preserves an explicit CUIT_EMISOR provided by the caller", async () => {
-    const { CreatePDFInputSchema } = await import("./CreatePDFTool.schemas.js");
-
-    const result = CreatePDFInputSchema.parse({
-      ...createValidInput(),
-      CUIT_EMISOR: "20999888777",
-    });
-
-    expect(result.CUIT_EMISOR).toBe("20999888777");
-  });
-
-  it("normalizes numeric CUIT_EMISOR values to strings", async () => {
-    const { CreatePDFInputSchema } = await import("./CreatePDFTool.schemas.js");
-
-    const result = CreatePDFInputSchema.parse({
-      ...createValidInput(),
-      CUIT_EMISOR: 20999888777,
-    });
-
-    expect(result.CUIT_EMISOR).toBe("20999888777");
-  });
-
-  it.each([1, 2, 3] as const)("accepts supported Concepto %s", async (Concepto) => {
-    const { CreatePDFInputSchema } = await import("./CreatePDFTool.schemas.js");
+  it.each([1, 2, 3] as const)("accepts supported Concepto %s", (Concepto) => {
     const serviceDates =
       Concepto === 1
         ? {}
         : { FchServDesde: "20260614", FchServHasta: "20260614", FchVtoPago: "20260614" };
 
     expect(
-      CreatePDFInputSchema.parse({ ...createValidInput(), ...serviceDates, Concepto }).Concepto,
+      CreatePDFInputSchema.parse({ ...validPublicInput(), ...serviceDates, Concepto }).Concepto,
     ).toBe(Concepto);
   });
 
-  it.each([undefined, 1.5, 0, 4])("rejects invalid Concepto %s", async (Concepto) => {
-    const { CreatePDFInputSchema } = await import("./CreatePDFTool.schemas.js");
-
-    const result = CreatePDFInputSchema.safeParse({ ...createValidInput(), Concepto });
+  it.each([undefined, 1.5, 0, 4])("rejects invalid Concepto %s", (Concepto) => {
+    const result = CreatePDFInputSchema.safeParse({ ...validPublicInput(), Concepto });
 
     expect(result.success).toBe(false);
     if (!result.success) expect(result.error.issues[0].path).toEqual(["Concepto"]);
   });
 
-  it.each(["", "20260230", "2026-02-28", "20261301"])(
-    "rejects invalid CbteFch %s",
-    async (CbteFch) => {
-      const { CreatePDFInputSchema } = await import("./CreatePDFTool.schemas.js");
-      const result = CreatePDFInputSchema.safeParse({ ...createValidInput(), CbteFch });
+  it.each(["", "20260230", "2026-02-28", "20261301"])("rejects invalid CbteFch %s", (CbteFch) => {
+    const result = CreatePDFInputSchema.safeParse({ ...validPublicInput(), CbteFch });
 
+    expect(result.success).toBe(false);
+    if (!result.success)
+      expect(result.error.issues).toContainEqual(expect.objectContaining({ path: ["CbteFch"] }));
+  });
+
+  it.each([
+    { condicion: "Local", numeroInscripcion: "123" },
+    { condicion: "Convenio Multilateral", numeroInscripcion: "456" },
+    { condicion: "Exento" },
+    { condicion: "No contribuyente" },
+  ])("accepts valid IIBB variant %o", (INGRESOS_BRUTOS) => {
+    expect(CreatePDFInputSchema.safeParse({ ...validPublicInput(), INGRESOS_BRUTOS }).success).toBe(
+      true,
+    );
+  });
+
+  it("rejects blank or contradictory IIBB registrations at the registration path", () => {
+    for (const INGRESOS_BRUTOS of [
+      { condicion: "Local", numeroInscripcion: " " },
+      { condicion: "Exento", numeroInscripcion: "123" },
+    ]) {
+      const result = CreatePDFInputSchema.safeParse({ ...validPublicInput(), INGRESOS_BRUTOS });
       expect(result.success).toBe(false);
       if (!result.success)
-        expect(result.error.issues).toContainEqual(expect.objectContaining({ path: ["CbteFch"] }));
-    },
-  );
+        expect(result.error.issues.some((issue) => issue.path.includes("numeroInscripcion"))).toBe(
+          true,
+        );
+    }
+  });
 
-  it("requires all service dates for concepts 2 and 3", async () => {
-    const { CreatePDFInputSchema } = await import("./CreatePDFTool.schemas.js");
-
-    for (const Concepto of [2, 3]) {
-      const result = CreatePDFInputSchema.safeParse({ ...createValidInput(), Concepto });
+  it("requires IVA condition and validates service dates", () => {
+    expect(
+      CreatePDFInputSchema.safeParse({ ...validPublicInput(), CondicionIVAEmisor: " " }).success,
+    ).toBe(false);
+    for (const Concepto of [2, 3] as const) {
+      const result = CreatePDFInputSchema.safeParse({ ...validPublicInput(), Concepto });
       expect(result.success).toBe(false);
-      if (!result.success) {
+      if (!result.success)
         expect(result.error.issues.map((issue) => issue.path)).toEqual(
           expect.arrayContaining([["FchServDesde"], ["FchServHasta"], ["FchVtoPago"]]),
         );
-      }
     }
   });
 
@@ -189,43 +144,34 @@ describe("CreatePDFInputSchema", () => {
     ["FchVtoPago", "20260230"],
     ["FchVtoPago", ""],
     ["FchVtoPago", "2026-06-14"],
-  ] as const)(
-    "rejects %s with an invalid service date value for concepts 2 and 3",
-    async (field, value) => {
-      const { CreatePDFInputSchema } = await import("./CreatePDFTool.schemas.js");
+  ] as const)("rejects %s with an invalid service date value", (field, value) => {
+    for (const Concepto of [2, 3] as const) {
+      const result = CreatePDFInputSchema.safeParse({
+        ...validPublicInput(),
+        Concepto,
+        FchServDesde: "20260614",
+        FchServHasta: "20260614",
+        FchVtoPago: "20260614",
+        [field]: value,
+      });
 
-      for (const Concepto of [2, 3] as const) {
-        const result = CreatePDFInputSchema.safeParse({
-          ...createValidInput(),
-          Concepto,
-          FchServDesde: "20260614",
-          FchServHasta: "20260614",
-          FchVtoPago: "20260614",
-          [field]: value,
-        });
+      expect(result.success).toBe(false);
+      if (!result.success)
+        expect(result.error.issues).toContainEqual(expect.objectContaining({ path: [field] }));
+    }
+  });
 
-        expect(result.success).toBe(false);
-        if (!result.success) {
-          expect(result.error.issues).toContainEqual(expect.objectContaining({ path: [field] }));
-        }
-      }
-    },
-  );
-
-  it("accepts product invoices without service dates", async () => {
-    const { CreatePDFInputSchema } = await import("./CreatePDFTool.schemas.js");
-
-    expect(CreatePDFInputSchema.parse(createValidInput()).FchServDesde).toBeUndefined();
+  it("accepts product invoices without service dates", () => {
+    expect(CreatePDFInputSchema.parse(validPublicInput()).FchServDesde).toBeUndefined();
   });
 
   it.each([
     { FchServDesde: "20260615", FchServHasta: "20260614" },
     { FchServDesde: "20260614", FchServHasta: "20260614", FchVtoPago: "20260613" },
-  ])("rejects invalid service date chronology", async (dates) => {
-    const { CreatePDFInputSchema } = await import("./CreatePDFTool.schemas.js");
+  ])("rejects invalid service date chronology", (dates) => {
     const serviceDates = dates.FchVtoPago ? dates : { ...dates, FchVtoPago: "20260614" };
     const result = CreatePDFInputSchema.safeParse({
-      ...createValidInput(),
+      ...validPublicInput(),
       Concepto: 2,
       ...serviceDates,
     });
@@ -233,41 +179,15 @@ describe("CreatePDFInputSchema", () => {
     expect(result.success).toBe(false);
   });
 
-  it.each(["NOMBRE_EMISOR", "DIRECCION_EMISOR", "CondicionIVAEmisor"])(
-    "rejects whitespace-only %s",
-    async (field) => {
-      const { CreatePDFInputSchema } = await import("./CreatePDFTool.schemas.js");
-      const result = CreatePDFInputSchema.safeParse({ ...createValidInput(), [field]: "   " });
-
-      expect(result.success).toBe(false);
-      if (!result.success)
-        expect(result.error.issues).toContainEqual(expect.objectContaining({ path: [field] }));
-    },
-  );
-
-  it.each(["123", "1234567890", "123456789012", "abc12345678"])(
-    "rejects explicit CUIT_EMISOR %s",
-    async (CUIT_EMISOR) => {
-      const { CreatePDFInputSchema } = await import("./CreatePDFTool.schemas.js");
-      const result = CreatePDFInputSchema.safeParse({ ...createValidInput(), CUIT_EMISOR });
-
-      expect(result.success).toBe(false);
-      if (!result.success)
-        expect(result.error.issues).toContainEqual(
-          expect.objectContaining({ path: ["CUIT_EMISOR"] }),
-        );
-    },
-  );
-
-  it("exposes base metadata shape separately from refined runtime validation", async () => {
-    const { CreatePDFInputBaseSchema, CreatePDFInputSchema } =
-      await import("./CreatePDFTool.schemas.js");
-    const { CreatePDFTool } = await import("./CreatePDFTool.js");
-
-    expect(CreatePDFInputBaseSchema.shape).toHaveProperty("Concepto");
-    expect(CreatePDFTool.metadata.inputSchema).toBe(CreatePDFInputBaseSchema.shape);
-    expect(CreatePDFInputSchema.safeParse({ ...createValidInput(), Concepto: 2 }).success).toBe(
-      false,
-    );
+  it("validates provider fields only at the resolved boundary", () => {
+    const publicInput = CreatePDFInputSchema.parse(validPublicInput());
+    expect(() =>
+      ResolvedRefinedSchema.parse({
+        ...publicInput,
+        CUIT_EMISOR: "20123456789",
+        NOMBRE_EMISOR: "Owner Name",
+        DIRECCION_EMISOR: "Owner Address",
+      }),
+    ).not.toThrow();
   });
 });

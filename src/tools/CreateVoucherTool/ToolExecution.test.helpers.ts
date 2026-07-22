@@ -92,10 +92,9 @@ export const pdfParams = {
   CbteTipo: 11,
   CbteLetra: "C" as const,
   Concepto: 1 as const,
-  NOMBRE_EMISOR: "Owner Name",
-  CUIT_EMISOR: "20123456789",
-  DIRECCION_EMISOR: "Owner Address",
   CondicionIVAEmisor: "Monotributo",
+  INGRESOS_BRUTOS: { condicion: "Local" as const, numeroInscripcion: "IIBB-123" },
+  FECHA_INICIO_ACTIVIDADES: "2022-01-31",
   PtoVta: 1,
   CbteNro: 123,
   CbteFch: "20260614",
@@ -116,4 +115,10 @@ beforeEach(() => {
   mockStore.config.AFIP_PRODUCTION = true;
   mockStore.config.CUIT = "20123456789";
   mockStore.config.PASSWORD = "secret";
+  mockStore.afip.RegisterScopeThirteen.getTaxpayerDetails.mockResolvedValue({
+    nombre: "Owner",
+    apellido: "Name",
+    periodoActividadPrincipal: 202201,
+    domicilio: [{ tipoDomicilio: "FISCAL", estadoDomicilio: "ACTIVO", direccion: "Owner Address" }],
+  });
 });

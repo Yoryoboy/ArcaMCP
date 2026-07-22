@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import type { CreatePDFInput } from "./CreatePDFTool.schemas.js";
+import type { CreatePDFResolvedInput } from "./CreatePDFTool.schemas.js";
 
 // These imports will fail until we create the functions (TDD RED step).
 import {
@@ -7,11 +7,12 @@ import {
   applyReplacements,
   buildQrPayload,
   buildFileName,
+  renderIngresosBrutos,
 } from "./CreatePDFTool.helpers.js";
 
 // --------------- Test fixtures ---------------
 
-const baseInput: CreatePDFInput = {
+const baseInput: CreatePDFResolvedInput = {
   CbteTipo: 11,
   CbteLetra: "C",
   Concepto: 1,
@@ -19,8 +20,8 @@ const baseInput: CreatePDFInput = {
   CUIT_EMISOR: "20123456789",
   DIRECCION_EMISOR: "Owner Address",
   CondicionIVAEmisor: "Monotributo",
-  INGRESOS_BRUTOS: "",
-  FECHA_INICIO_ACTIVIDADES: "",
+  INGRESOS_BRUTOS: { condicion: "Local", numeroInscripcion: "IIBB-123" },
+  FECHA_INICIO_ACTIVIDADES: "2022-01-31",
   PtoVta: 1,
   CbteNro: 123,
   CbteFch: "20260614",
@@ -69,6 +70,11 @@ describe("buildReplacementMap", () => {
     expect(map["{{CbteFch}}"]).toBe("14/06/2026");
   });
 
+  it("formats FECHA_INICIO_ACTIVIDADES to DD/MM/YYYY", () => {
+    const map = buildReplacementMap(baseInput, qrDataUrl);
+    expect(map["{{FECHA_INICIO_ACTIVIDADES}}"]).toBe("31/01/2022");
+  });
+
   it("formats SUBTOTAL and IMPORTE_TOTAL with es-AR locale", () => {
     const map = buildReplacementMap(baseInput, qrDataUrl);
     expect(map["{{SUBTOTAL}}"]).toBe("100,00");
@@ -88,7 +94,7 @@ describe("buildReplacementMap", () => {
 
   it("handles optional fields with defaults (empty)", () => {
     const map = buildReplacementMap(baseInput, qrDataUrl);
-    expect(map["{{INGRESOS_BRUTOS}}"]).toBe("");
+    expect(map["{{INGRESOS_BRUTOS}}"]).toBe("Local - Inscripción IIBB: IIBB-123");
   });
 
   it("handles optional date fields", () => {
@@ -99,6 +105,20 @@ describe("buildReplacementMap", () => {
   it("includes CAE_NUMBER as string", () => {
     const map = buildReplacementMap(baseInput, qrDataUrl);
     expect(map["{{CAE_NUMBER}}"]).toBe("12345678901234");
+  });
+});
+
+describe("renderIngresosBrutos", () => {
+  it.each([
+    [{ condicion: "Local" as const, numeroInscripcion: "123" }, "Local - Inscripción IIBB: 123"],
+    [
+      { condicion: "Convenio Multilateral" as const, numeroInscripcion: "456" },
+      "Convenio Multilateral - Inscripción IIBB: 456",
+    ],
+    [{ condicion: "Exento" as const }, "Exento"],
+    [{ condicion: "No contribuyente" as const }, "No contribuyente"],
+  ])("renders the exact fiscal label", (value, expected) => {
+    expect(renderIngresosBrutos(value)).toBe(expected);
   });
 });
 

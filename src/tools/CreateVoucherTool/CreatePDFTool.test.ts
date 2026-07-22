@@ -2,6 +2,7 @@ import { describe, expect, it } from "vitest";
 
 import { getMocks, parseContent, pdfParams } from "./ToolExecution.test.helpers.js";
 import { CreatePDFTool } from "../CreatePDFTool/CreatePDFTool.js";
+import { resetOwnerProfileCache } from "../../services/afip/ownerTaxpayerProfile.js";
 
 const mocks = getMocks();
 
@@ -58,6 +59,7 @@ describe("CreatePDFTool", () => {
     expect(htmlSent).toContain("00000123"); // CbteNro padded
     expect(htmlSent).toContain("14/06/2026"); // CbteFch DD/MM/YYYY
     expect(htmlSent).toContain("20123456789"); // CUIT_EMISOR
+    expect(htmlSent).toContain("31/01/2022"); // FECHA_INICIO_ACTIVIDADES DD/MM/YYYY
     expect(htmlSent).toContain("20304050607"); // DocNro
     expect(htmlSent).toContain("Recipient Name"); // NOMBRE_RECEPTOR
     expect(htmlSent).toContain("Consumidor Final"); // CondicionIVAReceptor
@@ -132,6 +134,48 @@ describe("CreatePDFTool", () => {
     expect(mocks.findTemplate).not.toHaveBeenCalled();
     expect(mocks.generateQRCode).not.toHaveBeenCalled();
     expect(mocks.electronicBilling.createPDF).not.toHaveBeenCalled();
+  });
+
+  it("rejects owner enrichment before template, QR, or PDF work", async () => {
+    resetOwnerProfileCache();
+    mocks.afip.RegisterScopeThirteen.getTaxpayerDetails.mockRejectedValue(
+      new Error("owner lookup failed"),
+    );
+
+    const response = await CreatePDFTool.execute(pdfParams);
+
+    expect(response.isError).toBe(true);
+    expect(parseContent(response)).toEqual({ success: false, error: "owner lookup failed" });
+    expect(mocks.findTemplate).not.toHaveBeenCalled();
+    expect(mocks.generateQRCode).not.toHaveBeenCalled();
+    expect(mocks.electronicBilling.createPDF).not.toHaveBeenCalled();
+  });
+
+  it("ignores the A13 activity period and uses the caller-provided legal start date", async () => {
+    resetOwnerProfileCache();
+    mocks.afip.RegisterScopeThirteen.getTaxpayerDetails.mockResolvedValue({
+      nombre: "Owner",
+      apellido: "Name",
+      periodoActividadPrincipal: "2022-01",
+      domicilio: [
+        {
+          tipoDomicilio: "FISCAL",
+          estadoDomicilio: "ACTIVO",
+          direccion: "Owner Address",
+        },
+      ],
+    });
+
+    mocks.findTemplate.mockReturnValue("{{FECHA_INICIO_ACTIVIDADES}}");
+    mocks.generateQRCode.mockResolvedValue("data:image/png;base64,qr");
+    mocks.electronicBilling.createPDF.mockResolvedValue({ file: "activity-date.pdf" });
+
+    const response = await CreatePDFTool.execute(pdfParams);
+
+    expect(response.isError).not.toBe(true);
+    expect(mocks.electronicBilling.createPDF).toHaveBeenCalledWith(
+      expect.objectContaining({ html: "31/01/2022" }),
+    );
   });
 
   it("renders omitted product service dates as blank values", async () => {
