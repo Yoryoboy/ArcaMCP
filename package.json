@@ -1,13 +1,14 @@
 {
   "name": "arcamcp",
   "version": "1.0.1",
+  "packageManager": "pnpm@11.8.0",
   "description": "ARCA MCP",
   "type": "module",
   "main": "index.ts",
   "scripts": {
     "build": "tsc -p tsconfig.json",
-    "dev": "npx tsx src/index.ts",
-    "inspector": "npx -y @modelcontextprotocol/inspector@latest npx -y tsx src/index.ts",
+    "dev": "pnpm exec tsx src/index.ts",
+    "inspector": "pnpm dlx @modelcontextprotocol/inspector@latest pnpm exec tsx src/index.ts",
     "typecheck": "tsc --noEmit",
     "test": "vitest run",
     "test:watch": "vitest",
@@ -16,7 +17,7 @@
     "lint:fix": "eslint \"src/**/*.ts\" --fix",
     "format": "prettier --write eslint.config.mjs vitest.config.ts package.json \"src/services/afip/client.ts\" \"src/**/*.test.ts\"",
     "format:check": "prettier --check eslint.config.mjs vitest.config.ts package.json \"src/services/afip/client.ts\" \"src/**/*.test.ts\"",
-    "quality": "npm run typecheck && npm run lint && npm run format:check && npm run test && npm run test:coverage"
+    "quality": "pnpm run typecheck && pnpm run lint && pnpm run format:check && pnpm run test && pnpm run test:coverage"
   },
   "keywords": [
     "monotributo",

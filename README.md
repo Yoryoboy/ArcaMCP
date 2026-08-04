@@ -12,7 +12,7 @@ Además, incluye scripts en `scripts/` que automatizan pasos críticos de onboar
 ## Requisitos
 
 - Node.js 20 o superior
-- npm 9+ o pnpm/yarn equivalente
+- pnpm (la versión canónica la define el campo `packageManager` de `package.json`)
 - Acceso a tu CUIT y a tu cuenta de AFIP
 - Clave Fiscal nivel 3 o superior
 - (Opcional pero recomendado) Git para clonar el repositorio
@@ -23,12 +23,12 @@ Además, incluye scripts en `scripts/` que automatizan pasos críticos de onboar
 2. Instala dependencias:
    - Windows PowerShell/CMD:
      ```bash
-     npm install
+     pnpm install
      ```
 3. Copia/crea un archivo `.env` en la raíz con las variables necesarias (ver sección Configuración).
 4. (Opcional) Inspecciona el servidor MCP con el Inspector:
    ```bash
-   npm run inspector
+   pnpm run inspector
    ```
 
 ## Configuración (.env)
@@ -107,7 +107,7 @@ Usa el script `scripts/getProdCerts.ts` para crear/descargar el certificado y la
 - Requisitos previos: haber configurado `.env` con `AFIP_CUIT`, `AFIP_PASSWORD` y `AFIP_CERT_ALIAS`.
 - Ejecuta:
   ```bash
-  npx tsx scripts/getProdCerts.ts
+  pnpm exec tsx scripts/getProdCerts.ts
   ```
 - Salida esperada:
   - `./certs/prod/prod_certificado.crt`
@@ -123,16 +123,16 @@ Con certificados listos, autoriza los servicios necesarios en AFIP. Este repo in
 
 - Sintaxis de ayuda:
   ```bash
-  npx tsx scripts/authService.ts --help
+  pnpm exec tsx scripts/authService.ts --help
   ```
 - Ejemplos (PowerShell/CMD):
 
   ```bash
   # Facturación Electrónica
-  npx tsx scripts/authService.ts wsfe
+  pnpm exec tsx scripts/authService.ts wsfe
 
   # Padrón (A13)
-  npx tsx scripts/authService.ts ws_sr_padron_a13
+  pnpm exec tsx scripts/authService.ts ws_sr_padron_a13
   ```
 
 Si la respuesta indica `data.status = "created"`, la autorización fue creada correctamente para ese servicio.
@@ -150,14 +150,14 @@ Asegúrate de asociar correctamente el PDV al servicio de facturación electrón
 - Desarrollo:
 
   ```bash
-  npm run dev
+  pnpm run dev
   ```
 
   Esto lanza `src/index.ts` con `tsx` en modo desarrollo.
 
 - Inspector MCP (diagnóstico):
   ```bash
-  npm run inspector
+  pnpm run inspector
   ```
   Utiliza `@modelcontextprotocol/inspector` contra la misma entrada (`src/index.ts`).
 
@@ -170,7 +170,7 @@ Asegúrate de asociar correctamente el PDV al servicio de facturación electrón
   - Crea carpetas si no existen.
 
 - `scripts/authService.ts`
-  - Uso: `npx tsx scripts/authService.ts <service>`
+  - Uso: `pnpm exec tsx scripts/authService.ts <service>`
   - Ejemplos de `<service>`: `wsfe`, `ws_sr_padron_a13`.
   - Valida que la automatización retorne `status="complete"` y `data.status="created"`.
   - Importante: Para que todas las herramientas funcionen correctamente, es obligatorio autorizar previamente los servicios `wsfe` y `ws_sr_padron_a13` en AFIP.
@@ -268,8 +268,8 @@ Ejemplo (Windows, con rutas absolutas):
 ```json
 {
   "arca-mcp": {
-    "command": "npx",
-    "args": ["-y", "tsx", "C:\\ruta\\a\\ArcaMCP\\src\\index.ts"],
+    "command": "pnpm",
+    "args": ["dlx", "tsx", "C:\\ruta\\a\\ArcaMCP\\src\\index.ts"],
     "env": {
       "AFIP_CUIT": "20123456789",
       "AFIP_DEV_CERT_PATH": "C:\\ruta\\a\\ArcaMCP\\certs\\dev\\dev_certificado.crt",
@@ -288,8 +288,8 @@ Ejemplo (rutas relativas al repositorio):
 ```json
 {
   "arca-mcp": {
-    "command": "npx",
-    "args": ["-y", "tsx", "./src/index.ts"],
+    "command": "pnpm",
+    "args": ["dlx", "tsx", "./src/index.ts"],
     "env": {
       "AFIP_CUIT": "20123456789",
       "AFIP_DEV_CERT_PATH": "./certs/dev/dev_certificado.crt",
@@ -351,8 +351,8 @@ El asistente completará datos faltantes, validará reglas (por ejemplo Factura 
 - **Propón mejoras**: para nuevas features, abre primero un Issue/Discussion para alinear el alcance.
 - **Envía Pull Requests (PRs)**:
   - Haz un fork del repo y crea una rama desde `main` (por ejemplo, `feat/mi-mejora` o `fix/mi-bug`).
-  - Instala dependencias con `npm install` y prueba en local con `npm run dev`.
-  - Asegúrate de que el código compile (`npm run build`) y que no rompa los scripts (`scripts/*.ts`).
+  - Instala dependencias con `pnpm install` y prueba en local con `pnpm run dev`.
+  - Asegúrate de que el código compile (`pnpm run build`) y que no rompa los scripts (`scripts/*.ts`).
   - Incluye documentación actualizada en `README.md` cuando aplique (por ejemplo, variables nuevas, pasos, comandos).
   - No incluyas secretos ni certificados en los commits (usa variables de entorno y rutas locales).
   - Describe claramente los cambios en el PR y referencia el Issue relacionado (`Fixes #<n>` si corresponde).
