@@ -100,8 +100,6 @@ describe("isolated tool schemas", () => {
     const parsed = GetAutomationDetailsInputSchema.parse({ id: "automation-123" });
 
     expect(parsed.wait).toBe(false);
-    expect(
-      GetAutomationDetailsInputSchema.safeParse({ id: "" }).success,
-    ).toBe(false);
+    expect(GetAutomationDetailsInputSchema.safeParse({ id: "" }).success).toBe(false);
   });
 });

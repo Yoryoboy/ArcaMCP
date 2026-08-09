@@ -54,13 +54,13 @@ describe("CreateVoucherPrompt", () => {
     const cotizacionField = CreateVoucherPromptArgsSchema.shape.cotizacion.unwrap();
     const importeTotalField = CreateVoucherPromptArgsSchema.shape.importeTotal.unwrap();
 
-    expect(
-      requiredCompleter(tipoComprobanteField)("", { arguments: { concepto: "1" } }),
-    ).toEqual(["11", "6", "1"]);
+    expect(requiredCompleter(tipoComprobanteField)("", { arguments: { concepto: "1" } })).toEqual([
+      "11",
+      "6",
+      "1",
+    ]);
 
-    expect(
-      requiredCompleter(cotizacionField)("", { arguments: { moneda: "PES" } }),
-    ).toEqual(["1"]);
+    expect(requiredCompleter(cotizacionField)("", { arguments: { moneda: "PES" } })).toEqual(["1"]);
 
     expect(
       requiredCompleter(importeTotalField)("", {

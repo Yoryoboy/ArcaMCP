@@ -63,9 +63,10 @@ describe("CreateVoucherPromptArgsSchema", () => {
     const cantidadRegistrosField = CreateVoucherPromptArgsSchema.shape.cantidadRegistros.unwrap();
 
     expect(requiredCompleter(modoNumeracionField)("AU")).toEqual(["automatico"]);
-    expect(
-      requiredCompleter(tipoComprobanteField)("1", { arguments: { concepto: "2" } }),
-    ).toEqual(["11", "1"]);
+    expect(requiredCompleter(tipoComprobanteField)("1", { arguments: { concepto: "2" } })).toEqual([
+      "11",
+      "1",
+    ]);
     expect(requiredCompleter(monedaField)("d")).toEqual(["DOL"]);
     expect(requiredCompleter(cotizacionField)("", { arguments: { moneda: "DOL" } })).toEqual([]);
     expect(requiredCompleter(cotizacionField)("1", { arguments: {} })).toEqual(["1"]);
@@ -112,10 +113,8 @@ describe("CreateVoucherPromptArgsSchema", () => {
   });
 
   it("only suggests service dates when service concepts provide the required anchors", () => {
-    const fechaServicioDesdeField =
-      CreateVoucherPromptArgsSchema.shape.fechaServicioDesde.unwrap();
-    const fechaServicioHastaField =
-      CreateVoucherPromptArgsSchema.shape.fechaServicioHasta.unwrap();
+    const fechaServicioDesdeField = CreateVoucherPromptArgsSchema.shape.fechaServicioDesde.unwrap();
+    const fechaServicioHastaField = CreateVoucherPromptArgsSchema.shape.fechaServicioHasta.unwrap();
     const fechaVencimientoPagoField =
       CreateVoucherPromptArgsSchema.shape.fechaVencimientoPago.unwrap();
 

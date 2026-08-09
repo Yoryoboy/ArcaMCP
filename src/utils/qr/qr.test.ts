@@ -48,8 +48,6 @@ describe("generateQRCode", () => {
   it("returns the stringified QR library error when generation fails", async () => {
     qrcodeMocks.toDataURL.mockRejectedValue(new Error("QR generation failed"));
 
-    await expect(generateQRCode(qrPayload)).resolves.toBe(
-      "Error: QR generation failed",
-    );
+    await expect(generateQRCode(qrPayload)).resolves.toBe("Error: QR generation failed");
   });
 });

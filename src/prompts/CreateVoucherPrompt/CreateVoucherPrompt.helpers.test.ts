@@ -45,16 +45,14 @@ describe("CreateVoucherPrompt helpers", () => {
   });
 
   it("only suggests service dates when services are required", () => {
-    expect(
-      suggestServiceDateFrom("", { concepto: "2", fechaComprobante: "20260614" }),
-    ).toEqual(["20260614"]);
-    expect(suggestServiceDateFrom("", { concepto: "1", fechaComprobante: "20260614" })).toEqual(
-      [],
-    );
+    expect(suggestServiceDateFrom("", { concepto: "2", fechaComprobante: "20260614" })).toEqual([
+      "20260614",
+    ]);
+    expect(suggestServiceDateFrom("", { concepto: "1", fechaComprobante: "20260614" })).toEqual([]);
 
-    expect(
-      suggestServiceDateUntil("", { concepto: "3", fechaServicioDesde: "20260610" }),
-    ).toEqual(["20260610"]);
+    expect(suggestServiceDateUntil("", { concepto: "3", fechaServicioDesde: "20260610" })).toEqual([
+      "20260610",
+    ]);
     expect(suggestServiceDateUntil("", { concepto: "1", fechaServicioDesde: "20260610" })).toEqual(
       [],
     );
