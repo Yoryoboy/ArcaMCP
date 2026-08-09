@@ -1,5 +1,5 @@
 import { MCPResponse } from "../core/types.js";
-import { processAfipError } from "../utils/errorProcessor/errorProcessor.js";
+import { toErrorResponse } from "./toolError.helpers.js";
 
 type VoucherArrayFields = {
   Iva?: unknown[];
@@ -54,16 +54,6 @@ export async function executeVoucherTool<TValidated extends VoucherArrayFields, 
 
     return toTextResponse(result);
   } catch (error) {
-    const processed = processAfipError(error);
-
-    return {
-      content: [
-        {
-          type: "text" as const,
-          text: JSON.stringify(processed, null, 2),
-        },
-      ],
-      isError: true,
-    };
+    return toErrorResponse(error);
   }
 }

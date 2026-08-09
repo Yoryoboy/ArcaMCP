@@ -1,4 +1,5 @@
 import { MCPResponse } from "../core/types.js";
+import { toErrorResponse } from "./toolError.helpers.js";
 
 type SchemaWithParse<T> = {
   parse(input: unknown): T;
@@ -22,21 +23,6 @@ export async function executeAutomationTool<TValidated, TResult>(
       content: options.serializeSuccess(result),
     };
   } catch (error) {
-    return {
-      content: [
-        {
-          type: "text" as const,
-          text: JSON.stringify(
-            {
-              success: false,
-              error: error instanceof Error ? error.message : String(error),
-            },
-            null,
-            2,
-          ),
-        },
-      ],
-      isError: true,
-    };
+    return toErrorResponse(error);
   }
 }

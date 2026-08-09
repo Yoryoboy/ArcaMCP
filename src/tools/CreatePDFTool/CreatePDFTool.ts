@@ -18,6 +18,7 @@ import {
   configuredOwnerCuit,
   resolveOwnerProfile,
 } from "../../services/afip/ownerTaxpayerProfile.js";
+import { toErrorResponse } from "../toolError.helpers.js";
 
 // ------------------------------
 // Tool implementation: generate populated HTML and create PDF
@@ -89,22 +90,7 @@ export class CreatePDFTool {
         ],
       };
     } catch (error) {
-      return {
-        content: [
-          {
-            type: "text" as const,
-            text: JSON.stringify(
-              {
-                success: false,
-                error: error instanceof Error ? error.message : String(error),
-              },
-              null,
-              2,
-            ),
-          },
-        ],
-        isError: true,
-      };
+      return toErrorResponse(error);
     }
   }
 }

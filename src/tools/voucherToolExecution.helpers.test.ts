@@ -1,9 +1,6 @@
 import { describe, expect, it, vi } from "vitest";
 
-import {
-  cleanEmptyVoucherArrays,
-  executeVoucherTool,
-} from "./voucherToolExecution.helpers.js";
+import { cleanEmptyVoucherArrays, executeVoucherTool } from "./voucherToolExecution.helpers.js";
 
 describe("cleanEmptyVoucherArrays", () => {
   it("removes empty voucher arrays", () => {

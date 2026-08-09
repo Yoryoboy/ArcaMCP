@@ -21,7 +21,13 @@ describe("catalog and query tools", () => {
       "GetLastVoucherTool",
       () => GetLastVoucherTool.execute({ PtoVta: 1, CbteTipo: 11 }),
       mocks.electronicBilling.getLastVoucher,
-      [{ CbteNro: 123 }, [1, 11], 123, { code: 500 }, { code: 500 }],
+      [
+        { CbteNro: 123 },
+        [1, 11],
+        123,
+        { code: 500 },
+        { success: false, kind: "afip_rejection", code: 500, details: { code: 500 } },
+      ],
     ],
     [
       "GetVoucherInfoTool",
@@ -32,7 +38,12 @@ describe("catalog and query tools", () => {
         [123, 1, 11],
         { CAE: "123" },
         new Error("voucher failed"),
-        { error: "voucher failed", details: {} },
+        {
+          success: false,
+          error: "voucher failed",
+          kind: "internal",
+          details: { name: "Error", message: "voucher failed" },
+        },
       ],
     ],
     [
@@ -44,56 +55,149 @@ describe("catalog and query tools", () => {
         ["FEParamGetCotizacion", { MonId: "DOL", FchCotiz: "20260614" }],
         { MonCotiz: 1200 },
         new Error("rate failed"),
-        { error: "rate failed", details: {} },
+        {
+          success: false,
+          error: "rate failed",
+          kind: "internal",
+          details: { name: "Error", message: "rate failed" },
+        },
       ],
     ],
     [
       "GetVoucherTypesTool",
       () => GetVoucherTypesTool.execute(),
       mocks.electronicBilling.getVoucherTypes,
-      [[{ Id: 11 }], [], [{ Id: 11 }], new Error("voucher types failed"), { error: "voucher types failed", details: {} }],
+      [
+        [{ Id: 11 }],
+        [],
+        [{ Id: 11 }],
+        new Error("voucher types failed"),
+        {
+          success: false,
+          error: "voucher types failed",
+          kind: "internal",
+          details: { name: "Error", message: "voucher types failed" },
+        },
+      ],
     ],
     [
       "GetConceptTypesTool",
       () => GetConceptTypesTool.execute(),
       mocks.electronicBilling.getConceptTypes,
-      [[{ Id: 1 }], [], [{ Id: 1 }], new Error("concept types failed"), { error: "concept types failed", details: {} }],
+      [
+        [{ Id: 1 }],
+        [],
+        [{ Id: 1 }],
+        new Error("concept types failed"),
+        {
+          success: false,
+          error: "concept types failed",
+          kind: "internal",
+          details: { name: "Error", message: "concept types failed" },
+        },
+      ],
     ],
     [
       "GetDocumentTypesTool",
       () => GetDocumentTypesTool.execute(),
       mocks.electronicBilling.getDocumentTypes,
-      [[{ Id: 99 }], [], [{ Id: 99 }], new Error("document types failed"), { error: "document types failed", details: {} }],
+      [
+        [{ Id: 99 }],
+        [],
+        [{ Id: 99 }],
+        new Error("document types failed"),
+        {
+          success: false,
+          error: "document types failed",
+          kind: "internal",
+          details: { name: "Error", message: "document types failed" },
+        },
+      ],
     ],
     [
       "GetAliquotTypesTool",
       () => GetAliquotTypesTool.execute(),
       mocks.electronicBilling.getAliquotTypes,
-      [[{ Id: 5 }], [], [{ Id: 5 }], new Error("aliquot types failed"), { error: "aliquot types failed", details: {} }],
+      [
+        [{ Id: 5 }],
+        [],
+        [{ Id: 5 }],
+        new Error("aliquot types failed"),
+        {
+          success: false,
+          error: "aliquot types failed",
+          kind: "internal",
+          details: { name: "Error", message: "aliquot types failed" },
+        },
+      ],
     ],
     [
       "GetCurrenciesTypesTool",
       () => GetCurrenciesTypesTool.execute(),
       mocks.electronicBilling.getCurrenciesTypes,
-      [[{ Id: "PES" }], [], [{ Id: "PES" }], new Error("currency types failed"), { error: "currency types failed", details: {} }],
+      [
+        [{ Id: "PES" }],
+        [],
+        [{ Id: "PES" }],
+        new Error("currency types failed"),
+        {
+          success: false,
+          error: "currency types failed",
+          kind: "internal",
+          details: { name: "Error", message: "currency types failed" },
+        },
+      ],
     ],
     [
       "GetOptionsTypesTool",
       () => GetOptionsTypesTool.execute(),
       mocks.electronicBilling.getOptionsTypes,
-      [[{ Id: "2101" }], [], [{ Id: "2101" }], new Error("options failed"), { error: "options failed", details: {} }],
+      [
+        [{ Id: "2101" }],
+        [],
+        [{ Id: "2101" }],
+        new Error("options failed"),
+        {
+          success: false,
+          error: "options failed",
+          kind: "internal",
+          details: { name: "Error", message: "options failed" },
+        },
+      ],
     ],
     [
       "GetTaxTypesTool",
       () => GetTaxTypesTool.execute(),
       mocks.electronicBilling.getTaxTypes,
-      [[{ Id: 1 }], [], [{ Id: 1 }], new Error("tax types failed"), { error: "tax types failed", details: {} }],
+      [
+        [{ Id: 1 }],
+        [],
+        [{ Id: 1 }],
+        new Error("tax types failed"),
+        {
+          success: false,
+          error: "tax types failed",
+          kind: "internal",
+          details: { name: "Error", message: "tax types failed" },
+        },
+      ],
     ],
     [
       "GetTaxConditionTypesTool",
       () => GetTaxConditionTypesTool.execute(),
       mocks.electronicBilling.executeRequest,
-      [[{ Id: 5 }], ["FEParamGetCondicionIvaReceptor"], [{ Id: 5 }], new Error("tax condition failed"), { error: "tax condition failed", details: {} }],
+      [
+        [{ Id: 5 }],
+        ["FEParamGetCondicionIvaReceptor"],
+        [{ Id: 5 }],
+        new Error("tax condition failed"),
+        {
+          success: false,
+          error: "tax condition failed",
+          kind: "internal",
+          details: { name: "Error", message: "tax condition failed" },
+        },
+      ],
     ],
   ] as const;
 
@@ -108,7 +212,7 @@ describe("catalog and query tools", () => {
       expect(parseContent(success)).toEqual(expected);
       expect(mockFn).toHaveBeenCalledWith(...args);
       expect(failure.isError).toBe(true);
-      expect(parseContent(failure)).toEqual(expectedError);
+      expect(parseContent(failure)).toMatchObject(expectedError);
     },
   );
 

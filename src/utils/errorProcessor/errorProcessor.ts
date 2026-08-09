@@ -10,9 +10,28 @@
 
 import { ErrorCode, instructionMap } from "./errorProcessor.mapping.js";
 
+/**
+ * Clasificación del origen de una falla. Permite al agente decidir si debe
+ * corregir el input, reintentar, o escalar a revisión humana.
+ *
+ * - "validation":     el input no pasó la validación local (Zod). Corregir input.
+ * - "afip_rejection": AFIP rechazó la operación por una regla de negocio (hay código).
+ * - "afip_transport": falla de red/SOAP/HTTP/certificados al hablar con AFIP. Reintentar.
+ * - "internal":       falla no clasificada (probablemente un bug). Escalar.
+ */
+export type ErrorKind =
+  | "validation"
+  | "afip_rejection"
+  | "afip_transport"
+  | "internal";
+
 export type ProcessedToolError = {
   /** Mensaje de error legible para humanos (preservado del error original) */
   error: string;
+  /** Clasificación del origen de la falla */
+  kind: ErrorKind;
+  /** Código de error identificado (AFIP o lógico), cuando se pudo extraer */
+  code?: number | string;
   /** Objeto/valor de error original para depuración y contexto (sin modificar) */
   details: unknown;
   /** Instrucciones determinísticas que debe seguir el LLM */
@@ -26,6 +45,30 @@ export type ProcessedToolError = {
 const DEFAULT_INSTRUCTIONS =
   "Informa al usuario que ocurrió un error desconocido y solicita revisión humana. " +
   "Muestra el mensaje de error y cualquier código disponible. No reintentes automáticamente sin correcciones.";
+
+/**
+ * Códigos de error de red/conexión (Node/axios) que indican una falla de
+ * transporte y no un rechazo de negocio de AFIP.
+ */
+const TRANSPORT_ERROR_CODES = new Set<string>([
+  "ECONNREFUSED",
+  "ECONNRESET",
+  "ECONNABORTED",
+  "ETIMEDOUT",
+  "ENOTFOUND",
+  "EAI_AGAIN",
+  "ENETUNREACH",
+  "EHOSTUNREACH",
+  "EPIPE",
+  "EPROTO",
+  "ERR_NETWORK",
+  "ERR_BAD_REQUEST",
+  "ERR_CANCELED",
+]);
+
+/** Patrones de mensaje típicos de fallas de red/SOAP/HTTP/certificados. */
+const TRANSPORT_MESSAGE_PATTERN =
+  /ECONNREFUSED|ECONNRESET|ETIMEDOUT|ENOTFOUND|EAI_AGAIN|network\s*error|timeout|timed?\s*out|socket hang up|getaddrinfo|failed to (connect|fetch|resolve)|certificate|ssl\b|tls\b|EPROTO|HTTP\s*(status\s*)?(4\d\d|5\d\d)/i;
 
 /** Registrar o sobrescribir instrucciones para un código específico. */
 export function registerErrorInstructions(code: ErrorCode, text: string): void {
@@ -121,6 +164,46 @@ function isZodValidationError(value: unknown): boolean {
 }
 
 /**
+ * Detecta fallas de transporte (red/SOAP/HTTP/certificados) de forma conservadora:
+ * solo clasifica como transporte cuando hay una señal fuerte (código de red conocido,
+ * nombre de error HTTP/axios, o patrón de mensaje). Nunca dispara ante rechazos de AFIP.
+ */
+function isTransportError(value: unknown): boolean {
+  if (typeof value === "string") {
+    return TRANSPORT_MESSAGE_PATTERN.test(value);
+  }
+
+  if (!isObjectLike(value)) {
+    return false;
+  }
+
+  const code = value.code;
+  if (typeof code === "string" && TRANSPORT_ERROR_CODES.has(code.toUpperCase())) {
+    return true;
+  }
+
+  if (value.name === "AxiosError" || value.name === "AbortError") {
+    return true;
+  }
+
+  const message = typeof value.message === "string" ? value.message : "";
+  return TRANSPORT_MESSAGE_PATTERN.test(message);
+}
+
+/**
+ * Clasifica el origen de la falla. El orden importa:
+ * 1. validación local (Zod), 2. transporte, 3. rechazo de AFIP con código, 4. interno.
+ * Transporte se evalúa antes que rechazo para no confundir códigos de red (p.ej. ECONNREFUSED)
+ * con códigos de negocio.
+ */
+function classifyKind(err: unknown, code: number | string | undefined): ErrorKind {
+  if (isZodValidationError(err)) return "validation";
+  if (isTransportError(err)) return "afip_transport";
+  if (code !== undefined) return "afip_rejection";
+  return "internal";
+}
+
+/**
  * Procesa cualquier error y lo transforma en un objeto estructurado que guíe al LLM.
  * - Siempre preserva el mensaje de error original y sus detalles.
  * - Agrega instrucciones determinísticas desde el mapeo centralizado.
@@ -140,6 +223,15 @@ export function processAfipError(err: unknown): ProcessedToolError {
       if (fromMsg !== undefined) code = fromMsg;
     }
 
+    // Clasificar el origen de la falla. Envuelto en su propio resguardo para que
+    // un error hostil nunca rompa la extracción de mensaje/detalles ya lograda.
+    let kind: ErrorKind = "internal";
+    try {
+      kind = classifyKind(err, code);
+    } catch {
+      kind = "internal";
+    }
+
     let instructions: string | undefined;
 
     if (code !== undefined && instructionMap.has(code)) {
@@ -149,12 +241,19 @@ export function processAfipError(err: unknown): ProcessedToolError {
       instructionMap.has("ZOD_VALIDATION")
     ) {
       instructions = instructionMap.get("ZOD_VALIDATION")!;
+    } else if (
+      kind === "afip_transport" &&
+      instructionMap.has("AFIP_TRANSPORT")
+    ) {
+      instructions = instructionMap.get("AFIP_TRANSPORT")!;
     } else {
       instructions = DEFAULT_INSTRUCTIONS;
     }
 
     return {
       error: message || "Error desconocido",
+      kind,
+      code,
       details: err,
       instructions,
     };
@@ -162,6 +261,7 @@ export function processAfipError(err: unknown): ProcessedToolError {
     // Resguardo ultra-seguro para asegurar que el procesador nunca arroje excepciones
     return {
       error: "Error desconocido",
+      kind: "internal",
       details: err,
       instructions: DEFAULT_INSTRUCTIONS,
     };

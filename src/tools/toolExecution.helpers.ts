@@ -1,4 +1,5 @@
 import { MCPResponse } from "../core/types.js";
+import { toErrorResponse } from "./toolError.helpers.js";
 
 type SchemaWithParse<T> = {
   parse(input: unknown): T;
@@ -44,21 +45,6 @@ export async function executeJsonTool<TValidated, TResult>(
 
     return toTextResponse(result);
   } catch (error) {
-    return {
-      content: [
-        {
-          type: "text" as const,
-          text: JSON.stringify(
-            {
-              error: error instanceof Error ? error.message : "Error desconocido",
-              details: error,
-            },
-            null,
-            2,
-          ),
-        },
-      ],
-      isError: true,
-    };
+    return toErrorResponse(error);
   }
 }

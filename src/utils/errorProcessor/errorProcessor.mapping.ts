@@ -123,4 +123,14 @@ export const instructionMap: Map<ErrorCode, string> = new Map<
       "- No intentes llamar a AFIP hasta que la validación local pase sin errores.",
     ].join("\n"),
   ],
+  [
+    "AFIP_TRANSPORT",
+    [
+      "Acción para falla de comunicación con AFIP (red/SOAP/HTTP/certificados):",
+      "- El problema es de conectividad o infraestructura, no de los datos enviados.",
+      "- No modifiques el input: los parámetros no son la causa del error.",
+      "- Puedes reintentar la misma operación una vez después de unos segundos.",
+      "- Si el error persiste, informa al usuario que AFIP no está disponible y solicita revisión humana.",
+    ].join("\n"),
+  ],
 ]);

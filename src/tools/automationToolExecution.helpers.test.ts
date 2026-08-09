@@ -8,7 +8,10 @@ describe("executeAutomationTool", () => {
     const invoke = vi.fn().mockResolvedValue({ id: "auto-1", status: "completed" });
     const serializeSuccess = vi.fn().mockReturnValue([
       { type: "text" as const, text: "automation started" },
-      { type: "text" as const, text: JSON.stringify({ id: "auto-1", status: "completed" }, null, 2) },
+      {
+        type: "text" as const,
+        text: JSON.stringify({ id: "auto-1", status: "completed" }, null, 2),
+      },
     ]);
 
     const response = await executeAutomationTool({
@@ -37,14 +40,13 @@ describe("executeAutomationTool", () => {
       serializeSuccess: vi.fn(),
     });
 
-    expect(response).toEqual({
-      content: [
-        {
-          type: "text",
-          text: JSON.stringify({ success: false, error: "automation failed" }, null, 2),
-        },
-      ],
-      isError: true,
+    expect(response.isError).toBe(true);
+    expect(JSON.parse(response.content[0].text)).toEqual({
+      success: false,
+      error: "automation failed",
+      kind: "internal",
+      details: { name: "Error", message: "automation failed" },
+      instructions: expect.stringContaining("error desconocido"),
     });
   });
 });

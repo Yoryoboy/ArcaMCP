@@ -1,5 +1,6 @@
 import { MCPResponse } from "../core/types.js";
 import { EmptySchema } from "./shared.schemas.js";
+import { toErrorResponse } from "./toolError.helpers.js";
 
 export interface CatalogToolConfig {
   name: string;
@@ -46,26 +47,7 @@ export function createCatalogTool(config: CatalogToolConfig): CatalogTool {
           ],
         };
       } catch (error) {
-        return {
-          content: [
-            {
-              type: "text" as const,
-              text: JSON.stringify(
-                {
-                  error:
-                    error instanceof Error
-                      ? error.message
-                      : "Error desconocido",
-                  details: error,
-                  ...(config.onError?.(error) ?? {}),
-                },
-                null,
-                2,
-              ),
-            },
-          ],
-          isError: true,
-        };
+        return toErrorResponse(error, config.onError?.(error));
       }
     },
   };

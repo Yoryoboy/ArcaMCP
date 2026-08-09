@@ -106,9 +106,10 @@ describe("CreatePDFTool", () => {
     const response = await CreatePDFTool.execute(pdfParams);
 
     expect(response.isError).toBe(true);
-    expect(parseContent(response)).toEqual({
+    expect(parseContent(response)).toMatchObject({
       success: false,
       error: "No se encontró la plantilla HTML 'templates/bill.html'.",
+      kind: "internal",
     });
     expect(mocks.electronicBilling.createPDF).not.toHaveBeenCalled();
   });
@@ -121,7 +122,12 @@ describe("CreatePDFTool", () => {
     const response = await CreatePDFTool.execute(pdfParams);
 
     expect(response.isError).toBe(true);
-    expect(parseContent(response)).toEqual({ success: false, error: "pdf failed" });
+    expect(parseContent(response)).toMatchObject({
+      success: false,
+      error: "pdf failed",
+      kind: "internal",
+      details: { name: "Error", message: "pdf failed" },
+    });
   });
 
   it("rejects invalid refined input before template, QR, or AFIP work", async () => {
@@ -145,7 +151,12 @@ describe("CreatePDFTool", () => {
     const response = await CreatePDFTool.execute(pdfParams);
 
     expect(response.isError).toBe(true);
-    expect(parseContent(response)).toEqual({ success: false, error: "owner lookup failed" });
+    expect(parseContent(response)).toMatchObject({
+      success: false,
+      error: "owner lookup failed",
+      kind: "internal",
+      details: { name: "Error", message: "owner lookup failed" },
+    });
     expect(mocks.findTemplate).not.toHaveBeenCalled();
     expect(mocks.generateQRCode).not.toHaveBeenCalled();
     expect(mocks.electronicBilling.createPDF).not.toHaveBeenCalled();

@@ -59,11 +59,22 @@ describe("tools with environment guards", () => {
     expect(parseContent(taxpayerSuccess)).toEqual({ taxId: 20368506345 });
     expect(parseContent(cuitSuccess)).toBe("20123456789");
     expect(parseContent(salesPointsSuccess)).toEqual([{ nro: 1 }]);
-    expect(parseContent(taxpayerFailure)).toEqual({ error: "taxpayer failed", details: {} });
-    expect(parseContent(cuitFailure)).toEqual({ error: "dni failed", details: {} });
+    expect(parseContent(taxpayerFailure)).toMatchObject({
+      success: false,
+      error: "taxpayer failed",
+      kind: "internal",
+      details: { name: "Error", message: "taxpayer failed" },
+    });
+    expect(parseContent(cuitFailure)).toMatchObject({
+      success: false,
+      error: "dni failed",
+      kind: "internal",
+      details: { name: "Error", message: "dni failed" },
+    });
     expect(parseContent(salesPointsFailure)).toMatchObject({
+      success: false,
       error: "sales points failed",
-      details: {},
+      kind: "internal",
     });
     expect(parseContent(salesPointsFailure)).toMatchObject({
       note: expect.stringContaining("punto de venta 1"),

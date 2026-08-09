@@ -14,9 +14,7 @@ describe("createCatalogTool", () => {
   it("exposes name, metadata, and execute", () => {
     expect(tool.name).toBe("get_test_types");
     expect(tool.metadata.title).toBe("Obtener tipos de prueba");
-    expect(tool.metadata.description).toBe(
-      "Obtiene los tipos de prueba disponibles.",
-    );
+    expect(tool.metadata.description).toBe("Obtiene los tipos de prueba disponibles.");
     expect(tool.metadata.inputSchema).toBeDefined();
     expect(typeof tool.execute).toBe("function");
   });
@@ -95,7 +93,8 @@ describe("createCatalogTool", () => {
 
     expect(response.isError).toBe(true);
     const parsed = JSON.parse(response.content[0].text);
-    expect(parsed.error).toBe("Error desconocido");
+    expect(parsed.error).toBe("raw string error");
+    expect(parsed.kind).toBe("internal");
     expect(parsed.details).toBe("raw string error");
   });
 

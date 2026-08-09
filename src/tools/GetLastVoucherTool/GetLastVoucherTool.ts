@@ -2,6 +2,7 @@ import { MCPResponse } from "../../core/types.js";
 import { AFIPLastVoucherResponse, GetLastVoucherParams } from "../types.js";
 import { GetLastVoucherSchema } from "./GetLastVoucherTool.schemas.js";
 import afip from "../../services/afip/client.js";
+import { toErrorResponse } from "../toolError.helpers.js";
 
 export class GetLastVoucherTool {
   static readonly name = "get_last_voucher";
@@ -37,15 +38,7 @@ export class GetLastVoucherTool {
         ],
       };
     } catch (error) {
-      return {
-        content: [
-          {
-            type: "text" as const,
-            text: JSON.stringify(error, null, 2),
-          },
-        ],
-        isError: true,
-      };
+      return toErrorResponse(error);
     }
   }
 }

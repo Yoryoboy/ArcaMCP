@@ -69,8 +69,11 @@ describe("executeJsonTool", () => {
 
     expect(response.isError).toBe(true);
     expect(JSON.parse(response.content[0].text)).toEqual({
+      success: false,
       error: "rate failed",
-      details: {},
+      kind: "internal",
+      details: { name: "Error", message: "rate failed" },
+      instructions: expect.stringContaining("error desconocido"),
     });
   });
 

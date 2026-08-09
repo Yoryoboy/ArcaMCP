@@ -171,3 +171,67 @@ describe("processAfipError", () => {
     expect(result.instructions).toContain("error desconocido");
   });
 });
+
+describe("processAfipError kind classification", () => {
+  it("classifies Zod schema errors as validation", () => {
+    const zodError = {
+      name: "ZodError",
+      issues: [{ path: ["CbteFch"], message: "Required" }],
+    };
+
+    const result = processAfipError(zodError);
+
+    expect(result.kind).toBe("validation");
+    expect(result.instructions).toContain("No intentes llamar a AFIP");
+  });
+
+  it("classifies an AFIP business rejection by its numeric code", () => {
+    const afipRejection = { code: 10049, message: "(10049) Missing service dates" };
+
+    const result = processAfipError(afipRejection);
+
+    expect(result.kind).toBe("afip_rejection");
+    expect(result.code).toBe(10049);
+    expect(result.instructions).toContain("FchServDesde");
+  });
+
+  it("classifies an AfipWebServiceError-shaped Error as a rejection", () => {
+    const rejection = new Error("(10004) Invalid sales point");
+
+    const result = processAfipError(rejection);
+
+    expect(result.kind).toBe("afip_rejection");
+    expect(result.code).toBe(10004);
+  });
+
+  it.each([
+    { name: "network code", error: { code: "ECONNREFUSED", message: "connect failed" } },
+    { name: "timeout message", error: new Error("Request timeout after 30s") },
+    { name: "axios error name", error: { name: "AxiosError", message: "Network Error" } },
+    { name: "socket hang up", error: new Error("socket hang up") },
+  ])("classifies transport failures ($name) as afip_transport", ({ error }) => {
+    const result = processAfipError(error);
+
+    expect(result.kind).toBe("afip_transport");
+    expect(result.instructions).toContain("conectividad");
+  });
+
+  it("prefers an explicit mapped code over transport instructions", () => {
+    registerErrorInstructions("AFIP_TIMEOUT", "Custom transport guidance.");
+
+    const result = processAfipError({ code: "AFIP_TIMEOUT", message: "timeout" });
+
+    expect(result.kind).toBe("afip_transport");
+    expect(result.instructions).toBe("Custom transport guidance.");
+
+    instructionMap.delete("AFIP_TIMEOUT");
+  });
+
+  it("classifies unknown errors without code as internal", () => {
+    const result = processAfipError(new Error("something unexpected"));
+
+    expect(result.kind).toBe("internal");
+    expect(result.code).toBeUndefined();
+    expect(result.instructions).toContain("error desconocido");
+  });
+});

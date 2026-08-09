@@ -38,7 +38,7 @@ describe("automation tools", () => {
   it("only sends defined mis comprobantes filters and keeps async execution forced", async () => {
     mocks.afip.CreateAutomation.mockResolvedValue({ id: "auto-2", status: "in_process" });
 
-      await MisComprobantesTool.execute({
+    await MisComprobantesTool.execute({
       t: "R",
       fechaEmision: "01/06/2026 - 30/06/2026",
       tipoDoc: 80,
@@ -66,7 +66,7 @@ describe("automation tools", () => {
   it("preserves explicitly empty filter arrays for mis comprobantes", async () => {
     mocks.afip.CreateAutomation.mockResolvedValue({ id: "auto-3", status: "in_process" });
 
-      await MisComprobantesTool.execute({
+    await MisComprobantesTool.execute({
       t: "E",
       fechaEmision: "01/06/2026 - 30/06/2026",
       puntosVenta: [],
@@ -130,10 +130,19 @@ describe("automation tools", () => {
           wait: true,
         }),
       ),
-    ).toEqual({ success: false, error: "automation failed" });
-    expect(parseContent(await GetAutomationDetailsTool.execute({ id: "auto-1", wait: true }))).toEqual({
+    ).toMatchObject({
+      success: false,
+      error: "automation failed",
+      kind: "internal",
+      details: { name: "Error", message: "automation failed" },
+    });
+    expect(
+      parseContent(await GetAutomationDetailsTool.execute({ id: "auto-1", wait: true })),
+    ).toMatchObject({
       success: false,
       error: "details failed",
+      kind: "internal",
+      details: { name: "Error", message: "details failed" },
     });
   });
 
@@ -147,9 +156,11 @@ describe("automation tools", () => {
     });
 
     expect(response.isError).toBe(true);
-    expect(parseContent(response)).toEqual({
+    expect(parseContent(response)).toMatchObject({
       success: false,
       error: "automation exploded",
+      kind: "internal",
+      details: "automation exploded",
     });
   });
 });
