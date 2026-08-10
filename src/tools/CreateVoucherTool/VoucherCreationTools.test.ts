@@ -74,4 +74,37 @@ describe("voucher creation tools", () => {
       instructions: expect.stringContaining("FchServDesde"),
     });
   });
+
+  it("rejects a semantically invalid voucher locally before calling AFIP", async () => {
+    // Factura C (CbteTipo 11) con IVA discriminado: inválido semánticamente.
+    const response = await CreateVoucherTool.execute({
+      ...voucherParams,
+      ImpNeto: 100,
+      ImpIVA: 21,
+      ImpTotal: 121,
+    });
+
+    expect(response.isError).toBe(true);
+    expect(parseContent(response)).toMatchObject({
+      success: false,
+      kind: "validation",
+    });
+    expect(parseContent(response).error).toContain("ImpIVA");
+    expect(mocks.electronicBilling.createVoucher).not.toHaveBeenCalled();
+  });
+
+  it("rejects a services voucher missing service dates before calling AFIP", async () => {
+    const response = await CreateNextVoucherTool.execute({
+      ...voucherCore,
+      Concepto: 2,
+    });
+
+    expect(response.isError).toBe(true);
+    expect(parseContent(response)).toMatchObject({
+      success: false,
+      kind: "validation",
+    });
+    expect(parseContent(response).error).toContain("FchServDesde");
+    expect(mocks.electronicBilling.createNextVoucher).not.toHaveBeenCalled();
+  });
 });

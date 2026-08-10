@@ -9,6 +9,7 @@ import { GetTaxpayerDetailsSchema } from "./GetTaxpayerDetailsTool/GetTaxpayerDe
 import { GetVoucherInfoSchema } from "./GetVoucherInfoTool/GetVoucherInfoTool.schemas.js";
 
 describe("isolated tool schemas", () => {
+  // Factura C (monotributo) válida: ImpIVA=0 e ImpNeto coincide con ImpTotal.
   const validVoucherCore = {
     PtoVta: 1,
     CbteTipo: 11,
@@ -17,9 +18,9 @@ describe("isolated tool schemas", () => {
     CbteFch: "20260614",
     ImpTotal: 121,
     ImpTotConc: 0,
-    ImpNeto: 100,
+    ImpNeto: 121,
     ImpOpEx: 0,
-    ImpIVA: 21,
+    ImpIVA: 0,
     ImpTrib: 0,
     MonId: "PES",
     MonCotiz: 1,

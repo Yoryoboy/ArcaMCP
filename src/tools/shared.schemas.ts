@@ -1,4 +1,5 @@
 import { z } from "zod";
+import { validateVoucherCoreSemantics } from "./voucherSemantics.js";
 
 // Schema vacío para herramientas sin parámetros
 export const EmptySchema = z.object({});
@@ -43,11 +44,14 @@ export const OpcionalesItemSchema = z.object({
 });
 
 // -----------------------------------------------------------------------------
-// VoucherCoreSchema
+// VoucherCoreShape / VoucherCoreSchema
 // -----------------------------------------------------------------------------
-// Esquema base común para ambos flujos: CreateVoucher y CreateNextVoucher.
+// `VoucherCoreShape` es el objeto plano (sin refinar): se usa para `.shape`
+// (metadata MCP), para `.extend()` y para inferencia de tipos.
+// `VoucherCoreSchema` es la versión refinada con validación semántica de campos
+// cruzados: es la que se usa para parsear en ambos flujos de creación.
 
-export const VoucherCoreSchema = z.object({
+export const VoucherCoreShape = z.object({
   // Punto de venta: compartido por ambos flujos
   PtoVta: z
     .number()
@@ -184,3 +188,8 @@ export const VoucherCoreSchema = z.object({
     .optional()
     .describe("Campos auxiliares reservados para usos futuros"),
 });
+
+// Esquema refinado: aplica la validación semántica de campos cruzados.
+export const VoucherCoreSchema = VoucherCoreShape.superRefine(
+  validateVoucherCoreSemantics,
+);

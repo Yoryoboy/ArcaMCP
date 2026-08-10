@@ -64,6 +64,8 @@ export const getMocks = () => mockStore;
 export const parseContent = (response: { content: Array<{ text: string }> }, index = 0) =>
   JSON.parse(response.content[index].text);
 
+// Factura C (monotributo) válida: no discrimina IVA, por lo que ImpIVA=0 y el
+// subtotal (ImpNeto) coincide con ImpTotal.
 export const voucherCore = {
   PtoVta: 1,
   CbteTipo: 11,
@@ -72,9 +74,9 @@ export const voucherCore = {
   CbteFch: "20260614",
   ImpTotal: 121,
   ImpTotConc: 0,
-  ImpNeto: 100,
+  ImpNeto: 121,
   ImpOpEx: 0,
-  ImpIVA: 21,
+  ImpIVA: 0,
   ImpTrib: 0,
   MonId: "PES",
   MonCotiz: 1,

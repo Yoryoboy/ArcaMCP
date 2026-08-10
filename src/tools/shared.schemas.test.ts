@@ -2,6 +2,7 @@ import { describe, expect, it } from "vitest";
 import { EmptySchema, IvaItemSchema, VoucherCoreSchema } from "./shared.schemas.js";
 
 describe("shared schemas", () => {
+  // Factura C (monotributo) válida: ImpIVA=0 e ImpNeto coincide con ImpTotal.
   const validVoucher = {
     PtoVta: 1,
     CbteTipo: 11,
@@ -10,9 +11,9 @@ describe("shared schemas", () => {
     CbteFch: "20260614",
     ImpTotal: 121,
     ImpTotConc: 0,
-    ImpNeto: 100,
+    ImpNeto: 121,
     ImpOpEx: 0,
-    ImpIVA: 21,
+    ImpIVA: 0,
     ImpTrib: 0,
     MonId: "PES",
     MonCotiz: 1,

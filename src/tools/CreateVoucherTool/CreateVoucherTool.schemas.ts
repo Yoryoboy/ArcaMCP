@@ -1,8 +1,12 @@
+import { VoucherCoreShape } from "../shared.schemas.js";
+import {
+  validateVoucherCoreSemantics,
+  validateVoucherRangeSemantics,
+} from "../voucherSemantics.js";
 import { z } from "zod";
-import { VoucherCoreSchema } from "../shared.schemas.js";
 
-// Schema para createVoucher (con campos adicionales)
-export const VoucherSchema = VoucherCoreSchema.extend({
+// Shape plano (sin refinar) para metadata `.shape` e inferencia de tipos.
+export const VoucherShape = VoucherCoreShape.extend({
   CantReg: z
     .number()
     .min(1)
@@ -23,4 +27,11 @@ export const VoucherSchema = VoucherCoreSchema.extend({
     .describe(
       "Si es true, devuelve la respuesta completa del WS. Si es false o no se especifica, devuelve solo CAE y CAEFchVto"
     ),
+});
+
+// Schema refinado para parsing: validación semántica del núcleo + rango de
+// numeración manual. Es el que usa create_voucher al ejecutar.
+export const VoucherSchema = VoucherShape.superRefine((data, ctx) => {
+  validateVoucherCoreSemantics(data, ctx);
+  validateVoucherRangeSemantics(data, ctx);
 });

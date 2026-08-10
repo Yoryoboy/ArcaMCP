@@ -1,6 +1,6 @@
 import { MCPResponse } from "../../core/types.js";
 import { VoucherParams } from "../types.js";
-import { VoucherSchema } from "./CreateVoucherTool.schemas.js";
+import { VoucherSchema, VoucherShape } from "./CreateVoucherTool.schemas.js";
 import afip from "../../services/afip/client.js";
 import { executeVoucherTool } from "../voucherToolExecution.helpers.js";
 
@@ -10,7 +10,7 @@ export class CreateVoucherTool {
   static readonly metadata = {
     title: "Crear comprobante electrónico",
     description: "Crear un comprobante electrónico en AFIP con CAE asignado",
-    inputSchema: VoucherSchema.shape,
+    inputSchema: VoucherShape.shape,
   };
 
   static async execute(params: VoucherParams): Promise<MCPResponse> {
