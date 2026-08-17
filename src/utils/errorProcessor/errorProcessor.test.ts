@@ -21,6 +21,27 @@ describe("processAfipError", () => {
     expect(result.details).toEqual({ code: 777777, message: "custom failure" });
   });
 
+  it.each([
+    {
+      code: "address_selection_required",
+      message: "A13 contains ambiguous addresses",
+      expected: ["details.candidates", "DIRECCION_EMISOR_SELECCIONADA", "único"],
+    },
+    {
+      code: "address_selection_invalid",
+      message: "Selected address is not current",
+      expected: ["details.candidates", "DIRECCION_EMISOR_SELECCIONADA", "exactamente uno"],
+    },
+  ])(
+    "provides deterministic address-selection guidance for $code",
+    ({ code, message, expected }) => {
+      const result = processAfipError({ code, message });
+
+      for (const text of expected) expect(result.instructions).toContain(text);
+      expect(result.instructions).not.toContain("error desconocido");
+    },
+  );
+
   it("resolves mapped instructions from a numeric code inside an error message", () => {
     const result = processAfipError(new Error("(10049) Missing service dates"));
 

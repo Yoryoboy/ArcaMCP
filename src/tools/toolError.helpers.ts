@@ -1,8 +1,5 @@
 import { MCPResponse } from "../core/types.js";
-import {
-  processAfipError,
-  ProcessedToolError,
-} from "../utils/errorProcessor/errorProcessor.js";
+import { processAfipError, ProcessedToolError } from "../utils/errorProcessor/errorProcessor.js";
 
 /**
  * Convierte un `Error` nativo en un objeto plano serializable.
@@ -21,6 +18,14 @@ export function toSerializableDetails(details: unknown): unknown {
     const code = (details as { code?: unknown }).code;
     if (code !== undefined) {
       plain.code = code;
+    }
+    const candidates = (details as { candidates?: unknown }).candidates;
+    if (Array.isArray(candidates)) {
+      plain.candidates = candidates;
+    }
+    const requestedAddress = (details as { requestedAddress?: unknown }).requestedAddress;
+    if (typeof requestedAddress === "string") {
+      plain.requestedAddress = requestedAddress;
     }
     return plain;
   }
@@ -61,10 +66,7 @@ export function buildToolErrorPayload(
  * Envuelve el payload de error unificado en una respuesta MCP marcada como error.
  * Este es el único punto de salida para los errores de todas las tools.
  */
-export function toErrorResponse(
-  error: unknown,
-  extra?: Record<string, unknown>,
-): MCPResponse {
+export function toErrorResponse(error: unknown, extra?: Record<string, unknown>): MCPResponse {
   return {
     content: [
       {

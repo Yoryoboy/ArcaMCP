@@ -66,6 +66,21 @@ describe("buildToolErrorPayload", () => {
     });
   });
 
+  it("serializes owner address selection candidates", () => {
+    const error = Object.assign(new Error("choose an address"), {
+      code: "address_selection_required",
+      candidates: ["One", "Two"],
+    });
+
+    expect(buildToolErrorPayload(error)).toMatchObject({
+      code: "address_selection_required",
+      details: {
+        code: "address_selection_required",
+        candidates: ["One", "Two"],
+      },
+    });
+  });
+
   it("classifies transport failures and keeps them retryable", () => {
     const payload = buildToolErrorPayload({ code: "ECONNREFUSED", message: "down" });
 

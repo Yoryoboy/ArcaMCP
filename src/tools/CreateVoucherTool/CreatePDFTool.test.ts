@@ -201,4 +201,53 @@ describe("CreatePDFTool", () => {
       expect.objectContaining({ html: "||" }),
     );
   });
+
+  it("retries ambiguous A13 selection with a validated current address", async () => {
+    resetOwnerProfileCache();
+    mocks.afip.RegisterScopeThirteen.getTaxpayerDetails.mockResolvedValue({
+      nombre: "Owner",
+      apellido: "Name",
+      domicilio: [
+        { tipoDomicilio: "FISCAL", estadoDomicilio: "ACTIVO", direccion: "First Address" },
+        { tipoDomicilio: "FISCAL", estadoDomicilio: "ACTIVO", direccion: "Second Address" },
+      ],
+    });
+    mocks.findTemplate.mockReturnValue("{{DIRECCION_EMISOR}}");
+    mocks.generateQRCode.mockResolvedValue("data:image/png;base64,qr");
+    mocks.electronicBilling.createPDF.mockResolvedValue({ file: "selected.pdf" });
+
+    const response = await CreatePDFTool.execute({
+      ...pdfParams,
+      DIRECCION_EMISOR_SELECCIONADA: " second   address ",
+    });
+
+    expect(response.isError).not.toBe(true);
+    expect(mocks.electronicBilling.createPDF).toHaveBeenCalledWith(
+      expect.objectContaining({ html: "Second Address" }),
+    );
+  });
+
+  it("rejects an emitter address selection not present in current A13", async () => {
+    resetOwnerProfileCache();
+    mocks.afip.RegisterScopeThirteen.getTaxpayerDetails.mockResolvedValue({
+      nombre: "Owner",
+      apellido: "Name",
+      domicilio: [{ tipoDomicilio: "FISCAL", estadoDomicilio: "ACTIVO", direccion: "Current" }],
+    });
+
+    const response = await CreatePDFTool.execute({
+      ...pdfParams,
+      DIRECCION_EMISOR_SELECCIONADA: "Unverified",
+    });
+
+    expect(response.isError).toBe(true);
+    expect(parseContent(response)).toMatchObject({
+      code: "address_selection_invalid",
+      details: {
+        requestedAddress: "Unverified",
+        candidates: ["Current"],
+      },
+    });
+    expect(mocks.electronicBilling.createPDF).not.toHaveBeenCalled();
+  });
 });

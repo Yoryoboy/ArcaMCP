@@ -31,6 +31,16 @@ describe("CreatePDF schemas", () => {
     expect(CreatePDFInputBaseSchema.shape).not.toHaveProperty("NOMBRE_EMISOR");
     expect(CreatePDFInputBaseSchema.shape).not.toHaveProperty("DIRECCION_EMISOR");
     expect(CreatePDFInputBaseSchema.shape).toHaveProperty("FECHA_INICIO_ACTIVIDADES");
+    expect(CreatePDFInputBaseSchema.shape).toHaveProperty("DIRECCION_EMISOR_SELECCIONADA");
+  });
+
+  it("accepts the dedicated emitter address selection field", () => {
+    expect(
+      CreatePDFInputSchema.parse({
+        ...validPublicInput(),
+        DIRECCION_EMISOR_SELECCIONADA: " Owner Address ",
+      }).DIRECCION_EMISOR_SELECCIONADA,
+    ).toBe("Owner Address");
   });
 
   it.each(["CUIT_EMISOR", "NOMBRE_EMISOR", "DIRECCION_EMISOR"])(

@@ -6,10 +6,7 @@ export type ErrorCode = number | string;
  *
  * Agrega nuevas entradas aquí (o vía registerErrorInstructions) para escalar sin tocar la lógica central.
  */
-export const instructionMap: Map<ErrorCode, string> = new Map<
-  ErrorCode,
-  string
->([
+export const instructionMap: Map<ErrorCode, string> = new Map<ErrorCode, string>([
   [
     10004,
     [
@@ -112,6 +109,26 @@ export const instructionMap: Map<ErrorCode, string> = new Map<
       "- Si el comprobante es solo de productos, ofrece cambiar 'Concepto' a 1 (Productos).",
       "- No reintentes la operación hasta completar/corregir estos campos.",
       "- El LLM no debe asumir esa información",
+    ].join("\n"),
+  ],
+  [
+    "address_selection_required",
+    [
+      "Acción para seleccionar el domicilio del emisor en A13:",
+      "- Presenta al usuario todos los candidatos actuales incluidos en 'details.candidates'.",
+      "- Solicita que elija explícitamente un único domicilio candidato.",
+      "- Reintenta create_pdf incluyendo exactamente ese valor en DIRECCION_EMISOR_SELECCIONADA.",
+      "- No inventes, reformatees ni sustituyas el domicilio seleccionado.",
+    ].join("\n"),
+  ],
+  [
+    "address_selection_invalid",
+    [
+      "Acción para corregir la selección del domicilio del emisor en A13:",
+      "- Informa que DIRECCION_EMISOR_SELECCIONADA no coincide con un candidato actual de A13.",
+      "- Presenta al usuario todos los candidatos actuales incluidos en 'details.candidates'.",
+      "- Solicita que elija exactamente uno de esos candidatos, sin introducir una dirección nueva.",
+      "- Reintenta create_pdf usando exactamente el candidato elegido en DIRECCION_EMISOR_SELECCIONADA.",
     ].join("\n"),
   ],
   [

@@ -41,6 +41,14 @@ export const CreatePDFInputBaseSchema = z
       .describe(
         "Letra del comprobante para visualización en el PDF (A/B/C/M). No utilizar aquí el Id numérico devuelto por get_voucher_types. Si sólo se dispone de la descripción (p. ej., 'Factura C'), extraer la letra (C). Se define CbteLetra separado de CbteTipo para evitar ambigüedad: CbteTipo es el código numérico para AFIP/QR, mientras que CbteLetra es únicamente la representación visual en el PDF.",
       ),
+    DIRECCION_EMISOR_SELECCIONADA: z
+      .string()
+      .trim()
+      .min(1)
+      .optional()
+      .describe(
+        "Domicilio del emisor seleccionado explícitamente de los candidatos actuales de A13. Solo se acepta si coincide con un domicilio elegible y normalizado devuelto por AFIP; no usar para proporcionar una dirección arbitraria.",
+      ),
     Concepto: z
       .union([z.literal(1), z.literal(2), z.literal(3)])
       .describe("Concepto del comprobante: 1=Productos, 2=Servicios, 3=Productos y Servicios"),

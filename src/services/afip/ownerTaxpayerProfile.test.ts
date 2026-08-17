@@ -36,6 +36,105 @@ describe("owner taxpayer profile", () => {
     });
   });
 
+  it("accepts DECLARADO POR INTERNET and deduplicates equivalent fiscal and legal addresses", () => {
+    expect(
+      normalizeOwnerProfile("20123456789", {
+        nombre: "Ada",
+        apellido: "Lovelace",
+        domicilio: [
+          {
+            tipoDomicilio: "LEGAL/REAL",
+            estadoDomicilio: "DECLARADO POR INTERNET",
+            direccion: "  Main   42  ",
+          },
+          {
+            tipoDomicilio: "FISCAL",
+            estadoDomicilio: "DECLARADO POR INTERNET",
+            direccion: "Main 42",
+          },
+        ],
+      }),
+    ).toMatchObject({ DIRECCION_EMISOR: "Main 42" });
+  });
+
+  it("preserves fiscal, legal/real, commercial, then other priority", () => {
+    expect(
+      normalizeOwnerProfile("20123456789", {
+        nombre: "Ada",
+        apellido: "Lovelace",
+        domicilio: [
+          { tipoDomicilio: "OTRO", estadoDomicilio: "ACTIVO", direccion: "Other" },
+          { tipoDomicilio: "COMERCIAL", estadoDomicilio: "ACTIVO", direccion: "Commercial" },
+          { tipoDomicilio: "LEGAL/REAL", estadoDomicilio: "ACTIVO", direccion: "Legal" },
+          { tipoDomicilio: "FISCAL", estadoDomicilio: "ACTIVO", direccion: "Fiscal" },
+        ],
+      }),
+    ).toMatchObject({ DIRECCION_EMISOR: "Fiscal" });
+  });
+
+  it("rejects inactive and unknown domicile states", () => {
+    expect(() =>
+      normalizeOwnerProfile("20123456789", {
+        nombre: "Ada",
+        apellido: "Lovelace",
+        domicilio: [
+          { tipoDomicilio: "FISCAL", estadoDomicilio: "INACTIVO", direccion: "Inactive" },
+          { tipoDomicilio: "LEGAL", estadoDomicilio: "UNKNOWN", direccion: "Unknown" },
+        ],
+      }),
+    ).toThrow("domicilio elegible");
+  });
+
+  it("reports same-priority address ambiguity with actionable candidates", () => {
+    try {
+      normalizeOwnerProfile("20123456789", {
+        nombre: "Ada",
+        apellido: "Lovelace",
+        domicilio: [
+          { tipoDomicilio: "FISCAL", estadoDomicilio: "ACTIVO", direccion: "One" },
+          { tipoDomicilio: "FISCAL", estadoDomicilio: "DECLARADO POR INTERNET", direccion: "Two" },
+        ],
+      });
+      throw new Error("expected address selection error");
+    } catch (error) {
+      expect(error).toMatchObject({
+        code: "address_selection_required",
+        candidates: ["One", "Two"],
+      });
+    }
+  });
+
+  it("uses a selected current candidate even when priority is ambiguous", () => {
+    expect(
+      normalizeOwnerProfile(
+        "20123456789",
+        {
+          nombre: "Ada",
+          apellido: "Lovelace",
+          domicilio: [
+            { tipoDomicilio: "FISCAL", estadoDomicilio: "ACTIVO", direccion: "One" },
+            { tipoDomicilio: "FISCAL", estadoDomicilio: "ACTIVO", direccion: "Two" },
+          ],
+        },
+        " two ",
+      ),
+    ).toMatchObject({ DIRECCION_EMISOR: "Two" });
+  });
+
+  it("rejects a selected address that is not a current eligible candidate", () => {
+    expect(() =>
+      normalizeOwnerProfile(
+        "20123456789",
+        {
+          nombre: "Ada",
+          apellido: "Lovelace",
+          domicilio: [{ tipoDomicilio: "FISCAL", estadoDomicilio: "ACTIVO", direccion: "One" }],
+        },
+        "Unverified",
+      ),
+    ).toThrow("no coincide");
+  });
+
   it("ignores periodoActividadPrincipal regardless of its representation", () => {
     expect(
       normalizeOwnerProfile("20123456789", {
