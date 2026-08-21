@@ -20,6 +20,7 @@ import {
   GetCuitFromDniTool,
   MisComprobantesTool,
   GetAutomationDetailsTool,
+  GetCertificateStatusTool,
 } from "./tools/index.js";
 import { CreateVoucherPrompt } from "./prompts/index.js";
 
@@ -140,6 +141,12 @@ server.registerTool(
   GetAutomationDetailsTool.name,
   GetAutomationDetailsTool.metadata,
   GetAutomationDetailsTool.execute
+);
+
+server.registerTool(
+  GetCertificateStatusTool.name,
+  GetCertificateStatusTool.metadata,
+  GetCertificateStatusTool.execute
 );
 
 server.registerPrompt(

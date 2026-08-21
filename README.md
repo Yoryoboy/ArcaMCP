@@ -161,6 +161,19 @@ Asegúrate de asociar correctamente el PDV al servicio de facturación electrón
   ```
   Utiliza `@modelcontextprotocol/inspector` contra la misma entrada (`src/index.ts`).
 
+### Estado del certificado X.509
+
+La tool read-only `get_certificate_status` informa el ambiente, las fechas de
+validez, los días restantes y el estado del certificado X.509 efectivamente
+cargado por el cliente. No lee ni accede a la clave privada y no expone PEM,
+identidad, subject, issuer ni rutas locales.
+
+Para inspeccionar las fechas manualmente, ejecuta:
+
+```bash
+openssl x509 -in /ruta/al/certificado.crt -noout -dates
+```
+
 ## Scripts de automatización (detalle)
 
 - `scripts/getProdCerts.ts`
