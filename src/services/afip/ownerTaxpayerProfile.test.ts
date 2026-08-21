@@ -1,5 +1,13 @@
 import { describe, expect, it, vi, beforeEach } from "vitest";
 
+vi.mock("./client.js", () => ({
+  default: {
+    RegisterScopeThirteen: {
+      getTaxpayerDetails: vi.fn(),
+    },
+  },
+}));
+
 import {
   normalizeOwnerProfile,
   resolveOwnerProfile,

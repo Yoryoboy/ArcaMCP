@@ -1,6 +1,10 @@
 import Afip from "@afipsdk/afip.js";
 import fs from "fs";
 import config from "../../config.js";
+import {
+  CertificateStatusMonitor,
+  createCertificateStatus,
+} from "../certificate/certificateStatus.js";
 
 type AfipInstance = InstanceType<typeof Afip>;
 
@@ -22,6 +26,7 @@ interface AfipClientDependencies {
 }
 
 let defaultAfipClient: AfipInstance | undefined;
+let defaultCertificateStatus: CertificateStatusMonitor | undefined;
 
 export function createAfipClient(
   options: AfipClientOptions,
@@ -50,10 +55,23 @@ export function loadAfipOptionsFromConfig(
 
 export function getDefaultAfipClient(dependencies: AfipClientDependencies = {}): AfipInstance {
   if (!defaultAfipClient) {
-    defaultAfipClient = createAfipClient(loadAfipOptionsFromConfig(dependencies), dependencies);
+    const options = loadAfipOptionsFromConfig(dependencies);
+    defaultCertificateStatus = createCertificateStatus(
+      options.cert,
+      options.production ? "production" : "development",
+    );
+    defaultAfipClient = createAfipClient(options, dependencies);
   }
 
   return defaultAfipClient;
+}
+
+export function getDefaultCertificateStatus(): CertificateStatusMonitor {
+  if (!defaultCertificateStatus) {
+    getDefaultAfipClient();
+  }
+
+  return defaultCertificateStatus!;
 }
 
 const afip = getDefaultAfipClient();
