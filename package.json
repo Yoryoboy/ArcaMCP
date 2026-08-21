@@ -1,12 +1,32 @@
 {
-  "name": "arcamcp",
-  "version": "1.0.1",
+  "name": "@yoryoboy/arcamcp",
+  "version": "1.1.0",
   "packageManager": "pnpm@11.8.0",
   "description": "ARCA MCP",
   "type": "module",
-  "main": "index.ts",
+  "main": "dist/index.js",
+  "exports": {
+    ".": "./dist/index.js"
+  },
+  "bin": {
+    "arcamcp": "dist/index.js"
+  },
+  "files": [
+    "dist",
+    "!dist/**/*.test.*",
+    "templates",
+    "README.md",
+    "LICENSE"
+  ],
+  "engines": {
+    "node": ">=20"
+  },
+  "publishConfig": {
+    "access": "public"
+  },
   "scripts": {
     "build": "tsc -p tsconfig.json",
+    "prepack": "pnpm run build && pnpm run quality",
     "dev": "pnpm exec tsx src/index.ts",
     "inspector": "pnpm dlx @modelcontextprotocol/inspector@latest pnpm exec tsx src/index.ts",
     "typecheck": "tsc --noEmit",

@@ -147,6 +147,43 @@ Asegúrate de asociar correctamente el PDV al servicio de facturación electrón
 
 ## Ejecución del servidor MCP
 
+### Uso desde npm
+
+Para ejecutar la versión publicada sin instalarla globalmente:
+
+```bash
+pnpm dlx @yoryoboy/arcamcp
+```
+
+El comando usa por defecto el tag `latest`. Configura las variables de entorno
+requeridas antes de ejecutarlo; `pnpm dlx` puede iniciarse desde cualquier
+directorio y el servidor carga `.env` desde el directorio de trabajo actual.
+
+Ejemplo de configuración de un cliente MCP:
+
+```json
+{
+  "arca-mcp": {
+    "command": "pnpm",
+    "args": ["dlx", "@yoryoboy/arcamcp"],
+    "env": {
+      "AFIP_CUIT": "20123456789",
+      "AFIP_PASSWORD": "tu_password_afip",
+      "AFIP_CERT_ALIAS": "mi-cert-prod",
+      "AFIP_DEV_CERT_PATH": "/ruta/local/dev.crt",
+      "AFIP_DEV_KEY_PATH": "/ruta/local/dev.key",
+      "AFIP_PROD_CERT_PATH": "/ruta/local/prod.crt",
+      "AFIP_PROD_KEY_PATH": "/ruta/local/prod.key",
+      "AFIP_PRODUCTION": "false",
+      "AFIP_SDK_ACCESS_TOKEN": ""
+    }
+  }
+}
+```
+
+No incluyas credenciales, tokens, certificados ni claves privadas en archivos
+del proyecto o en repositorios públicos.
+
 - Desarrollo:
 
   ```bash
