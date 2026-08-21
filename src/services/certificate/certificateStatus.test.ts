@@ -45,7 +45,10 @@ describe("certificate status", () => {
 
     expect(monitor.getStatus(() => validUntil - 90 * days).status).toBe("expiring_soon");
     expect(monitor.getStatus(() => validUntil - 90 * days - 1).status).toBe("valid");
-    expect(monitor.getStatus(() => validUntil - 90 * days + 1).status).toBe("expiring_soon");
+    expect(monitor.getStatus(() => validUntil - 90 * days + 1)).toMatchObject({
+      daysRemaining: 90,
+      status: "expiring_soon",
+    });
   });
 
   it("treats the expiry instant as expired and dates before validFrom as not yet valid", () => {

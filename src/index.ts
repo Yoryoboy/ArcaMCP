@@ -23,136 +23,50 @@ import {
   GetCertificateStatusTool,
 } from "./tools/index.js";
 import { CreateVoucherPrompt } from "./prompts/index.js";
+import { createCertificatePreflight } from "./services/certificate/certificatePreflight.js";
+import { certificateDependentTools } from "./services/certificate/certificateToolInventory.js";
+import { getDefaultCertificateStatus } from "./services/afip/client.js";
 
 const server = new McpServer({
   name: "MonotributoMCP",
   version: "1.0.0",
 });
 
-server.registerTool(
-  GetLastVoucherTool.name,
-  GetLastVoucherTool.metadata,
-  GetLastVoucherTool.execute
-);
+const certificatePreflight = createCertificatePreflight(getDefaultCertificateStatus());
+function registerTool(
+  tool: { name: string; metadata: any; execute: (...args: any[]) => Promise<any> },
+  requiresCertificate = certificateDependentTools.has(tool.name),
+) {
+  server.registerTool(
+    tool.name,
+    tool.metadata,
+    certificatePreflight.wrap(tool.execute, requiresCertificate),
+  );
+}
 
-server.registerTool(
-  CreateVoucherTool.name,
-  CreateVoucherTool.metadata,
-  CreateVoucherTool.execute
-);
+registerTool(GetLastVoucherTool);
+registerTool(CreateVoucherTool);
+registerTool(CreateNextVoucherTool);
+registerTool(GetVoucherInfoTool);
+registerTool(GetTaxpayerDetailsTool);
+registerTool(GetCuitFromDniTool);
+registerTool(CreatePDFTool);
+registerTool(GetSalesPointsTool);
+registerTool(GetVoucherTypesTool);
+registerTool(GetConceptTypesTool);
+registerTool(GetDocumentTypesTool);
+registerTool(GetAliquotTypesTool);
+registerTool(GetCurrenciesTypesTool);
+registerTool(GetExchangeRateTool);
+registerTool(GetOptionsTypesTool);
+registerTool(GetTaxTypesTool);
+registerTool(GetTaxConditionTypesTool);
+registerTool(MisComprobantesTool);
+registerTool(GetAutomationDetailsTool);
+registerTool(GetCertificateStatusTool, false);
 
-server.registerTool(
-  CreateNextVoucherTool.name,
-  CreateNextVoucherTool.metadata,
-  CreateNextVoucherTool.execute
-);
-
-server.registerTool(
-  GetVoucherInfoTool.name,
-  GetVoucherInfoTool.metadata,
-  GetVoucherInfoTool.execute
-);
-
-server.registerTool(
-  GetTaxpayerDetailsTool.name,
-  GetTaxpayerDetailsTool.metadata,
-  GetTaxpayerDetailsTool.execute
-);
-
-server.registerTool(
-  GetCuitFromDniTool.name,
-  GetCuitFromDniTool.metadata,
-  GetCuitFromDniTool.execute
-);
-
-server.registerTool(
-  CreatePDFTool.name,
-  CreatePDFTool.metadata,
-  CreatePDFTool.execute
-);
-
-server.registerTool(
-  GetSalesPointsTool.name,
-  GetSalesPointsTool.metadata,
-  GetSalesPointsTool.execute
-);
-
-server.registerTool(
-  GetVoucherTypesTool.name,
-  GetVoucherTypesTool.metadata,
-  GetVoucherTypesTool.execute
-);
-
-server.registerTool(
-  GetConceptTypesTool.name,
-  GetConceptTypesTool.metadata,
-  GetConceptTypesTool.execute
-);
-
-server.registerTool(
-  GetDocumentTypesTool.name,
-  GetDocumentTypesTool.metadata,
-  GetDocumentTypesTool.execute
-);
-
-server.registerTool(
-  GetAliquotTypesTool.name,
-  GetAliquotTypesTool.metadata,
-  GetAliquotTypesTool.execute
-);
-
-server.registerTool(
-  GetCurrenciesTypesTool.name,
-  GetCurrenciesTypesTool.metadata,
-  GetCurrenciesTypesTool.execute
-);
-
-server.registerTool(
-  GetExchangeRateTool.name,
-  GetExchangeRateTool.metadata,
-  GetExchangeRateTool.execute
-);
-
-server.registerTool(
-  GetOptionsTypesTool.name,
-  GetOptionsTypesTool.metadata,
-  GetOptionsTypesTool.execute
-);
-
-server.registerTool(
-  GetTaxTypesTool.name,
-  GetTaxTypesTool.metadata,
-  GetTaxTypesTool.execute
-);
-
-server.registerTool(
-  GetTaxConditionTypesTool.name,
-  GetTaxConditionTypesTool.metadata,
-  GetTaxConditionTypesTool.execute
-);
-
-server.registerTool(
-  MisComprobantesTool.name,
-  MisComprobantesTool.metadata,
-  MisComprobantesTool.execute
-);
-
-server.registerTool(
-  GetAutomationDetailsTool.name,
-  GetAutomationDetailsTool.metadata,
-  GetAutomationDetailsTool.execute
-);
-
-server.registerTool(
-  GetCertificateStatusTool.name,
-  GetCertificateStatusTool.metadata,
-  GetCertificateStatusTool.execute
-);
-
-server.registerPrompt(
-  CreateVoucherPrompt.name,
-  CreateVoucherPrompt.metadata,
-  (args) => CreateVoucherPrompt.build(args)
+server.registerPrompt(CreateVoucherPrompt.name, CreateVoucherPrompt.metadata, (args) =>
+  CreateVoucherPrompt.build(args),
 );
 
 const transport = new StdioServerTransport();

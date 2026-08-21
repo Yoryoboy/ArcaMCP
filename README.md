@@ -168,11 +168,18 @@ validez, los días restantes y el estado del certificado X.509 efectivamente
 cargado por el cliente. No lee ni accede a la clave privada y no expone PEM,
 identidad, subject, issuer ni rutas locales.
 
-Para inspeccionar las fechas manualmente, ejecuta:
+Las tools que usan WSAA/WSN se bloquean si el certificado todavía no es válido o
+ya venció. Si faltan exactamente 90 días o menos, continúan normalmente y se
+emite una advertencia visible una sola vez por proceso. La fecha se compara con
+un límite exacto de 90 días, no con meses calendario. Para inspeccionar las
+fechas manualmente, ejecuta:
 
 ```bash
 openssl x509 -in /ruta/al/certificado.crt -noout -dates
 ```
+
+Después de renovar o reemplazar el certificado, reinicia ArcaMCP para que el
+cliente cargue el nuevo PEM.
 
 ## Scripts de automatización (detalle)
 

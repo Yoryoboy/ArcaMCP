@@ -48,7 +48,7 @@ export function createCertificateStatus(
   return {
     getStatus(now = Date.now): CertificateStatusSnapshot {
       const nowMs = now();
-      const daysRemaining = Math.floor((validUntilMs - nowMs) / DAY_MS);
+      const daysRemaining = Math.ceil((validUntilMs - nowMs) / DAY_MS);
       let status: CertificateStatus;
 
       if (nowMs >= validUntilMs) {
