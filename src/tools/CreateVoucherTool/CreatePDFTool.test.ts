@@ -162,6 +162,30 @@ describe("CreatePDFTool", () => {
     expect(mocks.electronicBilling.createPDF).not.toHaveBeenCalled();
   });
 
+  it("creates a PDF for a legal-person A13 profile with an exact DECLARADO fiscal domicile", async () => {
+    resetOwnerProfileCache();
+    mocks.afip.RegisterScopeThirteen.getTaxpayerDetails.mockResolvedValue({
+      razonSocial: "  Example Company SA  ",
+      domicilio: [
+        {
+          tipoDomicilio: "FISCAL",
+          estadoDomicilio: "DECLARADO",
+          direccion: "Registered Office 123",
+        },
+      ],
+    });
+    mocks.findTemplate.mockReturnValue("{{NOMBRE_EMISOR}}|{{DIRECCION_EMISOR}}");
+    mocks.generateQRCode.mockResolvedValue("data:image/png;base64,qr");
+    mocks.electronicBilling.createPDF.mockResolvedValue({ file: "legal-person.pdf" });
+
+    const response = await CreatePDFTool.execute(pdfParams);
+
+    expect(response.isError).not.toBe(true);
+    expect(mocks.electronicBilling.createPDF).toHaveBeenCalledWith(
+      expect.objectContaining({ html: "Example Company SA|Registered Office 123" }),
+    );
+  });
+
   it("ignores the A13 activity period and uses the caller-provided legal start date", async () => {
     resetOwnerProfileCache();
     mocks.afip.RegisterScopeThirteen.getTaxpayerDetails.mockResolvedValue({
