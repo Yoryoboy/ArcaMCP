@@ -44,6 +44,27 @@ describe("owner taxpayer profile", () => {
     });
   });
 
+  it("normalizes a legal-person name and exact DECLARADO fiscal domicile", () => {
+    expect(
+      normalizeOwnerProfile("30123456789", {
+        razonSocial: "  Example Company SA  ",
+        nombre: "Ignored",
+        apellido: "Person",
+        domicilio: [
+          {
+            tipoDomicilio: "FISCAL",
+            estadoDomicilio: "DECLARADO",
+            direccion: "Registered Office 123",
+          },
+        ],
+      }),
+    ).toEqual({
+      CUIT_EMISOR: "30123456789",
+      NOMBRE_EMISOR: "Example Company SA",
+      DIRECCION_EMISOR: "Registered Office 123",
+    });
+  });
+
   it("accepts DECLARADO POR INTERNET and deduplicates equivalent fiscal and legal addresses", () => {
     expect(
       normalizeOwnerProfile("20123456789", {
@@ -79,6 +100,19 @@ describe("owner taxpayer profile", () => {
       }),
     ).toMatchObject({ DIRECCION_EMISOR: "Fiscal" });
   });
+
+  it.each(["CONFIRMADO", "DECLARADO EXTRA"])(
+    "does not broaden eligible domicile states to %s",
+    (estadoDomicilio) => {
+      expect(() =>
+        normalizeOwnerProfile("20123456789", {
+          nombre: "Ada",
+          apellido: "Lovelace",
+          domicilio: [{ tipoDomicilio: "FISCAL", estadoDomicilio, direccion: "Rejected" }],
+        }),
+      ).toThrow("domicilio elegible");
+    },
+  );
 
   it("rejects inactive and unknown domicile states", () => {
     expect(() =>
@@ -153,7 +187,8 @@ describe("owner taxpayer profile", () => {
   });
 
   it.each([
-    { ...taxpayer, nombre: "", apellido: "Lovelace" },
+    { ...taxpayer, razonSocial: "   ", nombre: "", apellido: "Lovelace" },
+    { ...taxpayer, razonSocial: "   ", nombre: "Ada", apellido: "" },
     {
       ...taxpayer,
       domicilio: [{ tipoDomicilio: "FISCAL", estadoDomicilio: "INACTIVO", direccion: "No" }],

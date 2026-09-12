@@ -56,6 +56,7 @@ const DomicileSchema = z
   .passthrough();
 
 const TaxpayerSchema = z.object({
+  razonSocial: z.unknown().optional(),
   nombre: z.unknown().optional(),
   apellido: z.unknown().optional(),
   domicilio: z.array(DomicileSchema).optional(),
@@ -70,7 +71,7 @@ function domicileType(domicile: z.infer<typeof DomicileSchema>): string {
 }
 
 function isEligible(domicile: z.infer<typeof DomicileSchema>): boolean {
-  return ["ACTIVO", "DECLARADO POR INTERNET"].includes(
+  return ["ACTIVO", "DECLARADO", "DECLARADO POR INTERNET"].includes(
     text(domicile.estadoDomicilio).toUpperCase(),
   );
 }
@@ -111,10 +112,13 @@ export function normalizeOwnerProfile(
   selectedAddress?: string,
 ): OwnerProfile {
   const taxpayer = TaxpayerSchema.parse(raw);
+  const businessName = text(taxpayer.razonSocial);
   const firstName = text(taxpayer.nombre);
   const lastName = text(taxpayer.apellido);
-  if (!firstName || !lastName) throw new Error("A13 no contiene nombre y apellido válidos");
-  const name = `${firstName} ${lastName}`;
+  if (!businessName && (!firstName || !lastName)) {
+    throw new Error("A13 no contiene razón social ni nombre y apellido válidos");
+  }
+  const name = businessName || `${firstName} ${lastName}`;
 
   const candidates = (taxpayer.domicilio ?? [])
     .map((value, index) => ({ value, index, address: addressOf(value) }))
