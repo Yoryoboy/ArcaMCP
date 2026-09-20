@@ -19,17 +19,24 @@ Además, incluye scripts en `scripts/` que automatizan pasos críticos de onboar
 
 ## Instalación rápida
 
-1. Clona el repositorio y entra al directorio del proyecto.
-2. Instala dependencias:
-   - Windows PowerShell/CMD:
-     ```bash
-     pnpm install
-     ```
-3. Copia/crea un archivo `.env` en la raíz con las variables necesarias (ver sección Configuración).
-4. (Opcional) Inspecciona el servidor MCP con el Inspector:
-   ```bash
-   pnpm run inspector
-   ```
+No necesitás clonar el repositorio ni instalar el paquete globalmente. Con Node.js
+20 o superior, ejecutá la última versión publicada directamente con `npx`:
+
+```bash
+npx -y @yoryoboy/arcamcp@latest
+```
+
+Antes de iniciarlo, configurá las variables de entorno requeridas y las rutas a
+tus certificados (ver la sección [Configuración](#configuración-env)). El
+servidor también carga un archivo `.env` desde el directorio donde ejecutás el
+comando.
+
+Para desarrollar el proyecto localmente:
+
+1. Cloná el repositorio y entrá en su directorio.
+2. Ejecutá `pnpm install`.
+3. Creá el archivo `.env` con las variables necesarias.
+4. Iniciá el servidor con `pnpm run dev` o el Inspector con `pnpm run inspector`.
 
 ## Configuración (.env)
 
@@ -147,25 +154,28 @@ Asegúrate de asociar correctamente el PDV al servicio de facturación electrón
 
 ## Ejecución del servidor MCP
 
-### Uso desde npm
+### Uso con npx
 
-Para ejecutar la versión publicada sin instalarla globalmente:
+Para ejecutar la versión publicada sin clonar el repositorio ni instalarla
+globalmente:
 
 ```bash
-pnpm dlx @yoryoboy/arcamcp
+npx -y @yoryoboy/arcamcp@latest
 ```
 
-El comando usa por defecto el tag `latest`. Configura las variables de entorno
-requeridas antes de ejecutarlo; `pnpm dlx` puede iniciarse desde cualquier
-directorio y el servidor carga `.env` desde el directorio de trabajo actual.
+`-y` permite que `npx` descargue el paquete sin pedir confirmación, algo
+necesario cuando un cliente MCP inicia el proceso sin una terminal interactiva.
+El tag `latest` mantiene el cliente en la última versión estable publicada.
+Configurá las variables de entorno requeridas antes de ejecutarlo. El servidor
+carga `.env` desde el directorio de trabajo actual.
 
 Ejemplo de configuración de un cliente MCP:
 
 ```json
 {
   "arca-mcp": {
-    "command": "pnpm",
-    "args": ["dlx", "@yoryoboy/arcamcp"],
+    "command": "npx",
+    "args": ["-y", "@yoryoboy/arcamcp@latest"],
     "env": {
       "AFIP_CUIT": "20123456789",
       "AFIP_PASSWORD": "tu_password_afip",
@@ -320,13 +330,13 @@ Recomendación:
 
 Muchos clientes MCP aceptan un archivo de configuración JSON (por ejemplo `mcp.json` o `mcp_config.json`) donde se definen los servidores. A continuación se muestra un ejemplo genérico para registrar este servidor como `arca-mcp`.
 
-Ejemplo (Windows, con rutas absolutas):
+Ejemplo (Windows, con rutas absolutas a los certificados):
 
 ```json
 {
   "arca-mcp": {
-    "command": "pnpm",
-    "args": ["dlx", "tsx", "C:\\ruta\\a\\ArcaMCP\\src\\index.ts"],
+    "command": "npx",
+    "args": ["-y", "@yoryoboy/arcamcp@latest"],
     "env": {
       "AFIP_CUIT": "20123456789",
       "AFIP_DEV_CERT_PATH": "C:\\ruta\\a\\ArcaMCP\\certs\\dev\\dev_certificado.crt",
@@ -340,13 +350,13 @@ Ejemplo (Windows, con rutas absolutas):
 }
 ```
 
-Ejemplo (rutas relativas al repositorio):
+Ejemplo (rutas relativas al directorio de trabajo del cliente MCP):
 
 ```json
 {
   "arca-mcp": {
-    "command": "pnpm",
-    "args": ["dlx", "tsx", "./src/index.ts"],
+    "command": "npx",
+    "args": ["-y", "@yoryoboy/arcamcp@latest"],
     "env": {
       "AFIP_CUIT": "20123456789",
       "AFIP_DEV_CERT_PATH": "./certs/dev/dev_certificado.crt",
@@ -362,8 +372,8 @@ Ejemplo (rutas relativas al repositorio):
 
 Notas importantes:
 
-- Ajusta las rutas (`args` y `env`) a tu entorno. En Windows se debe escapar la barra invertida (`\\`) en JSON.
-- Puedes usar rutas relativas si el cliente MCP ejecuta el comando desde la raíz del repo.
+- Ajustá las rutas de certificados de `env` a tu entorno. En Windows se debe escapar la barra invertida (`\\`) en JSON.
+- Podés usar rutas relativas si conocés el directorio de trabajo del cliente MCP; las rutas absolutas suelen ser más confiables.
 - Si trabajas en homologación, define `"AFIP_PRODUCTION": "false"` y usa los certificados de dev.
 
 ## Uso del prompt de creación de comprobantes
