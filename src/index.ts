@@ -34,7 +34,11 @@ const server = new McpServer({
   version: "1.0.0",
 });
 
-const certificatePreflight = createCertificatePreflight(getDefaultCertificateStatus());
+// The certificate is resolved lazily so a configuration problem is reported by
+// the tools instead of preventing the server from starting.
+const certificatePreflight = createCertificatePreflight({
+  getStatus: (now) => getDefaultCertificateStatus().getStatus(now),
+});
 function registerTool(
   tool: { name: string; metadata: any; execute: (...args: any[]) => Promise<any> },
   requiresCertificate = certificateDependentTools.has(tool.name),

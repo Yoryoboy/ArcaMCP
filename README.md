@@ -43,13 +43,13 @@ Para desarrollar el proyecto localmente:
 El archivo `src/config.ts` lee las siguientes variables de entorno:
 
 - `AFIP_CUIT` (obligatorio): CUIT del contribuyente.
-- `AFIP_PASSWORD` (obligatorio): contraseña asociada para automatizaciones (AFIP).
-- `AFIP_CERT_ALIAS` (obligatorio): alias que usarán las automatizaciones de certificados.
-- `AFIP_DEV_CERT_PATH` (obligatorio): ruta absoluta o relativa al certificado `.crt` de desarrollo.
-- `AFIP_DEV_KEY_PATH` (obligatorio): ruta al `.key` de desarrollo.
-- `AFIP_PROD_CERT_PATH` (obligatorio): ruta al certificado `.crt` de producción.
-- `AFIP_PROD_KEY_PATH` (obligatorio): ruta al `.key` de producción.
-- `AFIP_PRODUCTION` (obligatorio): `true` para producción, `false` para homologación/dev.
+- `AFIP_PASSWORD` (solo para automatizaciones): clave fiscal usada por las automatizaciones de certificados y autorización.
+- `AFIP_CERT_ALIAS` (solo para automatizaciones): alias que usarán las automatizaciones de certificados.
+- `AFIP_DEV_CERT_PATH` (obligatorio con `AFIP_PRODUCTION=false`): ruta absoluta o relativa al certificado `.crt` de desarrollo.
+- `AFIP_DEV_KEY_PATH` (obligatorio con `AFIP_PRODUCTION=false`): ruta al `.key` de desarrollo.
+- `AFIP_PROD_CERT_PATH` (obligatorio con `AFIP_PRODUCTION=true`): ruta al certificado `.crt` de producción.
+- `AFIP_PROD_KEY_PATH` (obligatorio con `AFIP_PRODUCTION=true`): ruta al `.key` de producción.
+- `AFIP_PRODUCTION`: `true` para producción, `false` para homologación/dev.
 - `AFIP_SDK_ACCESS_TOKEN` (obligatorio en producción): token de acceso de la SDK si corresponde.
 
 Ejemplo de `.env` (plantilla):
@@ -323,8 +323,13 @@ Recomendación:
   - Verifica que el CUIT tiene Clave Fiscal 3 y permisos para el servicio (ej. `wsfe`, `ws_sr_padron_a13`).
 - Versiones de Node incompatibles:
   - Asegúrate de usar Node 20+ y confirma la versión con `node -v`.
-- Variables de entorno sin definir:
-  - `src/config.ts` usa `!` (non-null assertion). Si falta una variable, el proceso puede fallar. Completa todas las requeridas.
+- Variables de entorno sin definir o certificados ilegibles:
+  - El servidor arranca igual y cada tool responde con `kind: "configuration"`,
+    `code: "CONFIGURATION_ERROR"` y la lista de problemas en `details.issues`
+    (por ejemplo `Falta AFIP_PROD_CERT_PATH.`). `get_certificate_status` también
+    los informa. Corregí la configuración y reiniciá el servidor MCP.
+  - `AFIP_PASSWORD` y `AFIP_CERT_ALIAS` no son necesarias para el servidor; solo
+    las usan las automatizaciones de certificados y autorización.
 
 ## Configuración del cliente MCP (archivo JSON)
 

@@ -194,6 +194,19 @@ describe("processAfipError", () => {
 });
 
 describe("processAfipError kind classification", () => {
+  it("classifies configuration errors and points the user to doctor", () => {
+    const configurationError = Object.assign(
+      new Error("ArcaMCP no está configurado correctamente: Falta AFIP_CUIT."),
+      { name: "ConfigurationError", code: "CONFIGURATION_ERROR", issues: ["Falta AFIP_CUIT."] },
+    );
+
+    const result = processAfipError(configurationError);
+
+    expect(result.kind).toBe("configuration");
+    expect(result.code).toBe("CONFIGURATION_ERROR");
+    expect(result.instructions).toContain("npx -y @yoryoboy/arcamcp@latest doctor");
+  });
+
   it("classifies Zod schema errors as validation", () => {
     const zodError = {
       name: "ZodError",

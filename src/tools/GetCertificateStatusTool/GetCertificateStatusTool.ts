@@ -1,5 +1,6 @@
 import { MCPResponse } from "../../core/types.js";
 import { getDefaultCertificateStatus } from "../../services/afip/client.js";
+import { toErrorResponse } from "../toolError.helpers.js";
 
 export class GetCertificateStatusTool {
   static readonly name = "get_certificate_status";
@@ -12,13 +13,17 @@ export class GetCertificateStatusTool {
   };
 
   static async execute(): Promise<MCPResponse> {
-    return {
-      content: [
-        {
-          type: "text",
-          text: JSON.stringify(getDefaultCertificateStatus().getStatus(), null, 2),
-        },
-      ],
-    };
+    try {
+      return {
+        content: [
+          {
+            type: "text",
+            text: JSON.stringify(getDefaultCertificateStatus().getStatus(), null, 2),
+          },
+        ],
+      };
+    } catch (error) {
+      return toErrorResponse(error);
+    }
   }
 }

@@ -134,27 +134,67 @@ describe("AFIP client factory", () => {
     });
   });
 
-  it("initializes the default client during module import and keeps default export usage working", async () => {
+  it("does not read certificates during module import and builds the default client on first use", async () => {
     const module = await import("./client.js");
 
+    expect(mocks.readFileSync).not.toHaveBeenCalled();
+    expect(mocks.constructorCalls).toHaveLength(0);
+
+    expect(module.default.ElectronicBilling).toEqual({
+      options: mocks.constructorCalls[0],
+    });
     const first = module.getDefaultAfipClient();
     const second = module.getDefaultAfipClient();
 
     expect(first).toBe(second);
-    expect(module.default).toBe(first);
-    expect(mocks.constructorCalls).toHaveLength(1);
-    expect(module.default.ElectronicBilling).toEqual({
-      options: mocks.constructorCalls[0],
-    });
     expect(mocks.constructorCalls).toHaveLength(1);
   });
 
-  it("fails during module import when certificate loading fails", async () => {
-    mocks.readFileSync.mockImplementationOnce(() => {
-      throw new Error("missing certificate");
+  it("imports successfully and fails on first use with a configuration error when a certificate is unreadable", async () => {
+    mocks.readFileSync.mockImplementation(() => {
+      throw Object.assign(new Error("ENOENT: no such file '/certs/dev.crt'"), { code: "ENOENT" });
     });
 
-    await expect(import("./client.js")).rejects.toThrow("missing certificate");
+    const module = await import("./client.js");
+
+    expect(() => module.default.ElectronicBilling).toThrow(
+      expect.objectContaining({
+        name: "ConfigurationError",
+        issues: ["No se pudo leer el archivo indicado en AFIP_DEV_CERT_PATH (ENOENT)."],
+      }),
+    );
+    expect(() => module.getDefaultCertificateStatus()).toThrow("AFIP_DEV_CERT_PATH");
     expect(mocks.constructorCalls).toHaveLength(0);
+  });
+
+  it("fails on first use with every missing variable instead of reading undefined paths", async () => {
+    const previous = mocks.config.DEV_KEY_PATH;
+    (mocks.config as Record<string, unknown>).DEV_KEY_PATH = undefined;
+    try {
+      const module = await import("./client.js");
+
+      expect(() => module.getDefaultAfipClient()).toThrow(
+        expect.objectContaining({
+          code: "CONFIGURATION_ERROR",
+          issues: ["Falta AFIP_DEV_KEY_PATH."],
+        }),
+      );
+      expect(mocks.readFileSync).not.toHaveBeenCalled();
+    } finally {
+      mocks.config.DEV_KEY_PATH = previous;
+    }
+  });
+
+  it("reports an invalid certificate PEM as a configuration error", async () => {
+    mocks.readFileSync.mockImplementation((path) => `${path}:not-a-pem`);
+    const module = await import("./client.js");
+
+    expect(() => module.getDefaultCertificateStatus()).toThrow(
+      expect.objectContaining({
+        issues: [
+          "El archivo indicado en AFIP_DEV_CERT_PATH no es un certificado X.509 PEM válido.",
+        ],
+      }),
+    );
   });
 });
