@@ -3,6 +3,7 @@ import afip from "../../services/afip/client.js";
 import { GetExchangeRateSchema } from "./GetExchangeRateTool.schemas.js";
 import { GetExchangeRateParams } from "../types.js";
 import { executeJsonTool } from "../toolExecution.helpers.js";
+import { READ_ONLY_AFIP } from "../toolAnnotations.js";
 
 export class GetExchangeRateTool {
   static readonly name = "get_exchange_rate";
@@ -12,6 +13,7 @@ export class GetExchangeRateTool {
     description:
       "Obtiene la cotización de una moneda específica para una fecha determinada desde AFIP.",
     inputSchema: GetExchangeRateSchema.shape,
+    annotations: READ_ONLY_AFIP,
   };
 
   static async execute(params: GetExchangeRateParams): Promise<MCPResponse> {

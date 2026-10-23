@@ -3,6 +3,7 @@ import { GetVoucherInfoParams } from "../types.js";
 import afip from "../../services/afip/client.js";
 import { MCPResponse } from "../../core/types.js";
 import { executeJsonTool } from "../toolExecution.helpers.js";
+import { READ_ONLY_AFIP } from "../toolAnnotations.js";
 
 export class GetVoucherInfoTool {
   static readonly name = "get_voucher_info";
@@ -11,6 +12,7 @@ export class GetVoucherInfoTool {
     title: "Obtener información de comprobante",
     description: "Obtener información completa de un comprobante ya emitido en AFIP",
     inputSchema: GetVoucherInfoSchema.shape,
+    annotations: READ_ONLY_AFIP,
   };
 
   static async execute(params: GetVoucherInfoParams): Promise<MCPResponse> {

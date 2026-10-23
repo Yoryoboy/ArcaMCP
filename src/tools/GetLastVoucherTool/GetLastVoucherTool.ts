@@ -3,6 +3,7 @@ import { AFIPLastVoucherResponse, GetLastVoucherParams } from "../types.js";
 import { GetLastVoucherSchema } from "./GetLastVoucherTool.schemas.js";
 import afip from "../../services/afip/client.js";
 import { toErrorResponse } from "../toolError.helpers.js";
+import { READ_ONLY_AFIP } from "../toolAnnotations.js";
 
 export class GetLastVoucherTool {
   static readonly name = "get_last_voucher";
@@ -11,6 +12,7 @@ export class GetLastVoucherTool {
     title: "Obtener número último comprobante creado",
     description: "Obtener número último comprobante creado",
     inputSchema: GetLastVoucherSchema.shape,
+    annotations: READ_ONLY_AFIP,
   };
 
   /**

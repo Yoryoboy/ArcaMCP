@@ -9,6 +9,7 @@ import {
 import { AutomationStartResponse } from "./MisComprobantesTool.types.js";
 import { buildMisComprobantesAutomationData } from "./MisComprobantesTool.helpers.js";
 import { executeAutomationTool } from "../automationToolExecution.helpers.js";
+import { READ_ONLY_AFIP } from "../toolAnnotations.js";
 
 export class MisComprobantesTool {
   static readonly name = "mis_comprobantes";
@@ -18,6 +19,7 @@ export class MisComprobantesTool {
     description:
       "Inicia la automatización 'Mis Comprobantes' de ARCA para descargar comprobantes emitidos o recibidos por un CUIT. Este tool SIEMPRE ejecuta en modo asíncrono (wait=false) y devuelve sólo { id, status }. Para consultar el resultado final, usar el tool 'get_automation_details' con el id devuelto. Las credenciales (CUIT, username y password) se leen de la configuración.",
     inputSchema: MisComprobantesInputObject.shape,
+    annotations: READ_ONLY_AFIP,
   };
 
   static async execute(params: MisComprobantesInputParams): Promise<MCPResponse> {

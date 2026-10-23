@@ -223,6 +223,15 @@ openssl x509 -in /ruta/al/certificado.crt -noout -dates
 Después de renovar o reemplazar el certificado, reinicia ArcaMCP para que el
 cliente cargue el nuevo PEM.
 
+## Confirmación de acciones (annotations MCP)
+
+Cada tool declara annotations MCP para que el cliente sepa cuándo pedir confirmación:
+
+- `create_voucher` y `create_next_voucher`: `destructiveHint: true`, `idempotentHint: false`. Emiten un comprobante fiscal con CAE, que es irreversible y no se debe repetir.
+- `create_pdf`: no es de solo lectura (genera un archivo nuevo en cada llamada), pero no es destructiva.
+- Todas las consultas (catálogos, `get_voucher_info`, `get_taxpayer_details`, `mis_comprobantes`, etc.): `readOnlyHint: true`.
+- `get_certificate_status`: `readOnlyHint: true`, `openWorldHint: false` (solo lee el certificado local).
+
 ## Comandos de línea de comandos
 
 ```text
