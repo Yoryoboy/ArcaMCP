@@ -16,8 +16,8 @@ Branch `feat/onboarding-cli-and-annotations`. Delivers proposals 2 (validated co
 
 ## Tasks
 
-- T1 [S1,S2] config validation + lazy client + lazy preflight — inline — commit: pending
-- T2 [S3-S7] CLI `setup`/`doctor`, `--help`, tsx devDependency, scripts migrated, README — inline — commit: pending
+- T1 [S1,S2] config validation + lazy client + lazy preflight — inline — commit: 3000c52 (slice 1)
+- T2 [S3-S7] CLI `setup`/`doctor`, `--help`, tsx devDependency, scripts migrated, README — inline — commit: pending (slice 2, own commit: Risk item 1, writes keys and .env)
 - T3 [S8] tool annotations — inline — commit: pending
 
 ## Log
@@ -25,3 +25,5 @@ Branch `feat/onboarding-cli-and-annotations`. Delivers proposals 2 (validated co
 - L1: "haz un barrido del repo y propon mejoras que aporten valor y facilidad de uso para el usuario o features que por ahi aporten valor al uso tambien" → proposals; then "dale, arranquemso por 2, 1 y 4".
 - L2: user decisions: CLI = "setup + doctor (Recomendado)"; environment = "Dev y prod (Recomendado)"; output = "Además escribe .env"; password = "Env o prompt oculto (Recomendado)".
 - L3: afipsdk docs confirm automations `create-cert-dev` and `auth-web-service-dev` with params cuit, username, password, alias (+ service).
+- L4: T1 verified: 307 tests, typecheck, lint, quality; stdio smoke with empty env returns CONFIGURATION_ERROR for get_certificate_status and get_voucher_types. Slice boundary: each task is its own commit.
+- L5: T2 verified: quality 367 tests; doctor by gentle-ai-worker (RED 18 failing → GREEN), parent added doctor dedupe (RED→GREEN); setup/envFile tests written after code, validated by mutation (3 tests fail when --force guard removed and password written). Smoke from dist in empty dir: doctor exit 1 listing issues, setup non-interactive exit 1 without writes, unknown command exit 2. `pnpm run dev -- x` forwards `--` under pnpm 11, README uses `pnpm run dev <comando>`. Test fixtures excluded from npm `files`.

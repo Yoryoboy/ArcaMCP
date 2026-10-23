@@ -1,7 +1,3 @@
 {
-  "entry": [
-    "src/index.ts",
-    "scripts/authService.ts",
-    "scripts/getProdCerts.ts"
-  ]
+  "entry": ["src/index.ts"]
 }
