@@ -18,7 +18,7 @@ Branch `feat/onboarding-cli-and-annotations`. Delivers proposals 2 (validated co
 
 - T1 [S1,S2] config validation + lazy client + lazy preflight — inline — commit: 3000c52 (slice 1)
 - T2 [S3-S7] CLI `setup`/`doctor`, `--help`, tsx devDependency, scripts migrated, README — inline — commit: e2f354f (slice 2, own commit: Risk item 1, writes keys and .env)
-- T3 [S8] tool annotations — inline — commit: see `git log` (slice 3, closes the feature)
+- T3 [S8] tool annotations — inline — commit: 305893e (slice 3)
 
 ## Log
 
@@ -28,3 +28,4 @@ Branch `feat/onboarding-cli-and-annotations`. Delivers proposals 2 (validated co
 - L4: T1 verified: 307 tests, typecheck, lint, quality; stdio smoke with empty env returns CONFIGURATION_ERROR for get_certificate_status and get_voucher_types. Slice boundary: each task is its own commit.
 - L5: T2 verified: quality 367 tests; doctor by gentle-ai-worker (RED 18 failing → GREEN), parent added doctor dedupe (RED→GREEN); setup/envFile tests written after code, validated by mutation (3 tests fail when --force guard removed and password written). Smoke from dist in empty dir: doctor exit 1 listing issues, setup non-interactive exit 1 without writes, unknown command exit 2. `pnpm run dev -- x` forwards `--` under pnpm 11, README uses `pnpm run dev <comando>`. Test fixtures excluded from npm `files`.
 - L6: T3 verified: RED 20 failing → GREEN; stdio tools/list shows annotations. Differential vs main with the repo .env (tools/list without annotations, get_certificate_status, prompts/list): identical.
+- L7: README quick install leads with setup/doctor (796d09a). Delivered in PR #8 (merge 8debe1c) and released as npm 1.2.0. Feature closed.
