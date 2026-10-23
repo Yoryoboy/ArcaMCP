@@ -20,22 +20,31 @@ Además, el paquete incluye los comandos `arcamcp setup` y `arcamcp doctor`, que
 ## Instalación rápida
 
 No necesitás clonar el repositorio ni instalar el paquete globalmente. Con Node.js
-20 o superior, ejecutá la última versión publicada directamente con `npx`:
+20 o superior, Clave Fiscal nivel 3 y un access token de [afipsdk.com](https://afipsdk.com/):
 
 ```bash
+# 1. Crear el certificado, autorizar wsfe y ws_sr_padron_a13 y generar .env
+#    (usá --prod para producción; pide por terminal lo que falte)
+npx -y @yoryoboy/arcamcp@latest setup --dev
+
+# 2. Verificar que todo quedó bien (no modifica nada)
+npx -y @yoryoboy/arcamcp@latest doctor
+
+# 3. Iniciar el servidor MCP (normalmente lo hace tu cliente MCP)
 npx -y @yoryoboy/arcamcp@latest
 ```
 
-Antes de iniciarlo, configurá las variables de entorno requeridas y las rutas a
-tus certificados (ver la sección [Configuración](#configuración-env)). El
-servidor también carga un archivo `.env` desde el directorio donde ejecutás el
-comando.
+`setup` imprime al final el bloque JSON listo para pegar en tu cliente MCP. Si
+preferís configurar todo a mano, mirá la sección
+[Configuración](#configuración-env). El servidor también carga un archivo `.env`
+desde el directorio donde ejecutás el comando. Detalle de los comandos en
+[Comandos de línea de comandos](#comandos-de-línea-de-comandos).
 
 Para desarrollar el proyecto localmente:
 
 1. Cloná el repositorio y entrá en su directorio.
 2. Ejecutá `pnpm install`.
-3. Creá el archivo `.env` con las variables necesarias.
+3. Ejecutá `pnpm run dev setup --dev` o creá el archivo `.env` a mano, y verificá con `pnpm run dev doctor`.
 4. Iniciá el servidor con `pnpm run dev` o el Inspector con `pnpm run inspector`.
 
 ## Configuración (.env)
