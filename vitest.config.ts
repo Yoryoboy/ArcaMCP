@@ -8,7 +8,7 @@ export default defineConfig({
     coverage: {
       provider: "v8",
       reporter: ["text", "lcov"],
-      exclude: ["src/index.ts", "src/services/afip/client.ts"],
+      exclude: ["src/index.ts", "src/server.ts", "src/services/afip/client.ts"],
     },
   },
 });

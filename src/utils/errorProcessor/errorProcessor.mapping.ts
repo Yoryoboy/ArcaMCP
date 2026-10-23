@@ -150,4 +150,14 @@ export const instructionMap: Map<ErrorCode, string> = new Map<ErrorCode, string>
       "- Si el error persiste, informa al usuario que AFIP no está disponible y solicita revisión humana.",
     ].join("\n"),
   ],
+  [
+    "CONFIGURATION_ERROR",
+    [
+      "Acción para error de configuración de ArcaMCP:",
+      "- El servidor no puede usar AFIP porque falta o es inválida su configuración (variables de entorno o certificados).",
+      "- Muestra al usuario cada problema listado en details.issues tal cual.",
+      "- Sugiere ejecutar `npx -y @yoryoboy/arcamcp@latest doctor` para diagnosticar y `npx -y @yoryoboy/arcamcp@latest setup` para obtener certificados.",
+      "- No reintentes: el usuario debe corregir la configuración y reiniciar el servidor MCP.",
+    ].join("\n"),
+  ],
 ]);

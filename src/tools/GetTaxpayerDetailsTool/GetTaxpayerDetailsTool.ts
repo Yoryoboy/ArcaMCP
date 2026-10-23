@@ -6,6 +6,7 @@ import config from "../../config.js";
 import { devEnvDetectedMessage } from "../../utils/helpers.js";
 import { PayerDetails } from "./GetTaxpayerDetailsTool.types.js";
 import { executeJsonTool } from "../toolExecution.helpers.js";
+import { READ_ONLY_AFIP } from "../toolAnnotations.js";
 
 export class GetTaxpayerDetailsTool {
   static readonly name = "get_taxpayer_details";
@@ -15,6 +16,7 @@ export class GetTaxpayerDetailsTool {
     description:
       "Obtiene los datos completos de un contribuyente a partir de su CUIT",
     inputSchema: GetTaxpayerDetailsSchema.shape,
+    annotations: READ_ONLY_AFIP,
   };
 
   static async execute(params: GetTaxpayerDetailsParams): Promise<MCPResponse> {

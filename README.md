@@ -7,7 +7,7 @@ Este proyecto implementa un servidor MCP (Model Context Protocol) orientado a in
 - Interactuar con servicios AFIP para emisión y consulta de comprobantes.
 - Estandarizar configuraciones, variables de entorno y rutas de certificados.
 
-Además, incluye scripts en `scripts/` que automatizan pasos críticos de onboarding en AFIP, reduciendo tiempos de configuración y posibles errores manuales.
+Además, el paquete incluye los comandos `arcamcp setup` y `arcamcp doctor`, que automatizan y diagnostican el onboarding en AFIP, reduciendo tiempos de configuración y posibles errores manuales.
 
 ## Requisitos
 
@@ -20,22 +20,31 @@ Además, incluye scripts en `scripts/` que automatizan pasos críticos de onboar
 ## Instalación rápida
 
 No necesitás clonar el repositorio ni instalar el paquete globalmente. Con Node.js
-20 o superior, ejecutá la última versión publicada directamente con `npx`:
+20 o superior, Clave Fiscal nivel 3 y un access token de [afipsdk.com](https://afipsdk.com/):
 
 ```bash
+# 1. Crear el certificado, autorizar wsfe y ws_sr_padron_a13 y generar .env
+#    (usá --prod para producción; pide por terminal lo que falte)
+npx -y @yoryoboy/arcamcp@latest setup --dev
+
+# 2. Verificar que todo quedó bien (no modifica nada)
+npx -y @yoryoboy/arcamcp@latest doctor
+
+# 3. Iniciar el servidor MCP (normalmente lo hace tu cliente MCP)
 npx -y @yoryoboy/arcamcp@latest
 ```
 
-Antes de iniciarlo, configurá las variables de entorno requeridas y las rutas a
-tus certificados (ver la sección [Configuración](#configuración-env)). El
-servidor también carga un archivo `.env` desde el directorio donde ejecutás el
-comando.
+`setup` imprime al final el bloque JSON listo para pegar en tu cliente MCP. Si
+preferís configurar todo a mano, mirá la sección
+[Configuración](#configuración-env). El servidor también carga un archivo `.env`
+desde el directorio donde ejecutás el comando. Detalle de los comandos en
+[Comandos de línea de comandos](#comandos-de-línea-de-comandos).
 
 Para desarrollar el proyecto localmente:
 
 1. Cloná el repositorio y entrá en su directorio.
 2. Ejecutá `pnpm install`.
-3. Creá el archivo `.env` con las variables necesarias.
+3. Ejecutá `pnpm run dev setup --dev` o creá el archivo `.env` a mano, y verificá con `pnpm run dev doctor`.
 4. Iniciá el servidor con `pnpm run dev` o el Inspector con `pnpm run inspector`.
 
 ## Configuración (.env)
@@ -43,13 +52,13 @@ Para desarrollar el proyecto localmente:
 El archivo `src/config.ts` lee las siguientes variables de entorno:
 
 - `AFIP_CUIT` (obligatorio): CUIT del contribuyente.
-- `AFIP_PASSWORD` (obligatorio): contraseña asociada para automatizaciones (AFIP).
-- `AFIP_CERT_ALIAS` (obligatorio): alias que usarán las automatizaciones de certificados.
-- `AFIP_DEV_CERT_PATH` (obligatorio): ruta absoluta o relativa al certificado `.crt` de desarrollo.
-- `AFIP_DEV_KEY_PATH` (obligatorio): ruta al `.key` de desarrollo.
-- `AFIP_PROD_CERT_PATH` (obligatorio): ruta al certificado `.crt` de producción.
-- `AFIP_PROD_KEY_PATH` (obligatorio): ruta al `.key` de producción.
-- `AFIP_PRODUCTION` (obligatorio): `true` para producción, `false` para homologación/dev.
+- `AFIP_PASSWORD` (solo para automatizaciones): clave fiscal usada por las automatizaciones de certificados y autorización.
+- `AFIP_CERT_ALIAS` (solo para automatizaciones): alias que usarán las automatizaciones de certificados.
+- `AFIP_DEV_CERT_PATH` (obligatorio con `AFIP_PRODUCTION=false`): ruta absoluta o relativa al certificado `.crt` de desarrollo.
+- `AFIP_DEV_KEY_PATH` (obligatorio con `AFIP_PRODUCTION=false`): ruta al `.key` de desarrollo.
+- `AFIP_PROD_CERT_PATH` (obligatorio con `AFIP_PRODUCTION=true`): ruta al certificado `.crt` de producción.
+- `AFIP_PROD_KEY_PATH` (obligatorio con `AFIP_PRODUCTION=true`): ruta al `.key` de producción.
+- `AFIP_PRODUCTION`: `true` para producción, `false` para homologación/dev.
 - `AFIP_SDK_ACCESS_TOKEN` (obligatorio en producción): token de acceso de la SDK si corresponde.
 
 Ejemplo de `.env` (plantilla):
@@ -82,9 +91,9 @@ Notas:
 
 - `src/config.ts`: carga `.env` y expone configuración.
 - `src/services/afip/client.ts`: inicializa el cliente de `@afipsdk/afip.js` con certificados y CUIT.
-- `scripts/`:
-  - `getProdCerts.ts`: automatiza creación/descarga de certificados de producción.
-  - `authService.ts`: automatiza la autorización de Web Services para tu CUIT.
+- `src/index.ts`: punto de entrada del bin `arcamcp` (servidor MCP o comandos `setup`/`doctor`).
+- `src/server.ts`: registra tools y prompts e inicia el servidor MCP por stdio.
+- `src/cli/`: comandos `setup` (certificado + autorización de servicios + `.env`) y `doctor`.
 - `certs/`: carpeta sugerida para ubicar certificados (`./certs/dev` y `./certs/prod`).
 
 ## Pasos para usar el MCP (guía completa)
@@ -107,42 +116,37 @@ Este MCP utiliza automatizaciones provistas por la SDK de AFIP para simplificar 
 
 Si tu flujo de automatización requiere `AFIP_SDK_ACCESS_TOKEN`, colócalo en `.env` para producción.
 
-### 3) Obtener certificados de producción (automatizado)
+### 3) Obtener el certificado y autorizar los Web Services (automatizado)
 
-Usa el script `scripts/getProdCerts.ts` para crear/descargar el certificado y la clave privada en `./certs/prod/`.
+Desde el directorio donde querés guardar los certificados y el `.env`, ejecutá:
 
-- Requisitos previos: haber configurado `.env` con `AFIP_CUIT`, `AFIP_PASSWORD` y `AFIP_CERT_ALIAS`.
-- Ejecuta:
-  ```bash
-  pnpm exec tsx scripts/getProdCerts.ts
-  ```
-- Salida esperada:
-  - `./certs/prod/prod_certificado.crt`
-  - `./certs/prod/prod_private.key`
+```bash
+# Homologación (por defecto si AFIP_PRODUCTION no es "true")
+npx -y @yoryoboy/arcamcp@latest setup --dev
 
-El script invoca la automatización `create-cert-prod` vía `CreateAutomation(...)` del cliente AFIP. Si falla, revisa credenciales y permisos en AFIP.
+# Producción
+npx -y @yoryoboy/arcamcp@latest setup --prod
+```
 
-> **Nota:** si ejecutás el MCP desde la raíz del proyecto (por ejemplo, arrancando `src/index.ts` directamente), el servidor carga automáticamente las variables desde `.env` mediante `dotenv.config()`. En ese caso no hace falta duplicar `AFIP_CUIT`, `AFIP_PASSWORD`, rutas de certificados ni otras variables en la configuración del cliente MCP. Si lo ejecutás desde otro contexto, mantener la configuración explícita en el cliente puede seguir siendo útil.
+`setup`:
 
-### 4) Autorizar los Web Services (wsfe, ws_sr_padron_a13)
+1. Toma `AFIP_CUIT`, `AFIP_CERT_ALIAS`, `AFIP_SDK_ACCESS_TOKEN` y `AFIP_PASSWORD` del entorno o de `.env`. Si falta alguno y estás en una terminal, lo pide; el token y la clave fiscal se piden sin eco.
+2. Crea el certificado con la automatización `create-cert-dev` o `create-cert-prod` y lo guarda en `./certs/dev/` o `./certs/prod/` (`<env>_certificado.crt` y `<env>_private.key`, esta última con permisos `600`).
+3. Crea o actualiza `.env` con `AFIP_CUIT`, `AFIP_CERT_ALIAS`, `AFIP_SDK_ACCESS_TOKEN` y las rutas absolutas `AFIP_<DEV|PROD>_CERT_PATH` / `AFIP_<DEV|PROD>_KEY_PATH`, conservando el resto de las líneas. Solo agrega `AFIP_PRODUCTION` si no existe. **La clave fiscal nunca se guarda.**
+4. Autoriza `wsfe` y `ws_sr_padron_a13` con `auth-web-service-dev` o `auth-web-service-prod`.
+5. Imprime el bloque JSON listo para pegar en la configuración de tu cliente MCP.
 
-Con certificados listos, autoriza los servicios necesarios en AFIP. Este repo incluye `scripts/authService.ts` que llama a la automatización `auth-web-service-prod`.
+Si ya existe un certificado en `./certs/<env>/`, `setup` no hace nada y termina con error antes de contactar a ARCA. Usá `--force` para crear uno nuevo y reemplazarlo.
 
-- Sintaxis de ayuda:
-  ```bash
-  pnpm exec tsx scripts/authService.ts --help
-  ```
-- Ejemplos (PowerShell/CMD):
+> **Nota:** el servidor carga `.env` desde su directorio de trabajo. Si tu cliente MCP lo inicia desde otro directorio, copiá las variables al bloque `env` del cliente (el que imprime `setup`).
 
-  ```bash
-  # Facturación Electrónica
-  pnpm exec tsx scripts/authService.ts wsfe
+### 4) Verificar la configuración
 
-  # Padrón (A13)
-  pnpm exec tsx scripts/authService.ts ws_sr_padron_a13
-  ```
+```bash
+npx -y @yoryoboy/arcamcp@latest doctor
+```
 
-Si la respuesta indica `data.status = "created"`, la autorización fue creada correctamente para ese servicio.
+`doctor` no modifica nada. Revisa las variables del ambiente activo, que los archivos de certificado y clave existan, que el certificado sea válido y no esté vencido, y que la clave corresponda al certificado. Si todo eso está bien, consulta a ARCA que `wsfe` esté autorizado y, en producción, también el padrón A13 y los puntos de venta. Termina con código `0` si no hay errores (`✖`) y `1` si los hay.
 
 ### 5) Dar de alta un Punto de Venta para Facturación Electrónica
 
@@ -228,19 +232,25 @@ openssl x509 -in /ruta/al/certificado.crt -noout -dates
 Después de renovar o reemplazar el certificado, reinicia ArcaMCP para que el
 cliente cargue el nuevo PEM.
 
-## Scripts de automatización (detalle)
+## Confirmación de acciones (annotations MCP)
 
-- `scripts/getProdCerts.ts`
+Cada tool declara annotations MCP para que el cliente sepa cuándo pedir confirmación:
 
-  - Lee `CUIT`, `PASSWORD`, `CERT_ALIAS` de `src/config.ts`.
-  - Llama `CreateAutomation("create-cert-prod", data, true)` y guarda los archivos en `./certs/prod/`.
-  - Crea carpetas si no existen.
+- `create_voucher` y `create_next_voucher`: `destructiveHint: true`, `idempotentHint: false`. Emiten un comprobante fiscal con CAE, que es irreversible y no se debe repetir.
+- `create_pdf`: no es de solo lectura (genera un archivo nuevo en cada llamada), pero no es destructiva.
+- Todas las consultas (catálogos, `get_voucher_info`, `get_taxpayer_details`, `mis_comprobantes`, etc.): `readOnlyHint: true`.
+- `get_certificate_status`: `readOnlyHint: true`, `openWorldHint: false` (solo lee el certificado local).
 
-- `scripts/authService.ts`
-  - Uso: `pnpm exec tsx scripts/authService.ts <service>`
-  - Ejemplos de `<service>`: `wsfe`, `ws_sr_padron_a13`.
-  - Valida que la automatización retorne `status="complete"` y `data.status="created"`.
-  - Importante: Para que todas las herramientas funcionen correctamente, es obligatorio autorizar previamente los servicios `wsfe` y `ws_sr_padron_a13` en AFIP.
+## Comandos de línea de comandos
+
+```text
+arcamcp                                   Inicia el servidor MCP por stdio.
+arcamcp setup [--dev | --prod] [--force]  Crea el certificado, actualiza .env y autoriza wsfe y ws_sr_padron_a13.
+arcamcp doctor                            Diagnostica la configuración sin modificar nada.
+arcamcp help                              Muestra la ayuda.
+```
+
+Con npx, anteponé `npx -y @yoryoboy/arcamcp@latest`. Desde un clone del repositorio, usá `pnpm run dev <comando>` (por ejemplo `pnpm run dev doctor`). Un comando u opción desconocidos terminan con código `2`.
 
 ## Herramientas adicionales del MCP
 
@@ -323,8 +333,13 @@ Recomendación:
   - Verifica que el CUIT tiene Clave Fiscal 3 y permisos para el servicio (ej. `wsfe`, `ws_sr_padron_a13`).
 - Versiones de Node incompatibles:
   - Asegúrate de usar Node 20+ y confirma la versión con `node -v`.
-- Variables de entorno sin definir:
-  - `src/config.ts` usa `!` (non-null assertion). Si falta una variable, el proceso puede fallar. Completa todas las requeridas.
+- Variables de entorno sin definir o certificados ilegibles:
+  - El servidor arranca igual y cada tool responde con `kind: "configuration"`,
+    `code: "CONFIGURATION_ERROR"` y la lista de problemas en `details.issues`
+    (por ejemplo `Falta AFIP_PROD_CERT_PATH.`). `get_certificate_status` también
+    los informa. Corregí la configuración y reiniciá el servidor MCP.
+  - `AFIP_PASSWORD` y `AFIP_CERT_ALIAS` no son necesarias para el servidor; solo
+    las usan las automatizaciones de certificados y autorización.
 
 ## Configuración del cliente MCP (archivo JSON)
 
@@ -419,7 +434,7 @@ El asistente completará datos faltantes, validará reglas (por ejemplo Factura 
 - **Envía Pull Requests (PRs)**:
   - Haz un fork del repo y crea una rama desde `main` (por ejemplo, `feat/mi-mejora` o `fix/mi-bug`).
   - Instala dependencias con `pnpm install` y prueba en local con `pnpm run dev`.
-  - Asegúrate de que el código compile (`pnpm run build`) y que no rompa los scripts (`scripts/*.ts`).
+  - Asegúrate de que el código compile (`pnpm run build`) y que pase `pnpm run quality`.
   - Incluye documentación actualizada en `README.md` cuando aplique (por ejemplo, variables nuevas, pasos, comandos).
   - No incluyas secretos ni certificados en los commits (usa variables de entorno y rutas locales).
   - Describe claramente los cambios en el PR y referencia el Issue relacionado (`Fixes #<n>` si corresponde).

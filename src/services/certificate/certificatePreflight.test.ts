@@ -57,3 +57,42 @@ describe("certificate preflight", () => {
     expect(response).toEqual({ content: [{ type: "text", text: "original" }] });
   });
 });
+
+describe("certificate preflight with an unusable configuration", () => {
+  const failingMonitor = {
+    getStatus: vi.fn(() => {
+      throw Object.assign(
+        new Error("ArcaMCP no está configurado correctamente: Falta AFIP_CUIT."),
+        {
+          name: "ConfigurationError",
+          code: "CONFIGURATION_ERROR",
+          issues: ["Falta AFIP_CUIT."],
+        },
+      );
+    }),
+  } satisfies CertificateStatusMonitor;
+
+  it("returns a configuration error for certificate-dependent tools without invoking them", async () => {
+    const handler = vi.fn();
+    const response = await createCertificatePreflight(failingMonitor).wrap(handler, true)();
+
+    expect(response.isError).toBe(true);
+    expect(JSON.parse(response.content[0].text)).toMatchObject({
+      success: false,
+      kind: "configuration",
+      code: "CONFIGURATION_ERROR",
+      details: { issues: ["Falta AFIP_CUIT."] },
+    });
+    expect(handler).not.toHaveBeenCalled();
+  });
+
+  it("never inspects the certificate for tools that do not require it", async () => {
+    failingMonitor.getStatus.mockClear();
+    const handler = vi.fn().mockResolvedValue({ content: [{ type: "text", text: "original" }] });
+
+    const response = await createCertificatePreflight(failingMonitor).wrap(handler, false)();
+
+    expect(response).toEqual({ content: [{ type: "text", text: "original" }] });
+    expect(failingMonitor.getStatus).not.toHaveBeenCalled();
+  });
+});

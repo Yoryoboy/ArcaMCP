@@ -7,6 +7,7 @@ import {
 } from "./GetAutomationDetailsTool.schemas.js";
 import { MisComprobantes } from "./GetAutomationDetailsTool.types.js";
 import { executeAutomationTool } from "../automationToolExecution.helpers.js";
+import { READ_ONLY_AFIP } from "../toolAnnotations.js";
 
 export class GetAutomationDetailsTool {
   static readonly name = "get_automation_details";
@@ -16,6 +17,7 @@ export class GetAutomationDetailsTool {
     description:
       "Consulta el estado o el resultado final de una automatización previamente iniciada (p. ej., 'mis_comprobantes') usando su ID. Este tool SIEMPRE consulta en modo no bloqueante (wait=false). Si la automatización sigue en proceso, devolverá { id, status: 'in_process' }. Cuando finalice, devolverá los datos completos.",
     inputSchema: GetAutomationDetailsInputSchema.shape,
+    annotations: READ_ONLY_AFIP,
   };
 
   static async execute(

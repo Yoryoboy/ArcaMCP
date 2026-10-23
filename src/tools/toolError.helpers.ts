@@ -19,6 +19,10 @@ export function toSerializableDetails(details: unknown): unknown {
     if (code !== undefined) {
       plain.code = code;
     }
+    const issues = (details as { issues?: unknown }).issues;
+    if (details.name === "ConfigurationError" && Array.isArray(issues)) {
+      plain.issues = issues;
+    }
     const candidates = (details as { candidates?: unknown }).candidates;
     if (Array.isArray(candidates)) {
       plain.candidates = candidates;

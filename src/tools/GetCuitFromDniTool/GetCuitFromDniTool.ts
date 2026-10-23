@@ -5,6 +5,7 @@ import { MCPResponse } from "../../core/types.js";
 import config from "../../config.js";
 import { devEnvDetectedMessage } from "../../utils/helpers.js";
 import { executeJsonTool } from "../toolExecution.helpers.js";
+import { READ_ONLY_AFIP } from "../toolAnnotations.js";
 
 export class GetCuitFromDniTool {
   static readonly name = "get_cuit_from_dni";
@@ -13,6 +14,7 @@ export class GetCuitFromDniTool {
     title: "Obtener CUIT a partir de DNI",
     description: "Obtiene el CUIT de un contribuyente a partir de su DNI",
     inputSchema: GetCuitFromDniToolSchema.shape,
+    annotations: READ_ONLY_AFIP,
   };
 
   static async execute(params: GetCuitFromDniToolParams): Promise<MCPResponse> {

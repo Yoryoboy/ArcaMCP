@@ -17,10 +17,12 @@ import { ErrorCode, instructionMap } from "./errorProcessor.mapping.js";
  * - "validation":     el input no pasó la validación local (Zod). Corregir input.
  * - "afip_rejection": AFIP rechazó la operación por una regla de negocio (hay código).
  * - "afip_transport": falla de red/SOAP/HTTP/certificados al hablar con AFIP. Reintentar.
+ * - "configuration":  ArcaMCP está mal configurado (env o certificados). Corregir y reiniciar.
  * - "internal":       falla no clasificada (probablemente un bug). Escalar.
  */
 export type ErrorKind =
   | "validation"
+  | "configuration"
   | "afip_rejection"
   | "afip_transport"
   | "internal";
@@ -197,6 +199,8 @@ function isTransportError(value: unknown): boolean {
  * con códigos de negocio.
  */
 function classifyKind(err: unknown, code: number | string | undefined): ErrorKind {
+  // Before Zod: ConfigurationError also carries an `issues` array.
+  if (isObjectLike(err) && err.name === "ConfigurationError") return "configuration";
   if (isZodValidationError(err)) return "validation";
   if (isTransportError(err)) return "afip_transport";
   if (code !== undefined) return "afip_rejection";

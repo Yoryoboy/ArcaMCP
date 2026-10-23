@@ -1,4 +1,5 @@
 import { MCPResponse } from "../../core/types.js";
+import { toErrorResponse } from "../../tools/toolError.helpers.js";
 import { CertificateStatusMonitor, CertificateStatusSnapshot } from "./certificateStatus.js";
 
 type ToolHandler = (...args: any[]) => Promise<MCPResponse>;
@@ -58,18 +59,26 @@ export function createCertificatePreflight(monitor: CertificateStatusMonitor) {
 
   return {
     wrap(handler: ToolHandler, requiresCertificate: boolean): ToolHandler {
-      return async (...args: any[]) => {
-        const snapshot = monitor.getStatus();
+      if (!requiresCertificate) {
+        return handler;
+      }
 
-        if (
-          requiresCertificate &&
-          (snapshot.status === "expired" || snapshot.status === "not_yet_valid")
-        ) {
+      return async (...args: any[]) => {
+        let snapshot: CertificateStatusSnapshot;
+        try {
+          snapshot = monitor.getStatus();
+        } catch (error) {
+          // Configuration problems (missing variables, unreadable certificate) surface
+          // here because the AFIP client is built lazily on first use.
+          return toErrorResponse(error);
+        }
+
+        if (snapshot.status === "expired" || snapshot.status === "not_yet_valid") {
           return blockedResponse(snapshot);
         }
 
         const response = await handler(...args);
-        if (!requiresCertificate || snapshot.status !== "expiring_soon" || warningIssued) {
+        if (snapshot.status !== "expiring_soon" || warningIssued) {
           return response;
         }
 
