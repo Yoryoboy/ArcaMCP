@@ -1,6 +1,10 @@
-import { GetVoucherInfoSchema } from "./GetVoucherInfoTool.schemas.js";
+import {
+  GetVoucherInfoOutputSchema,
+  GetVoucherInfoSchema,
+} from "./GetVoucherInfoTool.schemas.js";
 import { GetVoucherInfoParams } from "../types.js";
 import afip from "../../services/afip/client.js";
+import { messageResponse } from "../../core/structuredOutput.js";
 import { MCPResponse } from "../../core/types.js";
 import { executeJsonTool } from "../toolExecution.helpers.js";
 import { READ_ONLY_AFIP } from "../toolAnnotations.js";
@@ -12,6 +16,7 @@ export class GetVoucherInfoTool {
     title: "Obtener información de comprobante",
     description: "Obtener información completa de un comprobante ya emitido en AFIP",
     inputSchema: GetVoucherInfoSchema.shape,
+    outputSchema: GetVoucherInfoOutputSchema,
     annotations: READ_ONLY_AFIP,
   };
 
@@ -25,14 +30,7 @@ export class GetVoucherInfoTool {
           validatedParams.PtoVta,
           validatedParams.CbteTipo
         ),
-      onNullResult: () => ({
-        content: [
-          {
-            type: "text" as const,
-            text: JSON.stringify({ message: "El comprobante no existe" }, null, 2),
-          },
-        ],
-      }),
+      onNullResult: () => messageResponse("El comprobante no existe"),
     });
   }
 }
