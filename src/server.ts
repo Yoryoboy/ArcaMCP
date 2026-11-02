@@ -26,10 +26,11 @@ import { CreateVoucherPrompt } from "./prompts/index.js";
 import { createCertificatePreflight } from "./services/certificate/certificatePreflight.js";
 import { certificateDependentTools } from "./services/certificate/certificateToolInventory.js";
 import { getDefaultCertificateStatus } from "./services/afip/client.js";
+import { packageVersion } from "./packageInfo.js";
 
 const server = new McpServer({
-  name: "MonotributoMCP",
-  version: "1.0.0",
+  name: "arcamcp",
+  version: packageVersion,
 });
 
 // The certificate is resolved lazily so a configuration problem is reported by
