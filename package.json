@@ -53,7 +53,7 @@
     "@modelcontextprotocol/sdk": "^1.32.2",
     "dotenv": "^18.0.9",
     "qrcode": "^1.5.4",
-    "zod": "^3.25.67"
+    "zod": "^4.6.7"
   },
   "devDependencies": {
     "@eslint/js": "^10.0.1",

@@ -54,8 +54,8 @@ export const MisComprobantesInputObject = z.object({
     .describe(
       "Código de tipo de documento del receptor (p. ej., 80=CUIT). Usar get_document_types si se requiere."
     ),
-  nroDoc: IdAsString.optional()
-    .transform((v) => (v == null ? undefined : String(v).replace(/\D+/g, "")))
+  nroDoc: IdAsString.transform((v) => v.replace(/\D+/g, ""))
+    .optional()
     .describe(
       "Número de documento del receptor. Sin puntos ni guiones (solo dígitos). Si no corresponde, omitir."
     ),

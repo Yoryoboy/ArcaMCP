@@ -33,7 +33,9 @@ export class ConfigurationError extends Error {
 
 const required = (variable: string, detail = "") =>
   z
-    .string({ required_error: `Falta ${variable}${detail}.` })
+    .string({
+      error: (issue) => (issue.input === undefined ? `Falta ${variable}${detail}.` : undefined),
+    })
     .trim()
     .min(1, `Falta ${variable}${detail}.`);
 

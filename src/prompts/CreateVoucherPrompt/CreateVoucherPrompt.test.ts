@@ -50,9 +50,9 @@ describe("CreateVoucherPrompt", () => {
   });
 
   it("offers completable suggestions from prompt args context", async () => {
-    const tipoComprobanteField = CreateVoucherPromptArgsSchema.shape.tipoComprobante.unwrap();
-    const cotizacionField = CreateVoucherPromptArgsSchema.shape.cotizacion.unwrap();
-    const importeTotalField = CreateVoucherPromptArgsSchema.shape.importeTotal.unwrap();
+    const tipoComprobanteField = CreateVoucherPromptArgsSchema.shape.tipoComprobante;
+    const cotizacionField = CreateVoucherPromptArgsSchema.shape.cotizacion;
+    const importeTotalField = CreateVoucherPromptArgsSchema.shape.importeTotal;
 
     expect(requiredCompleter(tipoComprobanteField)("", { arguments: { concepto: "1" } })).toEqual([
       "11",
