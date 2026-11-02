@@ -1,3 +1,4 @@
+import { z } from "zod";
 import afip from "../../services/afip/client.js";
 import config from "../../config.js";
 import { devEnvDetectedMessage } from "../../utils/helpers.js";
@@ -17,6 +18,12 @@ export const GetSalesPointsTool = createCatalogTool({
 
     return null;
   },
+  itemSchema: z.looseObject({
+    Nro: z.number().optional().describe("Número de punto de venta"),
+    EmisionTipo: z.string().optional().describe("Tipo de emisión, por ejemplo CAE"),
+    Bloqueado: z.string().optional().describe("S si el punto de venta está bloqueado"),
+    FchBaja: z.string().optional().describe("Fecha de baja, o NULL"),
+  }),
   fetcher: () => afip.ElectronicBilling.getSalesPoints(),
   onError: () => ({
     note: "En ambiente de testing es normal recibir error ya que no existen puntos de venta configurados. Se usa punto de venta 1 por defecto.",

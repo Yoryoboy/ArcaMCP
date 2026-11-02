@@ -1,3 +1,4 @@
+import { z } from "zod";
 import { jsonResponse } from "../core/structuredOutput.js";
 import { MCPResponse } from "../core/types.js";
 import { EmptySchema } from "./shared.schemas.js";
@@ -11,6 +12,8 @@ export interface CatalogToolConfig {
   guard?: () => MCPResponse | null | undefined;
   fetcher: () => Promise<unknown>;
   onError?: (error: unknown) => Record<string, unknown>;
+  /** Shape of each list element in the output schema; defaults to AFIP's `{ Id, Desc }`. */
+  itemSchema?: z.ZodType;
   /** Serves successful results from memory for this long; omit to fetch on every call. */
   cacheTtlMs?: number;
   now?: () => number;
@@ -23,8 +26,25 @@ export interface CatalogTool {
     description: string;
     inputSchema: typeof EmptySchema.shape;
     annotations: typeof READ_ONLY_AFIP;
+    outputSchema: z.ZodObject;
   };
   execute(): Promise<MCPResponse>;
+}
+
+// AFIP payloads are typed `any` by the SDK: document the known fields, accept the rest.
+const AfipParameterSchema = z.looseObject({
+  Id: z.union([z.number(), z.string()]).optional().describe("Código AFIP"),
+  Desc: z.string().optional().describe("Descripción"),
+});
+
+function catalogOutputSchema(itemSchema: z.ZodType = AfipParameterSchema) {
+  return z.looseObject({
+    items: z.array(itemSchema).optional().describe("Elementos devueltos por AFIP"),
+    message: z
+      .string()
+      .optional()
+      .describe("Aviso informativo cuando no se consulta AFIP, por ejemplo en testing"),
+  });
 }
 
 // AFIP parameter catalogs (FEParamGet*) change rarely; one request per day is plenty.
@@ -74,6 +94,7 @@ export function createCatalogTool(config: CatalogToolConfig): CatalogTool {
       description: config.description,
       inputSchema: EmptySchema.shape,
       annotations: READ_ONLY_AFIP,
+      outputSchema: catalogOutputSchema(config.itemSchema),
     },
     async execute(): Promise<MCPResponse> {
       const guardedResponse = config.guard?.();
