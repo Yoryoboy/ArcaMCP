@@ -1,5 +1,6 @@
-import { describe, expect, it, vi } from "vitest";
-import { createCatalogTool } from "./catalogToolFactory.js";
+import { beforeEach, describe, expect, it, vi } from "vitest";
+import type { MCPResponse } from "../core/types.js";
+import { createCatalogTool, resetCatalogCaches } from "./catalogToolFactory.js";
 
 describe("createCatalogTool", () => {
   const fetcher = vi.fn();
@@ -105,5 +106,119 @@ describe("createCatalogTool", () => {
 
     expect(response.isError).toBeUndefined();
     expect(JSON.parse(response.content[0].text)).toBeNull();
+  });
+});
+
+describe("createCatalogTool cache", () => {
+  const TTL_MS = 24 * 60 * 60 * 1000;
+  let clock = 0;
+  const now = () => clock;
+
+  beforeEach(() => {
+    clock = 0;
+    resetCatalogCaches();
+  });
+
+  function cachedTool(fetcher: () => Promise<unknown>, guard?: () => MCPResponse | null) {
+    return createCatalogTool({
+      name: "get_cached_types",
+      title: "Cached",
+      description: "Cached catalog.",
+      fetcher,
+      guard,
+      cacheTtlMs: TTL_MS,
+      now,
+    });
+  }
+
+  it("serves repeated calls within the TTL from one AFIP request", async () => {
+    const fetcher = vi.fn().mockResolvedValue([{ Id: 1 }]);
+    const tool = cachedTool(fetcher);
+
+    const first = await tool.execute();
+    clock = TTL_MS - 1;
+    const second = await tool.execute();
+
+    expect(fetcher).toHaveBeenCalledOnce();
+    expect(second).toEqual(first);
+    expect(JSON.parse(second.content[0].text)).toEqual([{ Id: 1 }]);
+  });
+
+  it("shares one AFIP request between concurrent calls", async () => {
+    const fetcher = vi.fn().mockResolvedValue([{ Id: 1 }]);
+    const tool = cachedTool(fetcher);
+
+    const [first, second] = await Promise.all([tool.execute(), tool.execute()]);
+
+    expect(fetcher).toHaveBeenCalledOnce();
+    expect(second).toEqual(first);
+  });
+
+  it("fetches again once the TTL expires", async () => {
+    const fetcher = vi
+      .fn()
+      .mockResolvedValueOnce([{ Id: 1 }])
+      .mockResolvedValueOnce([{ Id: 2 }]);
+    const tool = cachedTool(fetcher);
+
+    await tool.execute();
+    clock = TTL_MS;
+    const refreshed = await tool.execute();
+
+    expect(fetcher).toHaveBeenCalledTimes(2);
+    expect(JSON.parse(refreshed.content[0].text)).toEqual([{ Id: 2 }]);
+  });
+
+  it("does not cache failures", async () => {
+    const fetcher = vi
+      .fn()
+      .mockRejectedValueOnce(new Error("AFIP down"))
+      .mockResolvedValueOnce([{ Id: 1 }]);
+    const tool = cachedTool(fetcher);
+
+    const failed = await tool.execute();
+    const recovered = await tool.execute();
+
+    expect(failed.isError).toBe(true);
+    expect(JSON.parse(failed.content[0].text).error).toBe("AFIP down");
+    expect(recovered.isError).toBeUndefined();
+    expect(JSON.parse(recovered.content[0].text)).toEqual([{ Id: 1 }]);
+    expect(fetcher).toHaveBeenCalledTimes(2);
+  });
+
+  it("checks the guard before the cache", async () => {
+    const fetcher = vi.fn().mockResolvedValue([{ Id: 1 }]);
+    let guarded = false;
+    const tool = cachedTool(fetcher, () =>
+      guarded ? { content: [{ type: "text" as const, text: '{"message":"Guarded"}' }] } : null,
+    );
+
+    await tool.execute();
+    guarded = true;
+    const response = await tool.execute();
+
+    expect(JSON.parse(response.content[0].text)).toEqual({ message: "Guarded" });
+    expect(fetcher).toHaveBeenCalledOnce();
+  });
+
+  it("fetches on every call when no TTL is configured", async () => {
+    const fetcher = vi.fn().mockResolvedValue([{ Id: 1 }]);
+    const tool = createCatalogTool({ name: "x", title: "x", description: "x", fetcher });
+
+    await tool.execute();
+    await tool.execute();
+
+    expect(fetcher).toHaveBeenCalledTimes(2);
+  });
+
+  it("forgets cached catalogs on reset", async () => {
+    const fetcher = vi.fn().mockResolvedValue([{ Id: 1 }]);
+    const tool = cachedTool(fetcher);
+
+    await tool.execute();
+    resetCatalogCaches();
+    await tool.execute();
+
+    expect(fetcher).toHaveBeenCalledTimes(2);
   });
 });

@@ -1,4 +1,5 @@
 import { beforeEach, vi } from "vitest";
+import { resetCatalogCaches } from "../catalogToolFactory.js";
 
 const mockStore = vi.hoisted(() => {
   const electronicBilling = {
@@ -114,6 +115,7 @@ export const pdfParams = {
 
 beforeEach(() => {
   vi.clearAllMocks();
+  resetCatalogCaches();
   mockStore.config.AFIP_PRODUCTION = true;
   mockStore.config.CUIT = "20123456789";
   mockStore.config.PASSWORD = "secret";

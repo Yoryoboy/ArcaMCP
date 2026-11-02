@@ -1,6 +1,7 @@
 import { describe, expect, it } from "vitest";
 
 import { getMocks, parseContent } from "./ToolExecution.test.helpers.js";
+import { resetCatalogCaches } from "../catalogToolFactory.js";
 import { GetAliquotTypesTool } from "../GetAliquotTypesTool/GetAliquotTypesTool.js";
 import { GetConceptTypesTool } from "../GetConceptTypesTool/GetConceptTypesTool.js";
 import { GetCurrenciesTypesTool } from "../GetCurrenciesTypesTool/GetCurrenciesTypesTool.js";
@@ -8,6 +9,7 @@ import { GetDocumentTypesTool } from "../GetDocumentTypesTool/GetDocumentTypesTo
 import { GetExchangeRateTool } from "../GetExchangeRateTool/GetExchangeRateTool.js";
 import { GetLastVoucherTool } from "../GetLastVoucherTool/GetLastVoucherTool.js";
 import { GetOptionsTypesTool } from "../GetOptionsTypesTool/GetOptionsTypesTool.js";
+import { GetSalesPointsTool } from "../GetSalesPointsTool/GetSalesPointsTool.js";
 import { GetTaxConditionTypesTool } from "../GetTaxConditionTypesTool/GetTaxConditionTypesTool.js";
 import { GetTaxTypesTool } from "../GetTaxTypesTool/GetTaxTypesTool.js";
 import { GetVoucherInfoTool } from "../GetVoucherInfoTool/GetVoucherInfoTool.js";
@@ -207,6 +209,8 @@ describe("catalog and query tools", () => {
       mockFn.mockResolvedValueOnce(result).mockRejectedValueOnce(error);
 
       const success = await execute();
+      // Catalog tools cache successes; start over so the failure reaches AFIP.
+      resetCatalogCaches();
       const failure = await execute();
 
       expect(parseContent(success)).toEqual(expected);
@@ -230,5 +234,33 @@ describe("catalog and query tools", () => {
     const response = await GetVoucherInfoTool.execute({ CbteNro: 123, PtoVta: 1, CbteTipo: 11 });
 
     expect(parseContent(response)).toEqual({});
+  });
+
+  it.each([
+    ["get_voucher_types", GetVoucherTypesTool, mocks.electronicBilling.getVoucherTypes],
+    ["get_concept_types", GetConceptTypesTool, mocks.electronicBilling.getConceptTypes],
+    ["get_document_types", GetDocumentTypesTool, mocks.electronicBilling.getDocumentTypes],
+    ["get_aliquot_types", GetAliquotTypesTool, mocks.electronicBilling.getAliquotTypes],
+    ["get_currencies_types", GetCurrenciesTypesTool, mocks.electronicBilling.getCurrenciesTypes],
+    ["get_options_types", GetOptionsTypesTool, mocks.electronicBilling.getOptionsTypes],
+    ["get_tax_types", GetTaxTypesTool, mocks.electronicBilling.getTaxTypes],
+    ["get_tax_condition_types", GetTaxConditionTypesTool, mocks.electronicBilling.executeRequest],
+  ] as const)("%s serves repeated calls from one AFIP request", async (_name, tool, fetcher) => {
+    fetcher.mockResolvedValue([{ Id: 1 }]);
+
+    const first = await tool.execute();
+    const second = await tool.execute();
+
+    expect(fetcher).toHaveBeenCalledOnce();
+    expect(parseContent(second)).toEqual(parseContent(first));
+  });
+
+  it("get_sales_points asks AFIP on every call so new sales points show up", async () => {
+    mocks.electronicBilling.getSalesPoints.mockResolvedValue([{ Nro: 1 }]);
+
+    await GetSalesPointsTool.execute();
+    await GetSalesPointsTool.execute();
+
+    expect(mocks.electronicBilling.getSalesPoints).toHaveBeenCalledTimes(2);
   });
 });

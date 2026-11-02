@@ -10,6 +10,9 @@ export interface CatalogToolConfig {
   guard?: () => MCPResponse | null | undefined;
   fetcher: () => Promise<unknown>;
   onError?: (error: unknown) => Record<string, unknown>;
+  /** Serves successful results from memory for this long; omit to fetch on every call. */
+  cacheTtlMs?: number;
+  now?: () => number;
 }
 
 export interface CatalogTool {
@@ -23,7 +26,46 @@ export interface CatalogTool {
   execute(): Promise<MCPResponse>;
 }
 
+// AFIP parameter catalogs (FEParamGet*) change rarely; one request per day is plenty.
+export const AFIP_CATALOG_CACHE_TTL_MS = 24 * 60 * 60 * 1000;
+
+type CacheEntry = { promise: Promise<unknown>; expiresAt: number };
+const catalogCaches = new Set<{ entry?: CacheEntry }>();
+
+export function resetCatalogCaches(): void {
+  for (const cache of catalogCaches) cache.entry = undefined;
+}
+
+function cachedFetcher(config: CatalogToolConfig): () => Promise<unknown> {
+  const { fetcher, cacheTtlMs, now = Date.now } = config;
+  if (cacheTtlMs === undefined) return fetcher;
+
+  const cache: { entry?: CacheEntry } = {};
+  catalogCaches.add(cache);
+
+  return () => {
+    if (cache.entry && cache.entry.expiresAt > now()) return cache.entry.promise;
+
+    // Concurrent calls share the pending request; the TTL starts once it succeeds.
+    const entry: CacheEntry = { promise: Promise.resolve(), expiresAt: Infinity };
+    entry.promise = fetcher().then(
+      (result) => {
+        entry.expiresAt = now() + cacheTtlMs;
+        return result;
+      },
+      (error) => {
+        if (cache.entry === entry) cache.entry = undefined;
+        throw error;
+      },
+    );
+    cache.entry = entry;
+    return entry.promise;
+  };
+}
+
 export function createCatalogTool(config: CatalogToolConfig): CatalogTool {
+  const fetch = cachedFetcher(config);
+
   return {
     name: config.name,
     metadata: {
@@ -40,7 +82,7 @@ export function createCatalogTool(config: CatalogToolConfig): CatalogTool {
       }
 
       try {
-        const result = await config.fetcher();
+        const result = await fetch();
         return {
           content: [
             {
