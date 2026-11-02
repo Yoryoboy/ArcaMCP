@@ -15,8 +15,8 @@ importers:
         specifier: ^1.32.2
         version: 1.32.2(zod@3.25.76)
       dotenv:
-        specifier: ^16.4.5
-        version: 16.6.1
+        specifier: ^18.0.9
+        version: 18.0.9
       qrcode:
         specifier: ^1.5.4
         version: 1.5.4
@@ -734,9 +734,10 @@ packages:
   dijkstrajs@1.0.3:
     resolution: {integrity: sha512-qiSlmBq9+BCdCA/L46dw8Uy93mloxsPSbwnm5yrKn2vMPiy8KyAskTF6zuV/j5BMsmOGZDPs7KjU+mjb670kfA==}
 
-  dotenv@16.6.1:
-    resolution: {integrity: sha512-uBq4egWHTcTt33a72vpSG0z3HnPuIl6NqYcTrKEg2azoEyl2hpW0zqlxysq2pK9HlDIHyHyakeYaYnSAwd8bow==}
+  dotenv@18.0.9:
+    resolution: {integrity: sha512-3fVOW4cB02R066PUSwn8O4TJyz9NckQl7F81blIbaq9jKBm2tSmOKky7ZHIXzGvkVPXCSn6jkpziBPZdGFs8Tw==}
     engines: {node: '>=12'}
+    hasBin: true
 
   dunder-proto@1.0.1:
     resolution: {integrity: sha512-KIN/nDJBQRcXw0MLVhZE9iQHmG68qAVIBg9CqmUYjmQIhgij9U5MFvrqkUL5FbtyyzZuOeOt0zdeRe4UY7ct+A==}
@@ -2182,7 +2183,7 @@ snapshots:
 
   dijkstrajs@1.0.3: {}
 
-  dotenv@16.6.1: {}
+  dotenv@18.0.9: {}
 
   dunder-proto@1.0.1:
     dependencies:

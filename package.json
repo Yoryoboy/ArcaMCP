@@ -51,7 +51,7 @@
   "dependencies": {
     "@afipsdk/afip.js": "^1.2.3",
     "@modelcontextprotocol/sdk": "^1.32.2",
-    "dotenv": "^16.4.5",
+    "dotenv": "^18.0.9",
     "qrcode": "^1.5.4",
     "zod": "^3.25.67"
   },

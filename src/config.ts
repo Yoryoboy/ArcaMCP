@@ -1,5 +1,6 @@
 import dotenv from "dotenv";
-dotenv.config();
+// Quiet keeps dotenv from logging to stderr, which MCP clients surface as server logs.
+dotenv.config({ quiet: true });
 
 export default {
   CUIT: process.env.AFIP_CUIT!,

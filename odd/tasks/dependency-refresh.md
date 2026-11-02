@@ -20,7 +20,7 @@ Branch `chore/dependency-refresh`; one work-unit commit per major upgrade.
 - [x] T2 (S1, S2) ESLint 10 and `@eslint/js` 10 — inline — commit
 - [x] T3 (S1, S2) Vitest 5 and `@vitest/coverage-v8` 5 — inline — commit
 - [x] T4 (S1, S2) TypeScript 6.0.3 — inline — commit
-- [ ] T5 (S1, S2, S3) dotenv 18 — inline — commit
+- [x] T5 (S1, S2, S3) dotenv 18 — inline — commit
 - [ ] T6 (S1, S2, S3) Zod 4 — inline — commit
 - [ ] T7 (S1-S3) Final stdio differential and independent verification — verify — no commit
 
