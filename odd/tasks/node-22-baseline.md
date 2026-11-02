@@ -31,7 +31,7 @@ on PR 1, starting at T1.
 - [x] T3 (S2) Use `import.meta.dirname` in CreatePDFTool helpers — inline — commit
 - [x] T4 (S4) Argentina calendar date for prompt date suggestions — inline — commit
 - [x] T5 (S1, S5) engines >=22, @types/node 22, `.node-version` 26, README — inline — commit
-- [ ] T6 (S5) Run quality and build on Node 22 and 26, stdio smoke — inline — no commit
+- [x] T6 (S5) Run quality and build on Node 22 and 26, stdio smoke — inline — no commit
 
 ## Log
 
@@ -47,3 +47,11 @@ on PR 1, starting at T1.
   neither `util.parseEnv` nor dotenv 18 unescapes `\"`, and both expand `\n` inside double quotes,
   so a Windows path containing `'` was also corrupted. Pre-existing on dotenv; verified on Node
   22.23.4, 24.22.2 and 26.13.0.
+- L5 (evidence, T2): `dotenv.config()` ignored an unreadable `.env`; `process.loadEnvFile()` throws,
+  which would have stopped the server at import. All errors are caught to keep the lazy
+  configuration design; pinned by `src/config.test.ts` (missing, unreadable, env precedence, silent).
+- L6 (evidence, T4): RED observed — on UTC and Asia/Tokyo hosts `suggestNearbyVoucherDates` was one
+  day off from the Argentine calendar; fixed with `Intl.DateTimeFormat`.
+- L7 (evidence, T6): `pnpm run quality` exit 0 (378 tests) and `pnpm run build` exit 0 on Node
+  22.23.4 and 26.13.0. stdio smoke on both, without and with a `.env`: 20 tools, 19 described prompt
+  args, date completions, `.env` values loaded, empty stderr.
