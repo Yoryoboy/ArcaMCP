@@ -11,7 +11,7 @@ Además, el paquete incluye los comandos `arcamcp setup` y `arcamcp doctor`, que
 
 ## Requisitos
 
-- Node.js 20 o superior
+- Node.js 22 o superior (para desarrollar el proyecto se usa Node 26; ver `.node-version`)
 - pnpm (la versión canónica la define el campo `packageManager` de `package.json`)
 - Acceso a tu CUIT y a tu cuenta de AFIP
 - Clave Fiscal nivel 3 o superior
@@ -20,7 +20,7 @@ Además, el paquete incluye los comandos `arcamcp setup` y `arcamcp doctor`, que
 ## Instalación rápida
 
 No necesitás clonar el repositorio ni instalar el paquete globalmente. Con Node.js
-20 o superior, Clave Fiscal nivel 3 y un access token de [afipsdk.com](https://afipsdk.com/):
+22 o superior, Clave Fiscal nivel 3 y un access token de [afipsdk.com](https://afipsdk.com/):
 
 ```bash
 # 1. Crear el certificado, autorizar wsfe y ws_sr_padron_a13 y generar .env
@@ -332,7 +332,7 @@ Recomendación:
 - Error de autorización de servicio:
   - Verifica que el CUIT tiene Clave Fiscal 3 y permisos para el servicio (ej. `wsfe`, `ws_sr_padron_a13`).
 - Versiones de Node incompatibles:
-  - Asegúrate de usar Node 20+ y confirma la versión con `node -v`.
+  - Asegúrate de usar Node 22+ y confirma la versión con `node -v`.
 - Variables de entorno sin definir o certificados ilegibles:
   - El servidor arranca igual y cada tool responde con `kind: "configuration"`,
     `code: "CONFIGURATION_ERROR"` y la lista de problemas en `details.issues`
