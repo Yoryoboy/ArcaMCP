@@ -79,6 +79,7 @@ describe("executeVoucherTool", () => {
           text: JSON.stringify({ CAE: "manual" }, null, 2),
         },
       ],
+      structuredContent: { CAE: "manual" },
     });
   });
 

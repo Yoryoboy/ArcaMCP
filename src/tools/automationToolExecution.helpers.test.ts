@@ -29,6 +29,7 @@ describe("executeAutomationTool", () => {
         { type: "text", text: "automation started" },
         { type: "text", text: JSON.stringify({ id: "auto-1", status: "completed" }, null, 2) },
       ],
+      structuredContent: { id: "auto-1", status: "completed" },
     });
   });
 

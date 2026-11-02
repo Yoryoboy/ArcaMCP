@@ -12,6 +12,7 @@ describe("devEnvDetectedMessage", () => {
           text: '{\n  "message": "Development environment detected"\n}',
         },
       ],
+      structuredContent: { message: "Development environment detected" },
     });
   });
 });

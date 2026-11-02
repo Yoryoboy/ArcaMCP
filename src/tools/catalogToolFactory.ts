@@ -1,3 +1,4 @@
+import { jsonResponse } from "../core/structuredOutput.js";
 import { MCPResponse } from "../core/types.js";
 import { EmptySchema } from "./shared.schemas.js";
 import { toErrorResponse } from "./toolError.helpers.js";
@@ -82,15 +83,7 @@ export function createCatalogTool(config: CatalogToolConfig): CatalogTool {
       }
 
       try {
-        const result = await fetch();
-        return {
-          content: [
-            {
-              type: "text" as const,
-              text: JSON.stringify(result, null, 2),
-            },
-          ],
-        };
+        return jsonResponse(await fetch());
       } catch (error) {
         return toErrorResponse(error, config.onError?.(error));
       }

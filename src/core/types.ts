@@ -7,5 +7,6 @@ export type MCPResponse = {
     _meta?: { [x: string]: unknown };
   }>;
   _meta?: { [x: string]: unknown };
+  structuredContent?: { [x: string]: unknown };
   isError?: boolean;
 };
