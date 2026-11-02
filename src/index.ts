@@ -34,7 +34,8 @@ const result = await runCli(process.argv.slice(2), {
 });
 
 if (result === "server") {
-  await import("./server.js");
+  const { startStdioServer } = await import("./server.js");
+  await startStdioServer();
 } else {
   process.exitCode = result;
 }
