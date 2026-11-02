@@ -53,14 +53,13 @@ describe("CreateVoucherPromptArgsSchema", () => {
   });
 
   it("filters basic completable suggestions with prefixes and context", () => {
-    const modoNumeracionField = CreateVoucherPromptArgsSchema.shape.modoNumeracion.unwrap();
-    const tipoComprobanteField = CreateVoucherPromptArgsSchema.shape.tipoComprobante.unwrap();
-    const monedaField = CreateVoucherPromptArgsSchema.shape.moneda.unwrap();
-    const cotizacionField = CreateVoucherPromptArgsSchema.shape.cotizacion.unwrap();
-    const condicionIVAReceptorField =
-      CreateVoucherPromptArgsSchema.shape.condicionIVAReceptor.unwrap();
-    const importeTributosField = CreateVoucherPromptArgsSchema.shape.importeTributos.unwrap();
-    const cantidadRegistrosField = CreateVoucherPromptArgsSchema.shape.cantidadRegistros.unwrap();
+    const modoNumeracionField = CreateVoucherPromptArgsSchema.shape.modoNumeracion;
+    const tipoComprobanteField = CreateVoucherPromptArgsSchema.shape.tipoComprobante;
+    const monedaField = CreateVoucherPromptArgsSchema.shape.moneda;
+    const cotizacionField = CreateVoucherPromptArgsSchema.shape.cotizacion;
+    const condicionIVAReceptorField = CreateVoucherPromptArgsSchema.shape.condicionIVAReceptor;
+    const importeTributosField = CreateVoucherPromptArgsSchema.shape.importeTributos;
+    const cantidadRegistrosField = CreateVoucherPromptArgsSchema.shape.cantidadRegistros;
 
     expect(requiredCompleter(modoNumeracionField)("AU")).toEqual(["automatico"]);
     expect(requiredCompleter(tipoComprobanteField)("1", { arguments: { concepto: "2" } })).toEqual([
@@ -82,9 +81,9 @@ describe("CreateVoucherPromptArgsSchema", () => {
   });
 
   it("suggests fallback values for nullable concept, sales point, and document completions", () => {
-    const conceptoField = CreateVoucherPromptArgsSchema.shape.concepto.unwrap();
-    const puntoDeVentaField = CreateVoucherPromptArgsSchema.shape.puntoDeVenta.unwrap();
-    const tipoDocumentoField = CreateVoucherPromptArgsSchema.shape.tipoDocumento.unwrap();
+    const conceptoField = CreateVoucherPromptArgsSchema.shape.concepto;
+    const puntoDeVentaField = CreateVoucherPromptArgsSchema.shape.puntoDeVenta;
+    const tipoDocumentoField = CreateVoucherPromptArgsSchema.shape.tipoDocumento;
 
     expect(requiredCompleter(conceptoField)("")).toEqual(["1", "2", "3"]);
     expect(requiredCompleter(conceptoField)("3")).toEqual(["3"]);
@@ -98,7 +97,7 @@ describe("CreateVoucherPromptArgsSchema", () => {
     vi.useFakeTimers();
     vi.setSystemTime(new Date("2026-06-14T12:00:00Z"));
 
-    const fechaComprobanteField = CreateVoucherPromptArgsSchema.shape.fechaComprobante.unwrap();
+    const fechaComprobanteField = CreateVoucherPromptArgsSchema.shape.fechaComprobante;
 
     expect(requiredCompleter(fechaComprobanteField)("")).toEqual([
       "20260614",
@@ -113,10 +112,9 @@ describe("CreateVoucherPromptArgsSchema", () => {
   });
 
   it("only suggests service dates when service concepts provide the required anchors", () => {
-    const fechaServicioDesdeField = CreateVoucherPromptArgsSchema.shape.fechaServicioDesde.unwrap();
-    const fechaServicioHastaField = CreateVoucherPromptArgsSchema.shape.fechaServicioHasta.unwrap();
-    const fechaVencimientoPagoField =
-      CreateVoucherPromptArgsSchema.shape.fechaVencimientoPago.unwrap();
+    const fechaServicioDesdeField = CreateVoucherPromptArgsSchema.shape.fechaServicioDesde;
+    const fechaServicioHastaField = CreateVoucherPromptArgsSchema.shape.fechaServicioHasta;
+    const fechaVencimientoPagoField = CreateVoucherPromptArgsSchema.shape.fechaVencimientoPago;
 
     expect(
       requiredCompleter(fechaServicioDesdeField)("", {
@@ -154,7 +152,7 @@ describe("CreateVoucherPromptArgsSchema", () => {
   });
 
   it("only suggests computed totals for factura C with numeric inputs", () => {
-    const importeTotalField = CreateVoucherPromptArgsSchema.shape.importeTotal.unwrap();
+    const importeTotalField = CreateVoucherPromptArgsSchema.shape.importeTotal;
 
     expect(
       requiredCompleter(importeTotalField)("", {

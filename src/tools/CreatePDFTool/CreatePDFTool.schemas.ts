@@ -313,12 +313,16 @@ export const PublicRefinedSchema = z
     addLegacyIssues(raw, context);
     const result = PublicObjectSchema.safeParse(raw);
     if (!result.success) {
-      for (const issue of result.error.issues) context.addIssue(issue);
+      for (const issue of result.error.issues) context.addIssue({ ...issue });
       return;
     }
     addSharedIssues(result.data, context);
   })
-  .transform((raw) => PublicObjectSchema.parse(raw));
+  .transform((raw) => {
+    // Zod 4 still runs transforms after refinement issues; those issues already fail the parse.
+    const result = PublicObjectSchema.safeParse(raw);
+    return result.success ? result.data : z.NEVER;
+  });
 
 export const ResolvedObjectSchema = PublicObjectSchema.merge(ProviderFieldsSchema).strict();
 export const ResolvedRefinedSchema = ResolvedObjectSchema.superRefine((input, context) => {
