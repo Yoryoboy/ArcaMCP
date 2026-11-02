@@ -10,10 +10,15 @@ export const GetExchangeRateSchema = z.object({
     .describe("Fecha de la cotización en formato AAAAMMDD (ej: '20250221')"),
 });
 
-// Resultado de FEParamGetCotizacion: el SDK lo tipa `any`, así que los campos son opcionales
-// y se aceptan extras.
+// Resultado crudo de FEParamGetCotizacion (executeRequest devuelve el sobre con ResultGet): el SDK
+// lo tipa `any`, así que los campos son opcionales y se aceptan extras.
 export const GetExchangeRateOutputSchema = z.looseObject({
-  MonId: z.string().optional().describe("ID de la moneda consultada"),
-  MonCotiz: z.number().optional().describe("Cotización de la moneda en pesos"),
-  FchCotiz: z.string().optional().describe("Fecha de la cotización en formato AAAAMMDD"),
+  ResultGet: z
+    .looseObject({
+      MonId: z.string().optional().describe("ID de la moneda consultada"),
+      MonCotiz: z.number().optional().describe("Cotización de la moneda en pesos"),
+      FchCotiz: z.string().optional().describe("Fecha de la cotización en formato AAAAMMDD"),
+    })
+    .optional()
+    .describe("Cotización informada por AFIP"),
 });

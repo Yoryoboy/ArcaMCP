@@ -36,6 +36,15 @@ describe("MCP server", () => {
     expect(prompts.map((prompt) => prompt.name)).toEqual(["wizard_crear_comprobante"]);
   });
 
+  it("declares an object output schema for every tool", async () => {
+    const { tools } = await (await connectClient()).listTools();
+
+    expect(tools).toHaveLength(TOOL_NAMES.length);
+    for (const tool of tools) {
+      expect(tool.outputSchema?.type, tool.name).toBe("object");
+    }
+  });
+
   it.each([
     ["get_voucher_types", mocks.electronicBilling.getVoucherTypes, [{ Id: 11, Desc: "Factura C" }]],
     ["get_concept_types", mocks.electronicBilling.getConceptTypes, [{ Id: 1, Desc: "Productos" }]],
