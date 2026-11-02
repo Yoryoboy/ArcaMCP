@@ -35,3 +35,21 @@ export const VoucherSchema = VoucherShape.superRefine((data, ctx) => {
   validateVoucherCoreSemantics(data, ctx);
   validateVoucherRangeSemantics(data, ctx);
 });
+
+// Respuesta de FECAESolicitar: el SDK la tipa `any`, así que se documentan los campos
+// conocidos como opcionales y se aceptan los demás.
+export const VoucherOutputSchema = z.looseObject({
+  CAE: z.string().optional().describe("Código de Autorización Electrónico asignado por AFIP"),
+  CAEFchVto: z
+    .string()
+    .optional()
+    .describe("Fecha de vencimiento del CAE en formato AAAAMMDD"),
+  FeCabResp: z
+    .looseObject({})
+    .optional()
+    .describe("Cabecera de la respuesta de AFIP (solo con fullResponse=true)"),
+  FeDetResp: z
+    .looseObject({})
+    .optional()
+    .describe("Detalle de la respuesta de AFIP (solo con fullResponse=true)"),
+});
