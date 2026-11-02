@@ -27,18 +27,24 @@ export function formatVoucherDate(date: Date): string {
   ).padStart(2, "0")}`;
 }
 
-export function suggestNearbyVoucherDates(value?: string): string[] {
-  const now = new Date();
-  const today = new Date(now);
-  const yesterday = new Date(now);
-  yesterday.setDate(now.getDate() - 1);
-  const tomorrow = new Date(now);
-  tomorrow.setDate(now.getDate() + 1);
+// AFIP validates voucher dates against the Argentine calendar, not the host's.
+const argentineCalendar = new Intl.DateTimeFormat("en-US", {
+  timeZone: "America/Argentina/Buenos_Aires",
+  year: "numeric",
+  month: "numeric",
+  day: "numeric",
+});
 
-  return startsWithAny(
-    [formatVoucherDate(today), formatVoucherDate(yesterday), formatVoucherDate(tomorrow)],
-    value,
+function argentineDay(offsetDays: number): Date {
+  const parts = Object.fromEntries(
+    argentineCalendar.formatToParts(new Date()).map((part) => [part.type, Number(part.value)]),
   );
+  // A local noon date keeps formatVoucherDate's local getters on the intended day.
+  return new Date(parts.year, parts.month - 1, parts.day + offsetDays, 12);
+}
+
+export function suggestNearbyVoucherDates(value?: string): string[] {
+  return startsWithAny([0, -1, 1].map((offset) => formatVoucherDate(argentineDay(offset))), value);
 }
 
 export function suggestVoucherType(
