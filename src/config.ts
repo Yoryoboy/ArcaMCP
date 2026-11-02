@@ -1,6 +1,11 @@
-import dotenv from "dotenv";
-// Quiet keeps dotenv from logging to stderr, which MCP clients surface as server logs.
-dotenv.config({ quiet: true });
+// Node's loader prints nothing (MCP clients surface stderr as server logs) and
+// never overrides variables already set in the environment. A missing or
+// unreadable .env is not fatal: configuration validation reports what is absent.
+try {
+  process.loadEnvFile();
+} catch {
+  // Start with the environment as it is.
+}
 
 export default {
   CUIT: process.env.AFIP_CUIT!,

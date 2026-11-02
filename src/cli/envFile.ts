@@ -25,7 +25,7 @@ function formatValue(key: string, value: string): string {
 }
 
 /**
- * Sets each key in dotenv content, replacing existing assignments in place and
+ * Sets each key in .env content, replacing existing assignments in place and
  * appending missing ones. Every other line, including comments, is preserved.
  */
 export function updateEnvContent(content: string, values: Record<string, string>): string {
