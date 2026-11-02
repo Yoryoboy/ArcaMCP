@@ -17,7 +17,7 @@ output (PRs #9-#16) as npm major release `@yoryoboy/arcamcp@2.0.0`.
 
 - [x] Merge #9-#16 into `main` in order.
 - [x] Bump package metadata to 2.0.0; quality on Node 22 and 26; package dry-run.
-- [ ] Publish to npm from `main`, tag `v2.0.0`, verify with `npx` in an empty directory.
+- [x] Publish to npm from `main`, tag `v2.0.0`, verify with `npx` in an empty directory.
 
 ## Log
 
@@ -28,3 +28,8 @@ output (PRs #9-#16) as npm major release `@yoryoboy/arcamcp@2.0.0`.
   merged by retargeting the child to `main` before deleting the parent branch.
 - L3 (evidence): merge commits #9 `d7dffd4`, #10 `c435a7e`, #11 `429bb64`, #12 `e382179`, #13
   `bf1d4c5`, #14 `e5192fd`, #15 `7214d58`, #16 `283d59a`; `main` tree identical to `e7d6cad`.
+- L4 (evidence): release commit `c1325cd`; `pnpm publish` exit 0 (prepack quality 452 tests);
+  npm dist-tag `latest` = 2.0.0 (visible after ~3 minutes); tag `v2.0.0` → `c1325cd`. From an
+  empty directory: `npx -y @yoryoboy/arcamcp@2.0.0 help` prints the help, `doctor` exits 1 (no
+  configuration), stdio `initialize` answers `{"name":"arcamcp","version":"2.0.0"}`, 20 tools all
+  with `outputSchema`, empty stderr. Not verified against a real ARCA account.
