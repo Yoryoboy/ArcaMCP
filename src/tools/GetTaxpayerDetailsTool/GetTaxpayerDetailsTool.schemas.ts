@@ -32,7 +32,11 @@ export const GetTaxpayerDetailsOutputSchema = z.looseObject({
   tipoClave: z.string().optional().describe("Tipo de clave, por ejemplo CUIT"),
   tipoDocumento: z.string().optional().describe("Tipo de documento"),
   tipoPersona: z.string().optional().describe("Tipo de persona, FISICA o JURIDICA"),
-  domicilio: z.array(DomicilioOutputSchema).optional().describe("Domicilios registrados"),
+  // A13 returns a single object instead of a list when there is only one domicilio.
+  domicilio: z
+    .union([z.array(DomicilioOutputSchema), DomicilioOutputSchema])
+    .optional()
+    .describe("Domicilios registrados"),
   message: z.string().optional().describe("Aviso informativo cuando no se consulta AFIP, por ejemplo en testing"),
 });
 

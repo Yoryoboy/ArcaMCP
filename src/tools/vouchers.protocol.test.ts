@@ -213,14 +213,12 @@ describe("voucher tools structured output", () => {
     it("declares the exchange rate fields in its output schema", async () => {
       const { outputSchema } = await outputSchemaOf("get_exchange_rate");
 
-      for (const field of ["MonId", "MonCotiz", "FchCotiz"]) {
-        expect(outputSchema?.properties).toHaveProperty(field);
-      }
+      expect(outputSchema?.properties).toHaveProperty("ResultGet");
       expect(outputSchema?.required ?? []).toEqual([]);
     });
 
     it("returns the exchange rate reported by AFIP", async () => {
-      const afipResult = { MonId: "DOL", MonCotiz: 1200.5, FchCotiz: "20260614" };
+      const afipResult = { ResultGet: { MonId: "DOL", MonCotiz: 1200.5, FchCotiz: "20260614" } };
       mocks.electronicBilling.executeRequest.mockResolvedValue(afipResult);
       const { connected } = await outputSchemaOf("get_exchange_rate");
 

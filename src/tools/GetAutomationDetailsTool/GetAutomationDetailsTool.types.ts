@@ -1,7 +1,8 @@
 import { z } from "zod";
 
-// Rows come straight from ARCA's "Mis Comprobantes" table; all fields are optional and extra columns are accepted.
-const TextOrNumber = z.union([z.string(), z.number()]).optional();
+// Rows come straight from ARCA's "Mis Comprobantes" table; all fields are optional, cells may be
+// empty (null) and extra columns are accepted.
+const TextOrNumber = z.union([z.string(), z.number()]).nullable().optional();
 
 const ComprobanteOutputSchema = z.looseObject({
   "Fecha de Emisión": TextOrNumber.describe("Fecha de emisión"),
