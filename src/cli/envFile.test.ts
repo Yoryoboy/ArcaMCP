@@ -1,6 +1,7 @@
 import fs from "fs";
 import os from "os";
 import path from "path";
+import { parseEnv } from "util";
 import { describe, expect, it } from "vitest";
 import { updateEnvContent, writeEnvFile } from "./envFile.js";
 
@@ -18,10 +19,33 @@ describe("updateEnvContent", () => {
     expect(updateEnvContent("A=1", { B: "2" })).toBe("A=1\nB=2\n");
   });
 
-  it("quotes values so dotenv reads Windows paths and spaces literally", () => {
+  it("quotes values so Windows paths and spaces are read literally", () => {
     expect(updateEnvContent("", { P: "C:\\new folder\\cert.crt", Q: "it's" })).toBe(
-      "P='C:\\new folder\\cert.crt'\nQ=\"it's\"\n",
+      "P='C:\\new folder\\cert.crt'\nQ=`it's`\n",
     );
+  });
+
+  it("writes values that Node's .env parser reads back unchanged", () => {
+    const values = {
+      PLAIN: "abc-1.2/x:y@z+",
+      WINDOWS_PATH: "C:\\certs\\new folder\\cert.crt",
+      APOSTROPHE_PATH: "C:\\Users\\O'Brien\\new\\cert.crt",
+      HASH: "v#1 x",
+      DOLLAR: "a$b ${HOME}",
+      BOTH_QUOTES: `it's "quoted"`,
+      ALL_QUOTES_NO_BACKSLASH: "it's `tick`",
+      EMPTY: "",
+    };
+
+    expect(parseEnv(updateEnvContent("", values))).toEqual(values);
+  });
+
+  it("rejects a value that no .env quoting can represent", () => {
+    for (const value of [`a'b"c\`d`, "C:\\it's\\`x`"]) {
+      expect(() => updateEnvContent("", { AFIP_CERT_ALIAS: value })).toThrow(
+        "AFIP_CERT_ALIAS no puede guardarse en .env: contiene comillas simples y backticks junto con comillas dobles o barras invertidas.",
+      );
+    }
   });
 });
 

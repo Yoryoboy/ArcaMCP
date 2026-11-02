@@ -2,14 +2,26 @@ import fs from "fs";
 
 type EnvFileSystem = Pick<typeof fs, "readFileSync" | "writeFileSync" | "renameSync">;
 
-function formatValue(value: string): string {
+function formatValue(key: string, value: string): string {
   if (value === "" || /^[\w./:@+-]+$/.test(value)) {
     return value;
   }
 
-  // Single quotes are literal for dotenv, so Windows backslashes such as `\n`
-  // in a path are never expanded. Fall back to double quotes only when needed.
-  return value.includes("'") ? `"${value.replace(/"/g, '\\"')}"` : `'${value}'`;
+  // Single quotes and backticks are literal for Node's .env parser, so Windows
+  // backslashes such as `\n` are never expanded. The parser has no escape
+  // sequences, so double quotes are only safe without backslashes or `"`.
+  for (const quote of ["'", "`"]) {
+    if (!value.includes(quote)) {
+      return `${quote}${value}${quote}`;
+    }
+  }
+  if (!/["\\]/.test(value)) {
+    return `"${value}"`;
+  }
+
+  throw new Error(
+    `${key} no puede guardarse en .env: contiene comillas simples y backticks junto con comillas dobles o barras invertidas.`,
+  );
 }
 
 /**
@@ -28,11 +40,11 @@ export function updateEnvContent(content: string, values: Record<string, string>
     }
 
     pending.delete(key);
-    return `${key}=${formatValue(values[key])}`;
+    return `${key}=${formatValue(key, values[key])}`;
   });
 
   for (const [key, value] of pending) {
-    updated.push(`${key}=${formatValue(value)}`);
+    updated.push(`${key}=${formatValue(key, value)}`);
   }
 
   return `${updated.join("\n")}\n`;
