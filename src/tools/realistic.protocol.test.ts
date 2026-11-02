@@ -66,4 +66,24 @@ describe("structured output with realistic AFIP payloads", () => {
     expect(result.isError).toBeUndefined();
     expect(textOf(result)).toBe("5");
   });
+
+  it.each([
+    ["a list", [{ Id: 5, Desc: "Consumidor Final", Cmp_Clase: "B,C" }]],
+    // SOAP collapses a single element into an object.
+    ["a single element", { Id: 5, Desc: "Consumidor Final", Cmp_Clase: "B,C" }],
+  ])("exposes IVA conditions as items when AFIP returns %s", async (_case, conditions) => {
+    const envelope = { ResultGet: { CondicionIvaReceptor: conditions } };
+    mocks.electronicBilling.executeRequest.mockResolvedValue(envelope);
+
+    const result = await (
+      await connectClient()
+    ).callTool({ name: "get_tax_condition_types", arguments: {} });
+
+    expect(mocks.electronicBilling.executeRequest).toHaveBeenCalledWith(
+      "FEParamGetCondicionIvaReceptor",
+    );
+    expect(result.isError).toBeUndefined();
+    expect(result.structuredContent).toEqual({ items: [conditions].flat() });
+    expect(textOf(result)).toEqual(envelope);
+  });
 });
