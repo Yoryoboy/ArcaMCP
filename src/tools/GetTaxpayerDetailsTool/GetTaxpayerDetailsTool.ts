@@ -1,4 +1,7 @@
-import { GetTaxpayerDetailsSchema } from "./GetTaxpayerDetailsTool.schemas.js";
+import {
+  GetTaxpayerDetailsOutputSchema,
+  GetTaxpayerDetailsSchema,
+} from "./GetTaxpayerDetailsTool.schemas.js";
 import { GetTaxpayerDetailsParams } from "../types.js";
 import afip from "../../services/afip/client.js";
 import { MCPResponse } from "../../core/types.js";
@@ -17,6 +20,7 @@ export class GetTaxpayerDetailsTool {
       "Obtiene los datos completos de un contribuyente a partir de su CUIT",
     inputSchema: GetTaxpayerDetailsSchema.shape,
     annotations: READ_ONLY_AFIP,
+    outputSchema: GetTaxpayerDetailsOutputSchema,
   };
 
   static async execute(params: GetTaxpayerDetailsParams): Promise<MCPResponse> {

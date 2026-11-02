@@ -1,3 +1,5 @@
+import { z } from "zod";
+import { jsonResponse } from "../../core/structuredOutput.js";
 import { MCPResponse } from "../../core/types.js";
 import { generateQRCode } from "../../utils/qr/qr.js";
 import { QRDataSchema } from "../../utils/qr/qr.schema.js";
@@ -21,6 +23,14 @@ import {
 import { toErrorResponse } from "../toolError.helpers.js";
 import { CREATES_HOSTED_FILE } from "../toolAnnotations.js";
 
+const CreatePDFOutputSchema = z.looseObject({
+  success: z.boolean().describe("true cuando el PDF se generó"),
+  phase: z.string().describe("Etapa alcanzada, por ejemplo pdf_created"),
+  message: z.string().describe("Resumen para el usuario, incluye el vencimiento del enlace"),
+  file: z.string().optional().describe("URL del PDF generado en AFIP SDK"),
+  expiresInHours: z.number().describe("Horas de vigencia del enlace del PDF"),
+});
+
 // ------------------------------
 // Tool implementation: generate populated HTML and create PDF
 // ------------------------------
@@ -34,6 +44,7 @@ export class CreatePDFTool {
       "Genera un PDF dinámico de un comprobante electrónico combinando datos del voucher, emisor y receptor desde AFIP. La manera más recomendada de llenar la información para la factura de manera correcta es utilizar las herramientas apropiadas para recuperar los datos del CAE y los datos tanto del emisor como del receptor utilizando sus CUIT. El LLM no debe asumir ninguna información que no haya sido dada explícitamente o que no pueda inferir. Una vez todos los datos estén recopilados, se debe hacer un resumen de la factura tal cual como quedaría y mostrársela al usuario antes de proceder. Procederemos solo cuando tengamos la confirmación explícita del usuario. Si A13 devuelve varios domicilios elegibles de igual prioridad, reintentar con DIRECCION_EMISOR_SELECCIONADA usando uno de los candidatos devueltos. Este campo se valida contra A13 y no permite direcciones arbitrarias. Nota importante: este tool usa dos campos relacionados al tipo de comprobante para evitar ambigüedad: CbteTipo (código numérico AFIP para uso técnico/QR) y CbteLetra (A/B/C/M) únicamente para la visualización en el PDF.",
     inputSchema: CreatePDFInputBaseSchema.shape,
     annotations: CREATES_HOSTED_FILE,
+    outputSchema: CreatePDFOutputSchema,
   };
 
   static async execute(params: unknown): Promise<MCPResponse> {
@@ -78,24 +89,13 @@ export class CreatePDFTool {
       });
 
       // 6) Return success response
-      return {
-        content: [
-          {
-            type: "text" as const,
-            text: JSON.stringify(
-              {
-                success: true,
-                phase: "pdf_created",
-                message: "PDF generado correctamente. El enlace expira en 24 horas.",
-                file: res?.file,
-                expiresInHours: 24,
-              },
-              null,
-              2,
-            ),
-          },
-        ],
-      };
+      return jsonResponse({
+        success: true,
+        phase: "pdf_created",
+        message: "PDF generado correctamente. El enlace expira en 24 horas.",
+        file: res?.file,
+        expiresInHours: 24,
+      });
     } catch (error) {
       return toErrorResponse(error);
     }

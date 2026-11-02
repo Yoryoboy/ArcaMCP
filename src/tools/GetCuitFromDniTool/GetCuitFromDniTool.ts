@@ -1,6 +1,10 @@
-import { GetCuitFromDniToolSchema } from "./GetCuitFromDniTool.schemas.js";
+import {
+  GetCuitFromDniOutputSchema,
+  GetCuitFromDniToolSchema,
+} from "./GetCuitFromDniTool.schemas.js";
 import { GetCuitFromDniToolParams } from "../types.js";
 import afip from "../../services/afip/client.js";
+import { messageResponse } from "../../core/structuredOutput.js";
 import { MCPResponse } from "../../core/types.js";
 import config from "../../config.js";
 import { devEnvDetectedMessage } from "../../utils/helpers.js";
@@ -15,6 +19,7 @@ export class GetCuitFromDniTool {
     description: "Obtiene el CUIT de un contribuyente a partir de su DNI",
     inputSchema: GetCuitFromDniToolSchema.shape,
     annotations: READ_ONLY_AFIP,
+    outputSchema: GetCuitFromDniOutputSchema,
   };
 
   static async execute(params: GetCuitFromDniToolParams): Promise<MCPResponse> {
@@ -32,18 +37,8 @@ export class GetCuitFromDniTool {
       },
       invoke: async (validatedParams) =>
         afip.RegisterScopeThirteen.getTaxIDByDocument(validatedParams.nationalId),
-      onNullResult: () => ({
-        content: [
-          {
-            type: "text" as const,
-            text: JSON.stringify(
-              { message: "No se encontró CUIT para el DNI proporcionado" },
-              null,
-              2
-            ),
-          },
-        ],
-      }),
+      structure: (cuit) => ({ cuit: String(cuit) }),
+      onNullResult: () => messageResponse("No se encontró CUIT para el DNI proporcionado"),
     });
   }
 }

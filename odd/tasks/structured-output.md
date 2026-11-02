@@ -25,7 +25,7 @@ Add MCP structured output (`outputSchema` + `structuredContent`) to all 20 tools
 - [x] T2 (S2, S3) Shared `structuredContent` support in the response helpers and `MCPResponse` — inline — commit
 - [x] T3 (S1, S3, S4) Output schemas: catalog tools and `get_sales_points` — commit
 - [x] T4 (S1, S3, S4) Output schemas: voucher and exchange-rate tools — commit
-- [ ] T5 (S1, S3, S4) Output schemas: taxpayer, CUIT, PDF, automation and certificate tools — commit
+- [x] T5 (S1, S3, S4) Output schemas: taxpayer, CUIT, PDF, automation and certificate tools — commit
 - [ ] T6 (S1, S5) Protocol test over all 20 tools, stdio smoke — inline — commit
 
 ## Log
