@@ -62,3 +62,6 @@ Add MCP structured output (`outputSchema` + `structuredContent`) to all 20 tools
   `src/tools/realistic.protocol.test.ts` (3 RED before the fix). `get_tax_condition_types` also
   returns the `{ ResultGet }` envelope; the loose catalog schema accepts it, so its structured
   content is that envelope rather than `{ items }`.
+- L9 (follow-up): `get_tax_condition_types` now exposes `ResultGet.CondicionIvaReceptor` as
+  `{ items }` (a single SOAP element is wrapped in a list); its text still carries the raw envelope.
+  Pinned by `src/tools/realistic.protocol.test.ts` (2 RED before the fix).

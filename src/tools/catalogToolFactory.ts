@@ -1,5 +1,5 @@
 import { z } from "zod";
-import { jsonResponse } from "../core/structuredOutput.js";
+import { jsonResponse, StructuredContent } from "../core/structuredOutput.js";
 import { MCPResponse } from "../core/types.js";
 import { EmptySchema } from "./shared.schemas.js";
 import { toErrorResponse } from "./toolError.helpers.js";
@@ -12,6 +12,8 @@ export interface CatalogToolConfig {
   guard?: () => MCPResponse | null | undefined;
   fetcher: () => Promise<unknown>;
   onError?: (error: unknown) => Record<string, unknown>;
+  /** Structured content for the fetched result; defaults to the result itself (lists under `items`). */
+  structure?: (result: unknown) => StructuredContent;
   /** Shape of each list element in the output schema; defaults to AFIP's `{ Id, Desc }`. */
   itemSchema?: z.ZodType;
   /** Serves successful results from memory for this long; omit to fetch on every call. */
@@ -104,7 +106,8 @@ export function createCatalogTool(config: CatalogToolConfig): CatalogTool {
       }
 
       try {
-        return jsonResponse(await fetch());
+        const result = await fetch();
+        return jsonResponse(result, config.structure?.(result));
       } catch (error) {
         return toErrorResponse(error, config.onError?.(error));
       }
