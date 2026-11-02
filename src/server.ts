@@ -28,51 +28,64 @@ import { certificateDependentTools } from "./services/certificate/certificateToo
 import { getDefaultCertificateStatus } from "./services/afip/client.js";
 import { packageVersion } from "./packageInfo.js";
 
-const server = new McpServer({
-  name: "arcamcp",
-  version: packageVersion,
-});
+type CertificateStatusMonitor = Parameters<typeof createCertificatePreflight>[0];
 
-// The certificate is resolved lazily so a configuration problem is reported by
-// the tools instead of preventing the server from starting.
-const certificatePreflight = createCertificatePreflight({
-  getStatus: (now) => getDefaultCertificateStatus().getStatus(now),
-});
-function registerTool(
-  tool: { name: string; metadata: any; execute: (...args: any[]) => Promise<any> },
-  requiresCertificate = certificateDependentTools.has(tool.name),
-) {
-  server.registerTool(
-    tool.name,
-    tool.metadata,
-    certificatePreflight.wrap(tool.execute, requiresCertificate),
+/**
+ * Builds the MCP server with every tool and prompt registered. The certificate
+ * monitor is injectable so tests can drive the tools in-process.
+ */
+export function createServer(
+  // The certificate is resolved lazily so a configuration problem is reported by
+  // the tools instead of preventing the server from starting.
+  certificateStatus: CertificateStatusMonitor = {
+    getStatus: (now) => getDefaultCertificateStatus().getStatus(now),
+  },
+): McpServer {
+  const server = new McpServer({
+    name: "arcamcp",
+    version: packageVersion,
+  });
+
+  const certificatePreflight = createCertificatePreflight(certificateStatus);
+  function registerTool(
+    tool: { name: string; metadata: any; execute: (...args: any[]) => Promise<any> },
+    requiresCertificate = certificateDependentTools.has(tool.name),
+  ) {
+    server.registerTool(
+      tool.name,
+      tool.metadata,
+      certificatePreflight.wrap(tool.execute, requiresCertificate),
+    );
+  }
+
+  registerTool(GetLastVoucherTool);
+  registerTool(CreateVoucherTool);
+  registerTool(CreateNextVoucherTool);
+  registerTool(GetVoucherInfoTool);
+  registerTool(GetTaxpayerDetailsTool);
+  registerTool(GetCuitFromDniTool);
+  registerTool(CreatePDFTool);
+  registerTool(GetSalesPointsTool);
+  registerTool(GetVoucherTypesTool);
+  registerTool(GetConceptTypesTool);
+  registerTool(GetDocumentTypesTool);
+  registerTool(GetAliquotTypesTool);
+  registerTool(GetCurrenciesTypesTool);
+  registerTool(GetExchangeRateTool);
+  registerTool(GetOptionsTypesTool);
+  registerTool(GetTaxTypesTool);
+  registerTool(GetTaxConditionTypesTool);
+  registerTool(MisComprobantesTool);
+  registerTool(GetAutomationDetailsTool);
+  registerTool(GetCertificateStatusTool, false);
+
+  server.registerPrompt(CreateVoucherPrompt.name, CreateVoucherPrompt.metadata, (args) =>
+    CreateVoucherPrompt.build(args),
   );
+
+  return server;
 }
 
-registerTool(GetLastVoucherTool);
-registerTool(CreateVoucherTool);
-registerTool(CreateNextVoucherTool);
-registerTool(GetVoucherInfoTool);
-registerTool(GetTaxpayerDetailsTool);
-registerTool(GetCuitFromDniTool);
-registerTool(CreatePDFTool);
-registerTool(GetSalesPointsTool);
-registerTool(GetVoucherTypesTool);
-registerTool(GetConceptTypesTool);
-registerTool(GetDocumentTypesTool);
-registerTool(GetAliquotTypesTool);
-registerTool(GetCurrenciesTypesTool);
-registerTool(GetExchangeRateTool);
-registerTool(GetOptionsTypesTool);
-registerTool(GetTaxTypesTool);
-registerTool(GetTaxConditionTypesTool);
-registerTool(MisComprobantesTool);
-registerTool(GetAutomationDetailsTool);
-registerTool(GetCertificateStatusTool, false);
-
-server.registerPrompt(CreateVoucherPrompt.name, CreateVoucherPrompt.metadata, (args) =>
-  CreateVoucherPrompt.build(args),
-);
-
-const transport = new StdioServerTransport();
-await server.connect(transport);
+export async function startStdioServer(): Promise<void> {
+  await createServer().connect(new StdioServerTransport());
+}

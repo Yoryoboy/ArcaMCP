@@ -1,3 +1,4 @@
+import { jsonResponse, StructuredContent } from "../core/structuredOutput.js";
 import { MCPResponse } from "../core/types.js";
 import { toErrorResponse } from "./toolError.helpers.js";
 
@@ -11,18 +12,9 @@ type ExecuteJsonToolOptions<TValidated, TResult> = {
   guard?: () => MCPResponse | null | undefined | Promise<MCPResponse | null | undefined>;
   invoke: (validatedParams: TValidated) => Promise<TResult>;
   onNullResult?: (validatedParams: TValidated) => MCPResponse | null | undefined;
+  /** Tool-specific structured content; defaults to the result itself (lists under `items`). */
+  structure?: (result: TResult) => StructuredContent;
 };
-
-function toTextResponse(payload: unknown): MCPResponse {
-  return {
-    content: [
-      {
-        type: "text" as const,
-        text: JSON.stringify(payload, null, 2),
-      },
-    ],
-  };
-}
 
 export async function executeJsonTool<TValidated, TResult>(
   options: ExecuteJsonToolOptions<TValidated, TResult>,
@@ -43,7 +35,7 @@ export async function executeJsonTool<TValidated, TResult>(
       }
     }
 
-    return toTextResponse(result);
+    return jsonResponse(result, options.structure?.(result));
   } catch (error) {
     return toErrorResponse(error);
   }

@@ -1,3 +1,4 @@
+import { toStructuredContent } from "../core/structuredOutput.js";
 import { MCPResponse } from "../core/types.js";
 import { toErrorResponse } from "./toolError.helpers.js";
 
@@ -21,6 +22,7 @@ export async function executeAutomationTool<TValidated, TResult>(
 
     return {
       content: options.serializeSuccess(result),
+      structuredContent: toStructuredContent(result),
     };
   } catch (error) {
     return toErrorResponse(error);

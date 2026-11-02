@@ -22,6 +22,7 @@ describe("executeJsonTool", () => {
           text: JSON.stringify({ taxId: 20368506345 }, null, 2),
         },
       ],
+      structuredContent: { taxId: 20368506345 },
     });
   });
 

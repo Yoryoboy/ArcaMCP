@@ -29,6 +29,7 @@ describe("createCatalogTool", () => {
     expect(response.content).toHaveLength(1);
     expect(response.content[0].type).toBe("text");
     expect(JSON.parse(response.content[0].text)).toEqual([{ Id: 1 }]);
+    expect(response.structuredContent).toEqual({ items: [{ Id: 1 }] });
     expect(fetcher).toHaveBeenCalledOnce();
   });
 
