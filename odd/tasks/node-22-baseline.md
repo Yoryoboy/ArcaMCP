@@ -28,7 +28,7 @@ on PR 1, starting at T1.
 
 - [x] T1 (S3) Round-trip `.env` quoting through `util.parseEnv` — inline — commit
 - [x] T2 (S2) Replace dotenv with `process.loadEnvFile()` — inline — commit
-- [ ] T3 (S2) Use `import.meta.dirname` in CreatePDFTool helpers — inline — commit
+- [x] T3 (S2) Use `import.meta.dirname` in CreatePDFTool helpers — inline — commit
 - [ ] T4 (S4) Argentina calendar date for prompt date suggestions — inline — commit
 - [ ] T5 (S1, S5) engines >=22, @types/node 22, `.node-version` 26, README — inline — commit
 - [ ] T6 (S5) Run quality and build on Node 22 and 26, stdio smoke — inline — no commit
