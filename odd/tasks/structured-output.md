@@ -26,7 +26,7 @@ Add MCP structured output (`outputSchema` + `structuredContent`) to all 20 tools
 - [x] T3 (S1, S3, S4) Output schemas: catalog tools and `get_sales_points` — commit
 - [x] T4 (S1, S3, S4) Output schemas: voucher and exchange-rate tools — commit
 - [x] T5 (S1, S3, S4) Output schemas: taxpayer, CUIT, PDF, automation and certificate tools — commit
-- [ ] T6 (S1, S5) Protocol test over all 20 tools, stdio smoke — inline — commit
+- [x] T6 (S1, S5) Protocol test over all 20 tools, stdio smoke — inline — commit
 
 ## Log
 
@@ -45,3 +45,11 @@ Add MCP structured output (`outputSchema` + `structuredContent`) to all 20 tools
   the developer's `.env` (read-only catalog call, no data written). Fixed by importing the mocks first;
   `src/tools/protocol.test.helpers.ts` now owns that order and every protocol test asserts the mock
   was called.
+- L6 (evidence, T4-T5): delivered by two parallel workers with disjoint surfaces; RED observed by
+  each (10/15 and 11/19 new protocol tests failing before implementation). `get_certificate_status`
+  reads `getDefaultCertificateStatus` from the client module, so its protocol test mocks that
+  module with `vi.doMock` instead of using the injected monitor.
+- L7 (evidence, T6): the all-tools `outputSchema` test fails against the T2 tree and passes at HEAD.
+  `pnpm run quality` exit 0 (46 files, 446 tests). stdio from an empty dir: 20/20 tools publish an
+  object `outputSchema`, empty stderr. `tools/list` grows from 34,241 to 48,210 bytes (+41%,
+  roughly 3.5k tokens per session) against `perf/catalog-cache`.
