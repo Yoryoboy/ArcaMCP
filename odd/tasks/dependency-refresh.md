@@ -17,7 +17,7 @@ Branch `chore/dependency-refresh`; one work-unit commit per major upgrade.
 
 - [x] T0 (S3) Capture the pre-upgrade stdio baseline — inline — no commit (scratch `/tmp/arcamcp-deps`)
 - [x] T1 (S1, S2) In-range updates: MCP SDK 1.32, prettier, typescript-eslint, tsx, `@types/node` 24.x — inline — commit
-- [ ] T2 (S1, S2) ESLint 10 and `@eslint/js` 10 — inline — commit
+- [x] T2 (S1, S2) ESLint 10 and `@eslint/js` 10 — inline — commit
 - [ ] T3 (S1, S2) Vitest 5 and `@vitest/coverage-v8` 5 — inline — commit
 - [ ] T4 (S1, S2) TypeScript 6.0.3 — inline — commit
 - [ ] T5 (S1, S2, S3) dotenv 18 — inline — commit
