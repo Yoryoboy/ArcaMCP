@@ -12,8 +12,12 @@ import {
 } from "./CreateVoucherPrompt.helpers.js";
 
 describe("CreateVoucherPrompt helpers", () => {
+  const originalTimeZone = process.env.TZ;
+
   afterEach(() => {
     vi.useRealTimers();
+    if (originalTimeZone === undefined) delete process.env.TZ;
+    else process.env.TZ = originalTimeZone;
   });
 
   it("filters suggestions by prefix without changing the source order", () => {
@@ -31,6 +35,27 @@ describe("CreateVoucherPrompt helpers", () => {
 
     expect(suggestNearbyVoucherDates("")).toEqual(["20260614", "20260613", "20260615"]);
     expect(suggestNearbyVoucherDates("2026061")).toEqual(["20260614", "20260613", "20260615"]);
+  });
+
+  it.each([
+    // 22:30 in Argentina is already the next day in UTC.
+    ["UTC", "2026-06-15T01:30:00Z"],
+    // 13:00 in Argentina is already the next day in Tokyo.
+    ["Asia/Tokyo", "2026-06-14T16:00:00Z"],
+  ])("suggests voucher dates for the Argentine calendar day on a %s host", (timeZone, now) => {
+    process.env.TZ = timeZone;
+    vi.useFakeTimers();
+    vi.setSystemTime(new Date(now));
+
+    expect(suggestNearbyVoucherDates("")).toEqual(["20260614", "20260613", "20260615"]);
+  });
+
+  it("crosses month and year boundaries in the Argentine calendar", () => {
+    process.env.TZ = "UTC";
+    vi.useFakeTimers();
+    vi.setSystemTime(new Date("2027-01-01T02:00:00Z"));
+
+    expect(suggestNearbyVoucherDates("")).toEqual(["20261231", "20261230", "20270101"]);
   });
 
   it("prioritizes factura C voucher suggestions when concept is products or mixed", () => {

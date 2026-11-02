@@ -20,7 +20,7 @@
     "LICENSE"
   ],
   "engines": {
-    "node": ">=20"
+    "node": ">=22"
   },
   "publishConfig": {
     "access": "public"
@@ -51,13 +51,12 @@
   "dependencies": {
     "@afipsdk/afip.js": "^1.2.3",
     "@modelcontextprotocol/sdk": "^1.32.2",
-    "dotenv": "^18.0.9",
     "qrcode": "^1.5.4",
     "zod": "^4.6.7"
   },
   "devDependencies": {
     "@eslint/js": "^10.0.1",
-    "@types/node": "^24.19.2",
+    "@types/node": "^22.20.5",
     "@types/qrcode": "^1.5.6",
     "@vitest/coverage-v8": "^5.0.5",
     "eslint": "^10.14.0",

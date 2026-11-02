@@ -1,4 +1,4 @@
-import { mkdtempSync, rmSync, writeFileSync } from "node:fs";
+import { mkdirSync, mkdtempSync, rmSync, writeFileSync } from "node:fs";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
 import { afterEach, describe, expect, it, vi } from "vitest";
@@ -34,5 +34,40 @@ describe("config", () => {
     expect(stderr).not.toHaveBeenCalled();
     expect(consoleLog).not.toHaveBeenCalled();
     expect(consoleError).not.toHaveBeenCalled();
+  });
+
+  it("starts without a .env file", async () => {
+    tempDir = mkdtempSync(join(tmpdir(), "arcamcp-config-"));
+    process.chdir(tempDir);
+    delete process.env.AFIP_CUIT;
+
+    vi.resetModules();
+    const { default: config } = await import("./config.js");
+
+    expect(config.CUIT).toBeUndefined();
+  });
+
+  it("starts when .env exists but cannot be read", async () => {
+    tempDir = mkdtempSync(join(tmpdir(), "arcamcp-config-"));
+    mkdirSync(join(tempDir, ".env"));
+    process.chdir(tempDir);
+    delete process.env.AFIP_CUIT;
+
+    vi.resetModules();
+    const { default: config } = await import("./config.js");
+
+    expect(config.CUIT).toBeUndefined();
+  });
+
+  it("keeps variables already set in the environment over .env values", async () => {
+    tempDir = mkdtempSync(join(tmpdir(), "arcamcp-config-"));
+    writeFileSync(join(tempDir, ".env"), "AFIP_CUIT=20123456789\n");
+    process.chdir(tempDir);
+    process.env.AFIP_CUIT = "27000000001";
+
+    vi.resetModules();
+    const { default: config } = await import("./config.js");
+
+    expect(config.CUIT).toBe("27000000001");
   });
 });

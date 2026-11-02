@@ -1,11 +1,6 @@
 import type { CreatePDFResolvedInput } from "./CreatePDFTool.schemas.js";
 import path from "path";
 import * as fs from "fs";
-import { fileURLToPath } from "url";
-
-// ESM-safe __dirname
-const __filename = fileURLToPath(import.meta.url);
-const __dirname = path.dirname(__filename);
 
 export function formatDateDDMMYYYY(yyyymmdd?: string): string {
   if (!yyyymmdd) return "";
@@ -56,8 +51,8 @@ export function renderItems(items: CreatePDFResolvedInput["INVOICE_ITEMS"] | und
 export function findTemplate(): string {
   const candidates = [
     path.resolve(process.cwd(), "templates/bill.html"),
-    path.resolve(__dirname, "../../../templates/bill.html"),
-    path.resolve(__dirname, "../../templates/bill.html"),
+    path.resolve(import.meta.dirname, "../../../templates/bill.html"),
+    path.resolve(import.meta.dirname, "../../templates/bill.html"),
   ];
   const found = candidates.find((p) => fs.existsSync(p));
   if (!found) {
