@@ -22,7 +22,7 @@ Branch `chore/dependency-refresh`; one work-unit commit per major upgrade.
 - [x] T4 (S1, S2) TypeScript 6.0.3 — inline — commit
 - [x] T5 (S1, S2, S3) dotenv 18 — inline — commit
 - [x] T6 (S1, S2, S3) Zod 4 — inline — commit
-- [ ] T7 (S1-S3) Final stdio differential and independent verification — verify — no commit
+- [x] T7 (S1-S3) Final stdio differential and verification — inline (verifier not admitted) — no commit
 
 ## Log
 
@@ -54,3 +54,8 @@ Branch `chore/dependency-refresh`; one work-unit commit per major upgrade.
   are stripped on both versions). Tool validation errors keep their paths and custom messages; only
   Zod's default English wording changes (e.g. `Required` → `Invalid input: expected number, received
   undefined`).
+- L9 (evidence, T7): at HEAD `pnpm outdated` lists only the two holds from L2/L3; `pnpm run quality`
+  exit 0 (41 files, 370 tests); `pnpm run build` exit 0; stdio from an empty dir: JSON-only stdout,
+  empty stderr, 20 tools, 19 described prompt args, `completion/complete` returns values.
+  `INVOICE_ITEMS` still defaults to `[]` and `ResolvedObjectSchema` still rejects unknown keys.
+  The independent verifier was not admitted by the runtime; verification ran inline.
